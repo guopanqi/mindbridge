@@ -126,7 +126,7 @@
 <rect x="428" y="866" width="290" height="28" rx="14" fill="#fff" stroke="#e2d6bc"/>
 <text class="bd" x="448" y="885">政务云 / 行业私有化部署模型</text>
 <rect x="734" y="866" width="240" height="28" rx="14" fill="#fff" stroke="#e2d6bc"/>
-<text class="bd" x="754" y="885">Claude · 通义等商用 API</text>
+<text class="bd" x="754" y="885">自己部署开源模型</text>
 
 <text class="bd" x="46" y="924">判定逻辑与合规约束不依赖具体模型，可随时替换；涉密或数据不出域场景可整套私有化部署。</text>
 

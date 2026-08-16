@@ -31,14 +31,14 @@ input,textarea{font-family:inherit;outline:none;border:none;background:none;colo
 #gate{background:radial-gradient(900px 600px at 50% -10%,rgba(238,185,108,.1),transparent 60%),
   linear-gradient(168deg,#0f1c19,#0a1512);color:#f2ebe0;overflow-y:auto}
 #gate.on{display:grid;place-items:center}
-.gwrap{width:min(1000px,93vw);padding:40px 0;text-align:center}
+.gwrap{width:min(880px,92vw);padding:40px 0;text-align:center}
 .glogo{width:52px;height:52px;margin:0 auto 20px}
 .glogo svg{width:100%;height:100%;filter:drop-shadow(0 0 14px rgba(238,185,108,.35))}
 .gt{font-family:var(--serif);font-size:27px;font-weight:600;letter-spacing:.03em}
 .gt .en{display:block;font-family:var(--sans);font-size:10.5px;letter-spacing:.3em;color:#7d9289;margin-top:9px;font-weight:500}
 .gq{font-size:14px;color:#a5bab0;margin:30px 0 8px}
 .gs{font-size:12px;color:#6c827a;margin-bottom:26px}
-.roles{display:grid;grid-template-columns:repeat(5,1fr);gap:11px}
+.roles{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
 .role{background:rgba(22,44,38,.55);border:1px solid rgba(127,201,143,.14);border-radius:14px;
   padding:22px 15px;transition:.3s cubic-bezier(.2,.8,.2,1);text-align:center}
 .role:hover{transform:translateY(-4px);border-color:rgba(238,185,108,.45);background:rgba(238,185,108,.09);
@@ -592,13 +592,42 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
 .grow .gs{font-size:10.5px;flex:none;padding:3px 9px;border-radius:100px;
   background:#eef5f1;color:var(--brand)}
 .grow.warn .gs{background:#fbf0da;color:#a8761d}
-.gwarn{margin-top:9px;background:#fdf8ee;border:1px solid #f0dfba;border-radius:7px;
-  padding:12px 13px;font-size:11.5px;color:#8a6a24;line-height:1.8}
-.gwarn b{color:#a8761d}
-.gwarn label{display:flex;gap:8px;align-items:flex-start;margin-top:9px;cursor:pointer;font-size:11.5px}
-.gwarn input{margin-top:2px;accent-color:#c8873a}
-.gwarn .gtrace{margin-top:9px;padding-top:9px;border-top:1px solid #f0dfba;
-  font-size:10.5px;color:#a08a5a;font-family:var(--mono)}
+/* ---- 两级授权分组 ---- */
+.lvl{margin-bottom:18px}
+.lvl:last-child{margin-bottom:0}
+.lvhd{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.lvtag{font-size:10.5px;font-weight:700;padding:3px 9px;border-radius:100px;flex:none}
+.lvtag.one{background:#e4f1ea;color:#1d6b52}
+.lvtag.two{background:#fbf0da;color:#a8761d}
+.lvt{font-size:13.5px;font-weight:650;color:var(--ink)}
+.lvs{font-size:11px;color:var(--mut2)}
+.lvnote{margin-top:9px;font-size:11px;color:var(--mut);line-height:1.8;
+  background:#f6f9f7;border-radius:7px;padding:10px 12px}
+
+/* ---- 弹窗 ---- */
+#modal{position:fixed;inset:0;z-index:120;background:rgba(16,24,20,.5);display:none;
+  place-items:center;padding:20px;backdrop-filter:blur(3px)}
+#modal.on{display:grid;animation:fadein .2s both}
+@keyframes fadein{from{opacity:0}}
+.mdbox{width:min(468px,100%);background:#fff;border-radius:14px;overflow:hidden;
+  box-shadow:0 24px 70px rgba(0,0,0,.34);animation:mdrise .28s cubic-bezier(.2,.8,.2,1) both}
+@keyframes mdrise{from{opacity:0;transform:translateY(14px) scale(.98)}}
+.mdh{background:#fdf8ee;border-bottom:1px solid #f0dfba;padding:15px 20px;
+  font-size:14.5px;font-weight:700;color:#a8761d}
+.mdb{padding:18px 20px;font-size:12.5px;color:#4d5c55;line-height:1.85}
+.mdb p{margin-bottom:10px}
+.mdb b{color:#23302b}
+.mdg{background:#f6f9f7;border-radius:8px;padding:11px 13px;margin-bottom:13px;font-size:12.5px}
+.mdack{display:flex;gap:9px;align-items:flex-start;cursor:pointer;
+  background:#fdf8ee;border:1px solid #f0dfba;border-radius:8px;padding:11px 13px;margin-top:4px}
+.mdack input{margin-top:2px;accent-color:#c8873a;flex:none}
+.mdtrace{margin-top:11px;font-size:10.5px;color:#9aa0a6;font-family:var(--mono)}
+.mdf{display:flex;gap:10px;justify-content:flex-end;padding:0 20px 18px}
+.mdf button{padding:9px 20px;border-radius:8px;font-size:12.5px;transition:.2s}
+.mdc{border:1px solid var(--line);color:var(--mut)}
+.mdc:hover{background:#f5f7f6}
+.mdok{background:#c8873a;color:#fff;font-weight:600}
+.mdok:disabled{opacity:.35;cursor:not-allowed}
 /* 配置 */
 .cfghead{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
 .saved{margin-left:auto;font-size:10.5px;color:var(--grn);font-family:var(--mono)}
@@ -934,9 +963,6 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
       <div class="gq">请选择演示身份</div>
       <div class="gs">模拟钉钉登录 · 无需密码 · 可另开窗口同时登录不同身份，数据实时互通</div>
       <div class="roles">
-        <button class="role" data-role="emp3">
-          <div class="ri">👤</div><div class="rn">周敏</div>
-          <div class="rd">实验二小 · 三年级组</div><div class="rt">→ 匿名化后进入</div></button>
         <button class="role" data-role="emp1">
           <div class="ri">👤</div><div class="rn">王磊</div>
           <div class="rd">星原科技 · 研发中心</div><div class="rt">→ 匿名化后进入</div></button>
@@ -959,7 +985,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
       <div class="notch"><span>21:38</span><span>●●● ⌁ ▮</span></div>
       <div class="wchead">
         <div class="lg">钉</div><div class="t" id="wc-t">消息</div>
-        <div class="co" id="wc-co">实验第二小学</div>
+        <div class="co" id="wc-co">星原科技</div>
       </div>
       <!-- 消息页 -->
       <div class="mlist" id="wc-msgs"></div>
@@ -1041,9 +1067,9 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
         <button class="frow pri" id="fwd-mb"><div class="fav">🕯</div>
           <div><div class="fnm">MindBridge</div><div class="fd">员工关爱 · 只有你能看到</div></div></button>
         <button class="frow"><div class="fav">👤</div>
-          <div><div class="fnm">李校长</div><div class="fd">实验第二小学</div></div></button>
+          <div><div class="fnm">刘总</div><div class="fd">研发中心</div></div></button>
         <button class="frow"><div class="fav">👥</div>
-          <div><div class="fnm">三年级组教研群</div><div class="fd">18人</div></div></button>
+          <div><div class="fnm">研发中心通知</div><div class="fd">128人</div></div></button>
         <button class="fx" id="fwd-x">取消</button>
       </div></div>
 
@@ -1219,7 +1245,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
   <section class="scr" id="hrApp">
     <div class="skC pad">
       <div class="hd"><div class="lg2">M</div><h3>MindBridge · 员工关爱后台</h3>
-        <div class="who"><div class="ava">张</div>张敏 · HRBP · 服务中：星原科技 / 实验第二小学</div></div>
+        <div class="who"><div class="ava">张</div>张敏 · HRBP · 星原科技</div></div>
       <div class="navbar">
         <span class="on" data-c="dash">组织看板</span>
         <span data-c="cfg">干预阶梯配置</span>
@@ -1270,15 +1296,12 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
                 <td>晋升与调薪</td><td><span class="pill g">良好</span></td></tr>
               <tr><td>制造中心</td><td class="mono">210</td><td class="mono">44%</td><td class="mono">6.2</td>
                 <td>轮班与疲劳</td><td><span class="pill g">良好</span></td></tr>
-              <tr><td>三年级组 <small style="color:var(--mut2)">· 实验二小</small></td>
-                <td class="mono">16</td><td class="mono">69%</td><td class="mono">5.4</td>
-                <td>家校沟通</td><td><span class="pill y">需关注</span></td></tr>
               <tr class="masked"><td>法务部</td><td class="mono">3</td>
                 <td colspan="4">有效样本 3 人（&lt;5）· 按隐私规则不予展示</td></tr>
             </table>
           </div>
           <div class="cardC">
-            <h4>团队节奏 · 三年级组<span class="src">来源：钉钉考勤 / 审批 / 待办</span></h4>
+            <h4>团队节奏 · 研发中心<span class="src">来源：钉钉考勤 / 审批 / 待办</span></h4>
             <div class="cs">回答「他们有多忙」—— 全部为行为元数据，不含任何消息内容</div>
             <div class="rhy">
               <div class="ri"><div class="rv">20:42</div><div class="rl">下班打卡中位时间</div>
@@ -1323,12 +1346,32 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
           </div>
 
           <div class="cardC">
-            <h4>群聊情绪感知 · 可选能力<span class="src">默认全部关闭</span></h4>
-            <div class="cs">开启后，MindBridge 机器人可读取所选群的消息用于团队级情绪聚合。
-              是否可开启<b>不按行业判断，按群的成员构成判断</b>——群里只要有非本单位人员，
-              你就无法代他们同意。</div>
-            <div class="grp" id="grp-list"></div>
-            <div class="gwarn hide" id="grp-warn"></div>
+            <h4>办公数据感知能力<span class="src">分两级授权</span></h4>
+            <div class="cs">MindBridge 从钉钉获取的数据分为两级。
+              <b>一级为行为元数据，不含任何聊天内容</b>，随应用安装默认开启；
+              <b>二级为群聊消息读取，需企业单独审批</b>，默认全部关闭。</div>
+
+            <div class="lvl">
+              <div class="lvhd">
+                <span class="lvtag one">一级</span>
+                <span class="lvt">行为元数据</span>
+                <span class="lvs">随应用安装授权 · 默认开启 · 不含任何聊天内容</span>
+              </div>
+              <div class="grp" id="lv1-list"></div>
+              <div class="lvnote">以上均为钉钉标准开放接口。团队级聚合，最小样本 8 人，
+                不落个人档案，不与绩效、晋升、续聘挂钩。员工可自行退出统计。</div>
+            </div>
+
+            <div class="lvl">
+              <div class="lvhd">
+                <span class="lvtag two">二级</span>
+                <span class="lvt">群聊消息读取</span>
+                <span class="lvs">需企业单独审批 · 默认全部关闭</span>
+              </div>
+              <div class="cs" style="margin:0 0 10px">是否可开启<b>不按行业判断，按群的成员构成判断</b>——
+                群里只要有非本企业人员，你就无法代他们同意。</div>
+              <div class="grp" id="grp-list"></div>
+            </div>
           </div>
 
           <div class="cardC policy-card crisis">
@@ -1413,10 +1456,9 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
   <button class="home" id="demo-home">← 返回演示页</button>
   <span class="quick">快速切换</span>
   <div class="sw" id="swrole">
-    <button data-r="emp3">周敏 · 教师<small>实验第二小学</small></button>
     <button data-r="emp1">王磊 · 研发<small>星原科技</small></button>
     <button data-r="emp2">陈雨 · 客服<small>星原科技</small></button>
-    <button data-r="hr">张敏 · HRBP<small>服务：星原科技 / 实验二小</small></button>
+    <button data-r="hr">张敏 · HRBP<small>星原科技</small></button>
     <button data-r="healer">李佳 · 疗愈师<small>服务商：UNIHEAL</small></button>
   </div>
   <div class="rt">
@@ -1436,6 +1478,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
   <div class="pkb" id="pk-b"></div>
 </div></div>
 
+<div id="modal"></div>
 <div id="toast"></div>
 
 <script>
@@ -1458,29 +1501,6 @@ addEventListener('resize',syncCtlHeight);syncCtlHeight();
    work : L1 元数据（考勤/审批/待办，标准接口可得，不含任何消息内容）
    convs: 钉钉消息列表 + 群聊内容，用于演示 L0 主动转发                        */
 const ROLES={
-  emp3:{kind:'emp',name:'周敏',dept:'三年级组',org:'实验第二小学',emp:'T10237',
-    anon:'4A6B',alias:'小溪',icon:'👤',
-    work:{title:'本周工作节奏',
-      items:[['23',':48','最晚下班打卡'],['3','天','晚间下班打卡'],['2','项','加班·调休审批'],['14','项','未完成待办']],
-      line:'这周有三天较晚完成下班打卡，最晚一次是 23:48。辛苦了，也记得给自己留一点休息的时间。'},
-    convs:[
-      {id:'g1',nm:'三年级2班家长群',n:'48人',av:'👨‍👩‍👧',tm:'21:40',
-       pv:'李梓涵妈妈：老师你怎么教的，我家孩子这次才62分',
-       msgs:[
-        {f:'王思远爸爸',av:'👨',t:'老师，这次单元测的卷子什么时候发下来？',tm:'21:22'},
-        {f:'我',me:1,t:'今天已经批完了，明天上午发到孩子手上。',tm:'21:31'},
-        {f:'李梓涵妈妈',av:'👩',t:'老师你怎么教的，我家孩子这次才62分。之前在别的班从来没考过这么低。',tm:'21:38'},
-        {f:'李梓涵妈妈',av:'👩',t:'这个成绩我没法跟他爸交代，你给个说法吧',tm:'21:39'},
-        {f:'张小雨妈妈',av:'👩',t:'@周老师 我们家的也不太理想，是不是这次题偏难了',tm:'21:40'},
-       ]},
-      {id:'g2',nm:'三年级组教研群',n:'18人',av:'📚',tm:'18:22',
-       pv:'教务处：周五教研会改到下午四点，请各位老师准时',
-       msgs:[
-        {f:'教务处 陈主任',av:'📋',t:'周五教研会改到下午四点，请各位老师准时。',tm:'18:20'},
-        {f:'刘老师',av:'👩',t:'收到',tm:'18:21'},
-        {f:'我',me:1,t:'收到',tm:'18:22'},
-       ]},
-    ]},
   emp1:{kind:'emp',name:'王磊',dept:'研发中心',org:'星原科技',emp:'E20481',
     anon:'7F3A',alias:'小芳',icon:'👤',
     work:{title:'本周工作节奏',
@@ -1528,26 +1548,22 @@ function clearAuthFlow(){
 }
 function authLater(fn,delay){authTimers.push(setTimeout(fn,delay))}
 const ALIASES={
-  '7F3A':'小芳','A91C':'小华','3B2E':'小陈','5C7D':'小林','2D80':'小李','6E15':'小周','4A6B':'小溪','8C1D':'小禾'
+  '7F3A':'小芳','A91C':'小华','3B2E':'小陈','5C7D':'小林','2D80':'小李','6E15':'小周'
 };
 function displayIdentity(anon,alias){return `${alias||ALIASES[anon]||'小伙伴'}-${anon}`}
 
 /* ---------- 存储 ---------- */
-const makeSchoolWallPost=()=>({id:'p-school-demo',org:'实验第二小学',anon:'8C1D',dept:'教职工',
-  text:'最近总觉得时间不够用。希望这个周末能真正休息一下。',
-  t:Date.now()-3.6e6,hugs:[],hugN:6,reps:[]});
 const SEED={
-  v:1,orgWallV:1,
+  v:1,
   posts:[
-    {id:'p1',org:'星原科技',anon:'3B2E',dept:'研发中心',text:'又是凌晨两点。看着屏幕，觉得自己像台还没坏的机器。',
+    {id:'p1',anon:'3B2E',dept:'研发中心',text:'又是凌晨两点。看着屏幕，觉得自己像台还没坏的机器。',
      t:Date.now()-7.2e6,hugs:['A91C','5C7D','2D80'],hugN:12,
      reps:[{anon:'5C7D',text:'那句"还没坏"看得我鼻子一酸。今晚早点睡吧。',t:Date.now()-6e6}]},
-    {id:'p2',org:'星原科技',anon:'A91C',dept:'客服中心',text:'被骂了四十分钟，最后还要说"很抱歉给您带来不便"。',
+    {id:'p2',anon:'A91C',dept:'客服中心',text:'被骂了四十分钟，最后还要说"很抱歉给您带来不便"。',
      t:Date.now()-9e7,hugs:[],hugN:28,
      reps:[{anon:'3B2E',text:'你已经做得很好了。那些话是冲着工牌来的，不是冲着你。',t:Date.now()-8e7}]},
-    {id:'p3',org:'星原科技',anon:'6E15',dept:'制造中心',text:'上了八年夜班。最难受的不是累，是回家时天还没亮，没人可以说话。',
+    {id:'p3',anon:'6E15',dept:'制造中心',text:'上了八年夜班。最难受的不是累，是回家时天还没亮，没人可以说话。',
      t:Date.now()-1.7e8,hugs:[],hugN:19,reps:[]},
-    makeSchoolWallPost(),
   ],
   cases:[
     {id:'c0',anon:'2D80',dept:'制造中心',level:'y',tags:['社交隔离','轮班疲劳'],
@@ -1574,13 +1590,15 @@ let bc=null;try{bc=new BroadcastChannel(CH)}catch(e){}
       c.tags=['危机信号','待专业评估'];changed=true;
     }
   });
-  if((DB.orgWallV||0)<1){
-    (DB.posts||[]).forEach(p=>{
-      if(!p.org){p.org=p.dept==='三年级组'||p.dept==='教职工'?'实验第二小学':'星原科技'}
-    });
-    if(!(DB.posts||[]).some(p=>p.org==='实验第二小学'))DB.posts.push(makeSchoolWallPost());
-    DB.orgWallV=1;changed=true;
-  }
+  // 单一企业演示：清掉早期多企业版本残留的教育机构数据
+  const before=(DB.posts||[]).length;
+  DB.posts=(DB.posts||[]).filter(p=>p.org!=='实验第二小学'&&p.dept!=='三年级组'&&p.dept!=='教职工');
+  if(DB.posts.length!==before)changed=true;
+  ['4A6B','8C1D'].forEach(a=>{
+    if(DB.chats&&DB.chats[a]){delete DB.chats[a];changed=true}
+    if(DB.bot&&DB.bot[a]){delete DB.bot[a];changed=true}
+    if(DB.st&&DB.st[a]){delete DB.st[a];changed=true}
+  });
   if(changed)save();
 })();
 if(bc)bc.onmessage=()=>pull();
@@ -2082,7 +2100,7 @@ const expandedThreads=new Set();
 function renderWall(){
   if(!ME||ME.kind!=='emp')return;
   const f=$('#feed');f.innerHTML='';
-  DB.posts.filter(p=>p.org===ME.org).sort((a,b)=>b.t-a.t).forEach(p=>{
+  [...DB.posts].sort((a,b)=>b.t-a.t).forEach(p=>{
     const mine=p.anon===ME.anon, did=p.hugs.includes(ME.anon);
     const expanded=expandedThreads.has(p.id), replies=expanded?p.reps:p.reps.slice(-2);
     const d=document.createElement('div');d.className='pcard'+(mine?' mine':'');
@@ -2168,7 +2186,7 @@ $('#postbtn').onclick=()=>{
     composerCheck.textContent='内容可能包含攻击性表达，请调整后再发布';composerCheck.style.color='var(--coral)';return;
   }
   const a=analyze(v);
-  DB.posts.push({id:'p'+Date.now(),org:ME.org,anon:ME.anon,dept:ME.dept,text:v,t:Date.now(),hugs:[],hugN:0,reps:[]});
+  DB.posts.push({id:'p'+Date.now(),anon:ME.anon,dept:ME.dept,text:v,t:Date.now(),hugs:[],hugN:0,reps:[]});
   save();postin.value='';postin.style.height='40px';wallComposer.classList.remove('open');renderWall();
   xray(v,a,a.lv==='red'?'广场检测到危机信号 → 仅向发帖人本人发出私聊邀请，未通知任何第三方':'仅计入部门议题聚类，不做个体风险分级');
   if(a.lv==='red'){
@@ -2187,12 +2205,6 @@ $('#postbtn').onclick=()=>{
 
 /* ---------- 私密对话 ---------- */
 const PRESETS={
-  emp3:[
-    {t:'😞 家长投诉',s:'家长在群里质问我怎么教的，我带这个班两年了。'},
-    {t:'😮‍💨 多重角色',s:'又要上课又要填表还要哄家长，真的太累了，看不到头。'},
-    {t:'🌙 批改到深夜',s:'每天备课批改到十二点，第二天七点还要到校。'},
-    {t:'🔴 危机信号',s:'我真的撑不下去了，天天失眠，觉得活着没有意义。'},
-  ],
   emp1:[
     {t:'💻 加班焦虑',s:'项目赶不上了，又要通宵。真怕这次做不完会被裁。'},
     {t:'😮‍💨 情绪耗竭',s:'太累了，看不到头，感觉整个人都被掏空了。'},
@@ -2553,16 +2565,45 @@ function renderHR(){
   renderGroups();
 }
 
-/* ---------- L2 群聊接入：按成员构成判定，不按行业 ---------- */
+/* ==========================================================================
+   办公数据感知能力 · 两级授权
+   一级：行为元数据，随应用安装授权，默认开启
+   二级：群聊消息读取，需企业单独审批，默认关闭；含外部人员的群勾选时弹窗担责
+   ========================================================================== */
+const LV1=[
+  {id:'a1',nm:'考勤打卡',d:'上下班打卡时间、出勤天数'},
+  {id:'a2',nm:'审批记录',d:'加班、调休、请假、出差申请'},
+  {id:'a3',nm:'日程密度',d:'会议时长与排布，不含会议内容'},
+  {id:'a4',nm:'待办任务',d:'待办数量与完成情况，不含任务详情'},
+];
+let LV1ON={a1:1,a2:1,a3:1,a4:1};        // 默认全部开启
+
 const GRPS=[
-  {id:'t1',nm:'三年级组教研群',n:18,out:0},
-  {id:'t2',nm:'语文教研组',n:24,out:0},
-  {id:'t3',nm:'校办公室通知群',n:31,out:0},
-  {id:'p1',nm:'三年级2班家长群',n:48,out:46},
-  {id:'p2',nm:'家校沟通群',n:132,out:128},
+  {id:'g1',nm:'星火项目攻坚群',n:26,out:0},
+  {id:'g2',nm:'研发中心通知',n:128,out:0},
+  {id:'g3',nm:'客服二组 · 工作群',n:14,out:0},
+  {id:'g4',nm:'大客户服务群',n:38,out:22},
+  {id:'g5',nm:'供应商对接群',n:45,out:31},
 ];
 let GRPON={};
+
 function renderGroups(){
+  // ---- 一级 ----
+  const l1=$('#lv1-list');
+  if(l1){
+    l1.innerHTML='';
+    LV1.forEach(g=>{
+      const b=document.createElement('button');
+      b.className='grow'+(LV1ON[g.id]?' on':'');
+      b.innerHTML=`<div class="gk">✓</div><div class="gi">
+        <div class="gn">${g.nm}</div><div class="gc">${g.d}</div></div>
+        <div class="gs">${LV1ON[g.id]?'已开启':'已关闭'}</div>`;
+      b.onclick=()=>{LV1ON[g.id]=!LV1ON[g.id];renderGroups();
+        toast(LV1ON[g.id]?`已开启「${g.nm}」`:`已关闭「${g.nm}」`)};
+      l1.appendChild(b);
+    });
+  }
+  // ---- 二级 ----
   const box=$('#grp-list');if(!box)return;box.innerHTML='';
   GRPS.forEach(g=>{
     const b=document.createElement('button');
@@ -2570,23 +2611,43 @@ function renderGroups(){
     b.innerHTML=`<div class="gk">✓</div><div class="gi">
       <div class="gn">${g.nm}</div>
       <div class="gc${g.out?' w':''}">${g.n}人 · ${g.out
-        ?`⚠ 含 ${g.out} 名非本单位人员`:'全部为本单位教职工'}</div></div>
+        ?`⚠ 含 ${g.out} 名非本企业人员`:'全部为本企业员工'}</div></div>
       <div class="gs">${g.out?'需承担告知责任':'可接入'}</div>`;
-    b.onclick=()=>{GRPON[g.id]=!GRPON[g.id];renderGroups()};
+    b.onclick=()=>{
+      if(GRPON[g.id]){GRPON[g.id]=false;renderGroups();return}
+      if(g.out)askExternal(g);                       // 含外部人员 → 弹窗担责
+      else{GRPON[g.id]=true;renderGroups();toast(`已接入「${g.nm}」`)}
+    };
     box.appendChild(b);
   });
-  // 只要选中了含外部人员的群，就把后果摊开——不禁止，但要求担责并留痕
-  const risky=GRPS.filter(g=>g.out&&GRPON[g.id]);
-  const w=$('#grp-warn');
-  w.classList.toggle('hide',!risky.length);
-  if(risky.length){
-    const tot=risky.reduce((s,g)=>s+g.out,0);
-    w.innerHTML=`<b>⚠ 你选中了 ${risky.length} 个含外部人员的群，共 ${tot} 名非本单位人员。</b><br>
-      开启后，他们的发言也会被系统读取。<b>你无法代他们同意。</b>
-      <label><input type="checkbox" id="grp-ack"><span>我已知悉，并确认由本单位承担相应告知责任</span></label>
-      <div class="gtrace">开启记录将留痕：张敏 · ${hhmm(Date.now())} · ${risky.map(g=>g.nm).join('、')}</div>`;
-    $('#grp-ack').onchange=e=>{if(e.target.checked)toast('已留痕 · 操作人与时间已记录')};
-  }
+}
+
+/* 含外部人员的群：不禁止，但把后果摊开、要求担责、并留痕 */
+function askExternal(g){
+  const m=$('#modal');
+  m.innerHTML=`<div class="mdbox">
+    <div class="mdh">⚠ 该群含非本企业人员</div>
+    <div class="mdb">
+      <div class="mdg"><b>${esc(g.nm)}</b>　${g.n} 人，其中 <b>${g.out} 名为非本企业人员</b></div>
+      <p>开启后，这 ${g.out} 人的发言也会被系统读取用于情绪聚合。
+        他们与本企业不存在劳动关系，<b>你无法代他们做出同意</b>。</p>
+      <p>如仍需开启，须由本企业自行完成对该群全体成员的告知，并承担相应责任。</p>
+      <label class="mdack"><input type="checkbox" id="md-ack">
+        <span>我已知悉，并确认由本企业承担相应告知责任</span></label>
+      <div class="mdtrace">开启记录将留痕：操作人 张敏 · ${hhmm(Date.now())} · ${esc(g.nm)}</div>
+    </div>
+    <div class="mdf">
+      <button class="mdc">取消</button>
+      <button class="mdok" disabled>确认开启</button>
+    </div></div>`;
+  m.classList.add('on');
+  const ok=m.querySelector('.mdok');
+  m.querySelector('#md-ack').onchange=e=>ok.disabled=!e.target.checked;
+  const close=()=>{m.classList.remove('on');m.innerHTML=''};
+  m.querySelector('.mdc').onclick=close;
+  m.onclick=e=>{if(e.target===m)close()};
+  ok.onclick=()=>{GRPON[g.id]=true;close();renderGroups();
+    toast('已开启 · 操作人与时间已留痕')};
 }
 
 /* ---------- 干预阶梯配置 ---------- */
