@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindBridge AI · 疗愈轨道 — 视觉设计稿（非功能性）</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=Noto+Sans+SC:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --paper:#F6F1E7;
+    --paper-deep:#EFE7D8;
+    --ink:#2B2B26;
+    --ink-soft:#5B564C;
+    --pine:#4B6355;
+    --pine-deep:#374A3F;
+    --pine-tint:#DCE5DD;
+    --clay:#C77B4D;
+    --clay-tint:#F3DFCB;
+    --clay-deep:#A85F35;
+    --moss:#7A9471;
+    --amber:#D9A441;
+    --brick:#B85C4D;
+    --line:rgba(43,43,38,0.12);
+    --shadow: 0 12px 32px -18px rgba(43,43,38,0.35);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Noto Sans SC',sans-serif;
+    font-weight:400;
+    -webkit-font-smoothing:antialiased;
+  }
+  body::before{
+    content:"";
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    background:
+      radial-gradient(ellipse 900px 600px at 8% -10%, rgba(75,99,85,0.10), transparent 60%),
+      radial-gradient(ellipse 800px 700px at 105% 10%, rgba(199,123,77,0.12), transparent 55%),
+      radial-gradient(ellipse 700px 500px at 50% 120%, rgba(75,99,85,0.08), transparent 60%);
+  }
+  h1,h2,h3,.serif{font-family:'Noto Serif SC',serif;}
+  .mono{font-family:'JetBrains Mono',monospace;}
+
+  /* ---------- 顶部说明条 ---------- */
+  .banner{
+    position:relative; z-index:2;
+    background:var(--ink); color:var(--paper);
+    text-align:center; font-size:13px; letter-spacing:.04em;
+    padding:9px 16px;
+  }
+  .banner b{color:var(--clay-tint);}
+
+  /* ---------- Chrome / 顶部导航 ---------- */
+  .chrome{
+    position:relative; z-index:2;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:20px 40px; border-bottom:1px solid var(--line);
+    background:rgba(246,241,231,0.85); backdrop-filter:blur(6px);
+    position:sticky; top:0;
+  }
+  .brand{display:flex; align-items:center; gap:12px;}
+  .brand .mark{
+    width:38px;height:38px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, var(--clay), var(--clay-deep) 70%);
+    box-shadow:0 0 0 4px var(--clay-tint), 0 6px 16px -6px rgba(167,93,49,.6);
+    position:relative;
+  }
+  .brand .mark::after{
+    content:""; position:absolute; inset:0; border-radius:50%;
+    animation:breathe 3.2s ease-in-out infinite;
+    background:radial-gradient(circle, rgba(199,123,77,.55), transparent 70%);
+  }
+  @keyframes breathe{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.6);opacity:0}}
+  .brand-text .t1{font-size:17px; font-weight:600; letter-spacing:.02em;}
+  .brand-text .t2{font-size:11.5px; color:var(--ink-soft); letter-spacing:.08em;}
+
+  .switcher{
+    display:flex; background:var(--paper-deep); border-radius:999px; padding:4px; gap:2px;
+    border:1px solid var(--line);
+  }
+  .switcher button{
+    border:none; background:transparent; padding:9px 20px; border-radius:999px;
+    font-family:'Noto Sans SC'; font-size:13.5px; font-weight:500; color:var(--ink-soft);
+    cursor:pointer; transition:all .35s cubic-bezier(.4,0,.2,1);
+  }
+  .switcher button.active.employee{background:var(--clay); color:#fff; box-shadow:var(--shadow);}
+  .switcher button.active.hr{background:var(--pine); color:#fff; box-shadow:var(--shadow);}
+
+  .subnav{display:flex; gap:6px;}
+  .subnav button{
+    border:1px solid var(--line); background:transparent; padding:8px 16px; border-radius:10px;
+    font-size:13px; color:var(--ink-soft); cursor:pointer; font-family:'Noto Sans SC';
+  }
+  .subnav button.active{background:var(--ink); color:var(--paper); border-color:var(--ink);}
+
+  main{position:relative; z-index:1; max-width:1180px; margin:0 auto; padding:44px 32px 100px;}
+  .view{display:none; animation:fadeUp .5s ease both;}
+  .view.active{display:block;}
+  @keyframes fadeUp{from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:translateY(0);}}
+
+  .ink-divider{
+    height:34px; margin:8px 0 30px; opacity:.5;
+    background:repeating-linear-gradient(90deg, transparent 0 10px, var(--ink) 10px 11px, transparent 11px 22px);
+    mask-image: linear-gradient(90deg, transparent, black 15%, black 85%, transparent);
+  }
+
+  /* ---------- 封面 ---------- */
+  .cover{
+    display:grid; grid-template-columns:1.1fr .9fr; gap:60px; align-items:center;
+    min-height:60vh;
+  }
+  .cover .eyebrow{
+    display:inline-flex; align-items:center; gap:8px; font-size:12.5px; letter-spacing:.14em;
+    color:var(--clay-deep); background:var(--clay-tint); padding:6px 14px; border-radius:999px;
+    margin-bottom:22px; font-weight:600;
+  }
+  .cover h1{font-size:52px; line-height:1.25; margin:0 0 20px; font-weight:700;}
+  .cover h1 em{font-style:normal; color:var(--clay-deep); position:relative;}
+  .cover p.lead{font-size:16.5px; color:var(--ink-soft); line-height:1.9; max-width:520px; margin-bottom:30px;}
+  .track-row{display:flex; gap:16px;}
+  .track-card{
+    flex:1; padding:20px; border-radius:16px; border:1px solid var(--line); background:rgba(255,255,255,.4);
+  }
+  .track-card.ai{border-left:4px solid var(--clay);}
+  .track-card.heal{border-left:4px solid var(--pine);}
+  .track-card .k{font-size:11.5px; letter-spacing:.1em; color:var(--ink-soft); margin-bottom:6px;}
+  .track-card .v{font-family:'Noto Serif SC'; font-size:19px; font-weight:600; margin-bottom:6px;}
+  .track-card .d{font-size:13px; color:var(--ink-soft); line-height:1.6;}
+
+  .cover-visual{
+    position:relative; aspect-ratio:1/1; border-radius:28px;
+    background:
+      radial-gradient(circle at 30% 25%, rgba(199,123,77,.35), transparent 55%),
+      radial-gradient(circle at 75% 70%, rgba(75,99,85,.32), transparent 55%),
+      var(--paper-deep);
+    border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+  }
+  .orb{
+    width:180px; height:180px; border-radius:50%;
+    background:radial-gradient(circle at 35% 30%, #fff, var(--clay) 45%, var(--clay-deep) 100%);
+    box-shadow:0 30px 60px -20px rgba(167,93,49,.5);
+    position:relative;
+  }
+  .orb::before,.orb::after{
+    content:""; position:absolute; inset:-24px; border-radius:50%;
+    border:1px solid rgba(75,99,85,.35);
+    animation:ring 4s linear infinite;
+  }
+  .orb::after{inset:-48px; animation-duration:6s; border-color:rgba(199,123,77,.3);}
+  @keyframes ring{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+
+  .section-title{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:22px;}
+  .section-title h2{font-size:26px; margin:0; font-weight:700;}
+  .section-title .tag{font-size:12px; color:var(--ink-soft); letter-spacing:.06em;}
+
+  /* ---------- AI树洞 ---------- */
+  .treehole-grid{display:grid; grid-template-columns:1fr 300px; gap:28px;}
+  .chat-panel{
+    background:#fff; border-radius:22px; border:1px solid var(--line); box-shadow:var(--shadow);
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+  .chat-head{
+    display:flex; align-items:center; gap:14px; padding:20px 24px; border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg, var(--clay-tint), transparent);
+  }
+  .chat-head .av{width:44px;height:44px;border-radius:50%;background:radial-gradient(circle at 35% 30%, #fff, var(--clay) 50%, var(--clay-deep)); position:relative; flex:none;}
+  .chat-head .av::after{content:"";position:absolute;inset:-8px;border-radius:50%;background:radial-gradient(circle, rgba(199,123,77,.5), transparent 70%);animation:breathe 3s ease-in-out infinite;}
+  .chat-head .ti{font-weight:700; font-size:16px;}
+  .chat-head .sub{font-size:12.5px; color:var(--ink-soft);}
+  .chat-body{padding:26px; display:flex; flex-direction:column; gap:16px; min-height:440px;}
+  .msg{max-width:78%; padding:13px 17px; border-radius:16px; font-size:14.5px; line-height:1.65; position:relative;}
+  .msg.user{align-self:flex-end; background:var(--pine); color:#fff; border-bottom-right-radius:4px;}
+  .msg.ai{align-self:flex-start; background:var(--paper-deep); border:1px solid var(--line); border-bottom-left-radius:4px;}
+  .msg .level{
+    display:inline-flex; align-items:center; gap:5px; font-size:10.5px; margin-top:8px; padding:3px 9px;
+    border-radius:999px; font-weight:600; letter-spacing:.03em;
+  }
+  .level.green{background:rgba(122,148,113,.18); color:#4c6444;}
+  .level.yellow{background:rgba(217,164,65,.2); color:#8a6318;}
+  .level.dot{width:6px;height:6px;border-radius:50%; display:inline-block;}
+  .level.green .dot{background:var(--moss);}
+  .level.yellow .dot{background:var(--amber);}
+
+  .rec-card{
+    align-self:flex-start; max-width:78%; border:1px solid var(--amber); background:#FFF8EA;
+    border-radius:14px; padding:14px 16px; display:flex; gap:12px; align-items:center;
+  }
+  .rec-card .ico{width:36px;height:36px;border-radius:10px;background:var(--amber); flex:none; display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px;}
+  .rec-card .rt{font-weight:600; font-size:13.5px;}
+  .rec-card .rd{font-size:12px; color:var(--ink-soft);}
+  .rec-card button{margin-left:auto; border:none; background:var(--pine); color:#fff; font-size:12px; padding:8px 14px; border-radius:8px; cursor:default; white-space:nowrap;}
+
+  .chat-input{padding:16px 22px; border-top:1px solid var(--line); display:flex; gap:10px;}
+  .chat-input input{flex:1; border:1px solid var(--line); border-radius:12px; padding:12px 16px; font-size:14px; font-family:'Noto Sans SC'; background:var(--paper);}
+  .chat-input button{border:none; background:var(--clay); color:#fff; padding:0 20px; border-radius:12px; font-weight:600; cursor:default;}
+  .ethic-strip{padding:10px 22px; font-size:11.5px; color:var(--ink-soft); background:var(--paper-deep); text-align:center; border-top:1px solid var(--line);}
+
+  .side-col{display:flex; flex-direction:column; gap:18px;}
+  .info-card{background:#fff; border:1px solid var(--line); border-radius:18px; padding:20px; box-shadow:var(--shadow);}
+  .info-card h3{margin:0 0 12px; font-size:14.5px; display:flex; align-items:center; gap:8px;}
+  .legend-row{display:flex; align-items:center; gap:10px; font-size:12.5px; padding:7px 0; color:var(--ink-soft); border-bottom:1px dashed var(--line);}
+  .legend-row:last-child{border-bottom:none;}
+  .legend-dot{width:9px;height:9px;border-radius:50%; flex:none;}
+
+  /* ---------- HR 仪表盘 ---------- */
+  .tiles{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:26px;}
+  .tile{background:#fff; border:1px solid var(--line); border-radius:16px; padding:20px; box-shadow:var(--shadow);}
+  .tile .k{font-size:12px; color:var(--ink-soft); margin-bottom:10px;}
+  .tile .v{font-family:'JetBrains Mono'; font-size:30px; font-weight:600; color:var(--pine-deep);}
+  .tile .v.warn{color:var(--amber);}
+  .tile .v.alert{color:var(--brick);}
+  .tile .d{font-size:11.5px; color:var(--moss); margin-top:6px;}
+
+  .hr-grid{display:grid; grid-template-columns:1.4fr 1fr; gap:20px; margin-bottom:24px;}
+  .panel{background:#fff; border:1px solid var(--line); border-radius:18px; padding:22px; box-shadow:var(--shadow);}
+  .panel h3{margin:0 0 16px; font-size:15px;}
+  canvas{max-width:100%;}
+
+  table.alerts{width:100%; border-collapse:collapse; font-size:13px;}
+  table.alerts th{text-align:left; font-weight:600; color:var(--ink-soft); padding:8px 6px; border-bottom:1px solid var(--line); font-size:11.5px; letter-spacing:.04em;}
+  table.alerts td{padding:10px 6px; border-bottom:1px solid var(--line);}
+  .pill{padding:3px 10px; border-radius:999px; font-size:11px; font-weight:600;}
+  .pill.yellow{background:rgba(217,164,65,.2); color:#8a6318;}
+  .pill.red{background:rgba(184,92,77,.18); color:#8f3a2c;}
+  .pill.status{background:var(--pine-tint); color:var(--pine-deep);}
+
+  .industry-tabs{display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;}
+  .industry-tabs span{padding:6px 14px; border-radius:999px; font-size:12px; border:1px solid var(--line); color:var(--ink-soft);}
+  .industry-tabs span.on{background:var(--pine); color:#fff; border-color:var(--pine);}
+  .match-row{display:flex; gap:14px; font-size:13px; padding:12px 0; border-bottom:1px dashed var(--line);}
+  .match-row .lab{width:88px; flex:none; color:var(--ink-soft); font-size:11.5px; padding-top:2px;}
+
+  .kanban{display:grid; grid-template-columns:repeat(4,1fr); gap:14px;}
+  .kcol{background:var(--paper-deep); border-radius:14px; padding:14px;}
+  .kcol h4{font-size:12px; margin:0 0 10px; color:var(--ink-soft); letter-spacing:.04em;}
+  .kcard{background:#fff; border:1px solid var(--line); border-radius:10px; padding:10px 12px; font-size:12px; margin-bottom:8px; box-shadow:0 4px 10px -6px rgba(0,0,0,.15);}
+  .kcard b{display:block; font-size:12.5px; margin-bottom:3px;}
+
+  /* ---------- 成长报告 ---------- */
+  .growth-grid{display:grid; grid-template-columns:1.3fr 1fr; gap:22px;}
+  .summary-quote{
+    font-family:'Noto Serif SC'; font-size:15.5px; line-height:2; color:var(--pine-deep);
+    background:var(--pine-tint); border-radius:16px; padding:22px 24px; border-left:4px solid var(--pine);
+  }
+  .timeline{margin-top:18px;}
+  .tl-item{display:flex; gap:14px; padding:12px 0; border-bottom:1px dashed var(--line);}
+  .tl-dot{width:10px;height:10px;border-radius:50%;background:var(--clay); margin-top:5px; flex:none;}
+  .tl-day{width:50px; flex:none; font-size:11.5px; color:var(--ink-soft); font-family:'JetBrains Mono';}
+  .tl-text b{font-size:13.5px;}
+  .tl-text span{display:block; font-size:12px; color:var(--ink-soft);}
+
+  /* ---------- 心灵体检 ---------- */
+  .scan-wrap{display:grid; grid-template-columns:.9fr 1.1fr; gap:30px; align-items:center;}
+  .scan-ring{
+    width:280px;height:280px; border-radius:50%; margin:0 auto;
+    background:conic-gradient(var(--clay) 0 78%, var(--paper-deep) 78% 100%);
+    display:flex; align-items:center; justify-content:center; position:relative;
+  }
+  .scan-ring::before{content:""; position:absolute; inset:16px; border-radius:50%; background:var(--paper);}
+  .scan-inner{position:relative; text-align:center;}
+  .scan-inner .n{font-family:'JetBrains Mono'; font-size:38px; font-weight:600; color:var(--clay-deep);}
+  .scan-inner .l{font-size:12px; color:var(--ink-soft);}
+  .sim-note{
+    margin-top:16px; text-align:center; font-size:11.5px; color:var(--ink-soft);
+    background:var(--paper-deep); padding:8px 14px; border-radius:999px; display:inline-block;
+  }
+
+  footer{position:relative; z-index:1; text-align:center; padding:30px; font-size:12px; color:var(--ink-soft);}
+
+  @media(max-width:980px){
+    .treehole-grid,.hr-grid,.growth-grid,.scan-wrap,.cover{grid-template-columns:1fr;}
+    .tiles{grid-template-columns:repeat(2,1fr);}
+    .kanban{grid-template-columns:repeat(2,1fr);}
+  }
+</style>
+</head>
+<body>
+
+<div class="banner">这是<b>视觉设计稿</b>，用于确认视觉方向与信息架构 — 所有对话、数据、图表均为预设示意，不含真实功能</div>
+
+<div class="chrome">
+  <div class="brand">
+    <div class="mark"></div>
+    <div class="brand-text">
+      <div class="t1">MindBridge AI · 疗愈轨道</div>
+      <div class="t2">企业员工心理安全与成长共生系统</div>
+    </div>
+  </div>
+  <div class="switcher">
+    <button class="active employee" data-persona="employee">员工端</button>
+    <button class="hr" data-persona="hr">企业管理端</button>
+  </div>
+  <div class="subnav" id="subnav"></div>
+</div>
+
+<main>
+
+  <!-- 封面 -->
+  <section class="view active" data-view="cover">
+    <div class="cover">
+      <div>
+        <div class="eyebrow">2026 企业疗愈力与EAP创新挑战赛 · 复赛原型</div>
+        <h1>AI负责广度，<br><em>疗愈轨道</em>负责深度。</h1>
+        <p class="lead">员工要么不敢求助，要么求助后只得到治标不治本的话术。MindBridge 用「AI预警与推荐 + 疗愈师深度陪伴」双轨模型，让技术的高效覆盖与疗愈的深度转化在一个系统里共生——AI不替代疗愈，而是让疗愈在关键时刻可及。</p>
+        <div class="track-row">
+          <div class="track-card ai">
+            <div class="k">AI 轨道</div>
+            <div class="v">倾听者 · 匹配师</div>
+            <div class="d">四种轻量识别方式感知情绪、主动预警、个性化推荐疗愈资源</div>
+          </div>
+          <div class="track-card heal">
+            <div class="k">疗愈轨道</div>
+            <div class="v">转化师 · 陪伴者</div>
+            <div class="d">能量疗愈、情绪疏导、深层转化与长期成长，由持证疗愈师完成</div>
+          </div>
+        </div>
+      </div>
+      <div class="cover-visual"><div class="orb"></div></div>
+    </div>
+  </section>
+
+  <!-- 员工端：AI树洞 -->
+  <section class="view" data-view="treehole">
+    <div class="section-title">
+      <h2>AI树洞</h2>
+      <span class="tag">员工视角 · 小王的第 1–3 天</span>
+    </div>
+    <div class="treehole-grid">
+      <div class="chat-panel">
+        <div class="chat-head">
+          <div class="av"></div>
+          <div>
+            <div class="ti">AI树洞 · 24小时懂你的倾听者</div>
+            <div class="sub">完全匿名 · AI不做诊断，只做倾听与转介</div>
+          </div>
+        </div>
+        <div class="chat-body">
+          <div class="msg user">项目赶不上了，又要通宵，好焦虑</div>
+          <div class="msg ai">听起来你最近真的很辛苦，deadline 压过来的时候，焦虑是很正常的反应。愿意多说一点吗？
+            <div class="level green"><span class="dot"></span>绿色关注 · 已推送「三分钟呼吸着陆法」</div>
+          </div>
+          <div class="msg user">还是没赶上，觉得自己好没用</div>
+          <div class="msg ai">你已经很努力了——没赶上进度不等于你不够好。这种感觉持续好几天了吧？
+            <div class="level yellow"><span class="dot"></span>黄色预警 · 累计焦虑信号 3 次，已提醒HR关注团队整体状态</div>
+          </div>
+          <div class="rec-card">
+            <div class="ico">✺</div>
+            <div>
+              <div class="rt">「情绪红绿灯」正念工作坊</div>
+              <div class="rd">90分钟 · 团体工作坊 · 缓解赶工焦虑</div>
+            </div>
+            <button>查看详情</button>
+          </div>
+        </div>
+        <div class="chat-input">
+          <input placeholder="在这里说出你的心里话……（示意，未连接真实输入）" disabled>
+          <button>发送</button>
+        </div>
+        <div class="ethic-strip">⚠ 所有预警需疗愈师 / HR 人工复核后，才会触发真实介入 — AI 不自动定性任何员工</div>
+      </div>
+
+      <div class="side-col">
+        <div class="info-card">
+          <h3>预警等级说明</h3>
+          <div class="legend-row"><span class="legend-dot" style="background:var(--moss)"></span>绿色 — 自动推送自助资源</div>
+          <div class="legend-row"><span class="legend-dot" style="background:var(--amber)"></span>黄色 — 推送资源 + 提醒HR关注</div>
+          <div class="legend-row"><span class="legend-dot" style="background:var(--brick)"></span>红色 — 立即转接专业咨询师</div>
+        </div>
+        <div class="info-card">
+          <h3>本次识别方式</h3>
+          <div class="legend-row">方式二 · AI树洞（匿名倾诉）</div>
+          <div class="legend-row">适配：互联网/IT 行业 · 24小时可用，匹配加班文化</div>
+        </div>
+        <div class="info-card">
+          <h3>入口</h3>
+          <div class="legend-row" style="cursor:default">🩺 1分钟心灵体检</div>
+          <div class="legend-row" style="cursor:default">📈 我的成长报告</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 员工端：成长报告 -->
+  <section class="view" data-view="growth">
+    <div class="section-title">
+      <h2>我的成长报告</h2>
+      <span class="tag">员工视角 · 第 30 天</span>
+    </div>
+    <div class="growth-grid">
+      <div class="panel">
+        <h3>情绪温度曲线（近30天）</h3>
+        <canvas id="growthChart" height="150"></canvas>
+      </div>
+      <div>
+        <div class="summary-quote">
+          "您在过去30天中，情绪温度从 <b>4.2</b> 提升至 <b>6.8</b>，共参加 2 次疗愈活动，焦虑信号从每周 5 次降至每周 1 次。建议继续参加叙事疗愈小组第 2–4 周课程。"
+          <div style="font-size:11.5px;margin-top:10px;color:var(--ink-soft)">— AI 自动生成阶段性总结</div>
+        </div>
+        <div class="timeline">
+          <div class="tl-item"><span class="tl-dot"></span><span class="tl-day">D5</span><div class="tl-text"><b>参加「情绪红绿灯」工作坊</b><span>情绪温度 4.2 → 6.5</span></div></div>
+          <div class="tl-item"><span class="tl-dot"></span><span class="tl-day">D14</span><div class="tl-text"><b>首次叙事疗愈小组</b><span>分享职业迷茫，获得组员支持</span></div></div>
+          <div class="tl-item"><span class="tl-dot"></span><span class="tl-day">D30</span><div class="tl-text"><b>AI 随访生成成长报告</b><span>焦虑信号降至每周 1 次</span></div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 员工端：心灵体检 -->
+  <section class="view" data-view="scan">
+    <div class="section-title">
+      <h2>1分钟心灵体检</h2>
+      <span class="tag">员工视角 · 演示模拟</span>
+    </div>
+    <div class="panel">
+      <div class="scan-wrap">
+        <div>
+          <div class="scan-ring"><div class="scan-inner"><div class="n">78%</div><div class="l">扫描完成度</div></div></div>
+          <div style="text-align:center"><span class="sim-note">⚠ 演示模拟数据，非真实摄像头采集 — AI只读数，不诊断</span></div>
+        </div>
+        <div>
+          <canvas id="radarChart" height="240"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HR 仪表盘 -->
+  <section class="view" data-view="dashboard">
+    <div class="section-title">
+      <h2>情绪仪表盘</h2>
+      <span class="tag">企业管理端 · EAP专员视角</span>
+    </div>
+
+    <div class="tiles">
+      <div class="tile"><div class="k">本周倾诉人次</div><div class="v">1,284</div><div class="d">↑ 12% 环比上周</div></div>
+      <div class="tile"><div class="k">绿色预警</div><div class="v">96</div><div class="d">自动推送资源，无需介入</div></div>
+      <div class="tile"><div class="k">黄色预警</div><div class="v warn">18</div><div class="d">待疗愈师复核</div></div>
+      <div class="tile"><div class="k">团队情绪温度</div><div class="v">6.4<span style="font-size:15px">/10</span></div><div class="d">较上月 +0.9</div></div>
+    </div>
+
+    <div class="hr-grid">
+      <div class="panel">
+        <h3>团队情绪趋势（近30天）</h3>
+        <canvas id="trendChart" height="130"></canvas>
+      </div>
+      <div class="panel">
+        <h3>待复核预警队列（已脱敏）</h3>
+        <table class="alerts">
+          <tr><th>团队</th><th>信号</th><th>等级</th><th>状态</th></tr>
+          <tr><td>研发部 · 某小组</td><td>焦虑信号 +40%</td><td><span class="pill yellow">黄色</span></td><td><span class="pill status">待复核</span></td></tr>
+          <tr><td>客服中心 · 某小组</td><td>情绪劳动疲劳</td><td><span class="pill yellow">黄色</span></td><td><span class="pill status">已联系</span></td></tr>
+          <tr><td>产线三部 · 某小组</td><td>躯体紧张信号</td><td><span class="pill red">红色</span></td><td><span class="pill status">疗愈中</span></td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="hr-grid">
+      <div class="panel">
+        <h3>行业定制推荐面板</h3>
+        <div class="industry-tabs">
+          <span class="on">互联网/IT</span><span>金融/银行</span><span>医护/护理</span><span>教育</span><span>客服/服务业</span><span>制造业</span>
+        </div>
+        <div class="match-row"><span class="lab">核心痛点</span><span>怕被替代、怕赶不上（65.4%将"线上秒回"列为第二大负担）</span></div>
+        <div class="match-row"><span class="lab">识别方式</span><span>方式二「AI树洞」— 匿名文字表达，匹配加班文化</span></div>
+        <div class="match-row"><span class="lab">推荐活动</span><span>「情绪红绿灯」正念工作坊 → 「身份重塑叙事疗愈」深度小组</span></div>
+      </div>
+      <div class="panel">
+        <h3>疗愈师复核看板</h3>
+        <div class="kanban">
+          <div class="kcol"><h4>待复核 (3)</h4>
+            <div class="kcard"><b>研发部·小组A</b>黄色 · 焦虑信号</div>
+            <div class="kcard"><b>产线三部</b>红色 · 需优先介入</div>
+          </div>
+          <div class="kcol"><h4>已联系 (2)</h4>
+            <div class="kcard"><b>客服中心</b>已电话确认</div>
+          </div>
+          <div class="kcol"><h4>疗愈中 (4)</h4>
+            <div class="kcard"><b>教师团队</b>奥尔夫音乐疗愈</div>
+          </div>
+          <div class="kcol"><h4>已完成 (12)</h4>
+            <div class="kcard"><b>研发部·小组B</b>情绪温度 +2.3</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>MindBridge AI · 疗愈轨道 — 视觉设计稿 v0.1　|　仅用于内部确认设计方向，最终功能演示将另行开发</footer>
+
+<script>
+  const personas = {
+    employee: ['treehole','growth','scan'],
+    hr: ['dashboard']
+  };
+  const subnavLabels = {
+    treehole:'AI树洞', growth:'我的成长报告', scan:'1分钟心灵体检', dashboard:'情绪仪表盘'
+  };
+  const subnavEl = document.getElementById('subnav');
+  const views = document.querySelectorAll('.view');
+  let currentPersona = 'employee';
+
+  function renderSubnav(persona, activeView){
+    subnavEl.innerHTML = '';
+    personas[persona].forEach(v=>{
+      const b = document.createElement('button');
+      b.textContent = subnavLabels[v];
+      b.className = v===activeView ? 'active' : '';
+      b.onclick = ()=> showView(v);
+      subnavEl.appendChild(b);
+    });
+  }
+
+  function showView(view){
+    views.forEach(v=> v.classList.toggle('active', v.dataset.view===view));
+    if(personas.employee.includes(view) || personas.hr.includes(view)){
+      renderSubnav(currentPersona, view);
+    }
+    requestAnimationFrame(()=>{
+      if(window.Chart && Chart.instances){
+        Object.values(Chart.instances).forEach(inst=> inst.resize());
+      }
+    });
+  }
+
+  document.querySelectorAll('.switcher button').forEach(btn=>{
+    btn.onclick = ()=>{
+      document.querySelectorAll('.switcher button').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      currentPersona = btn.dataset.persona;
+      const firstView = personas[currentPersona][0];
+      showView(firstView);
+    };
+  });
+
+  // 初始：封面页，不显示 subnav
+  showView('cover');
+  subnavEl.innerHTML = '';
+
+  // 封面页不属于任何 persona 的 subnav，点击顶部切换器进入对应端
+  document.querySelectorAll('.switcher button').forEach(btn=>{
+    const orig = btn.onclick;
+  });
+
+  const CH = { pine:'#4B6355', clay:'#C77B4D', amber:'#D9A441', ink:'#2B2B26', grid:'rgba(43,43,38,0.08)' };
+  Chart.defaults.font.family = "'Noto Sans SC', sans-serif";
+  Chart.defaults.color = '#5B564C';
+
+  new Chart(document.getElementById('growthChart'), {
+    type:'line',
+    data:{
+      labels:['D1','D5','D10','D14','D18','D22','D26','D30'],
+      datasets:[{
+        label:'情绪温度',
+        data:[4.2,4.5,5.6,5.9,6.1,6.3,6.5,6.8],
+        borderColor:CH.clay, backgroundColor:'rgba(199,123,77,0.15)',
+        fill:true, tension:.4, pointRadius:4, pointBackgroundColor:CH.clay
+      }]
+    },
+    options:{
+      plugins:{legend:{display:false}},
+      scales:{ y:{min:0,max:10, grid:{color:CH.grid}}, x:{grid:{display:false}} }
+    }
+  });
+
+  new Chart(document.getElementById('trendChart'), {
+    type:'line',
+    data:{
+      labels:['W1','W2','W3','W4'],
+      datasets:[
+        {label:'团队情绪温度', data:[5.5,5.8,6.0,6.4], borderColor:CH.pine, backgroundColor:'rgba(75,99,85,0.12)', fill:true, tension:.4},
+        {label:'黄色预警数', data:[26,22,20,18], borderColor:CH.amber, backgroundColor:'rgba(217,164,65,0.1)', fill:true, tension:.4}
+      ]
+    },
+    options:{
+      plugins:{legend:{position:'bottom', labels:{boxWidth:10,font:{size:11}}}},
+      scales:{ y:{grid:{color:CH.grid}}, x:{grid:{display:false}} }
+    }
+  });
+
+  new Chart(document.getElementById('radarChart'), {
+    type:'radar',
+    data:{
+      labels:['压力指数','疲惫度','情绪稳定性','专注力','放松度'],
+      datasets:[{
+        label:'本次体检', data:[72,65,58,70,45],
+        fill:true, borderWidth:2.5,
+        borderColor:CH.clay, backgroundColor:'rgba(199,123,77,0.35)',
+        pointBackgroundColor:CH.clay, pointBorderColor:'#fff', pointRadius:4, pointHoverRadius:5
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:true,
+      plugins:{legend:{display:false}},
+      scales:{ r:{ suggestedMin:0, suggestedMax:100, grid:{color:CH.grid}, angleLines:{color:CH.grid}, pointLabels:{font:{size:11.5}}, ticks:{display:false} } }
+    }
+  });
+</script>
+
+</body>
+</html>

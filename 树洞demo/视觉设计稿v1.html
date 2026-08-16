@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MindBridge AI · 界面设计稿 v1</title>
+<style>
+/* ============ BOARD ============ */
+:root{
+  --board:#131518; --board-2:#1a1d21; --board-line:#282c32;
+  --board-txt:#e6e8ea; --board-mut:#8d949c; --board-mut2:#5f666e;
+  --pin:#e8a54a;
+  --sans:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",-apple-system,sans-serif;
+  --serif:"Songti SC","STSong","Noto Serif SC",serif;
+  --mono:"SF Mono",Menlo,Consolas,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--board);color:var(--board-txt);font-family:var(--sans);
+  background-image:radial-gradient(circle at 1px 1px, rgba(255,255,255,.035) 1px, transparent 0);
+  background-size:28px 28px;padding:44px 32px 100px}
+.wrap{max-width:1500px;margin:0 auto}
+
+.bhead{margin-bottom:16px}
+.bhead h1{font-size:25px;font-weight:650;letter-spacing:.01em}
+.bhead .sub{color:var(--board-mut);font-size:13.5px;margin-top:8px;line-height:1.75;max-width:860px}
+.bhead .sub b{color:var(--pin);font-weight:600}
+
+.legend{display:flex;gap:10px;flex-wrap:wrap;margin:22px 0 40px}
+.lg{display:flex;align-items:center;gap:10px;background:var(--board-2);border:1px solid var(--board-line);
+  border-radius:9px;padding:10px 14px;font-size:12px;color:var(--board-mut)}
+.lg .sw{width:26px;height:26px;border-radius:6px;flex:none;border:1px solid rgba(255,255,255,.1)}
+.lg b{color:var(--board-txt);font-weight:600;display:block;font-size:12.5px;margin-bottom:2px}
+
+.sec{margin:0 0 22px}
+.sec-t{display:flex;align-items:baseline;gap:12px;margin:52px 0 22px;padding-bottom:12px;border-bottom:1px solid var(--board-line)}
+.sec-t .n{font-family:var(--mono);font-size:11px;color:var(--pin);letter-spacing:.1em}
+.sec-t h2{font-size:17px;font-weight:650}
+.sec-t .d{font-size:12.5px;color:var(--board-mut);margin-left:auto}
+
+.row{display:flex;gap:34px;flex-wrap:wrap;align-items:flex-start}
+.unit{display:flex;flex-direction:column;gap:12px}
+.cap{font-size:12.5px;color:var(--board-mut);display:flex;align-items:center;gap:8px}
+.cap b{color:var(--board-txt);font-weight:600;font-size:13px}
+.cap .chip{font-family:var(--mono);font-size:9.5px;padding:2px 7px;border-radius:4px;
+  background:rgba(232,165,74,.13);color:var(--pin);border:1px solid rgba(232,165,74,.25)}
+
+/* annotation */
+.note{max-width:340px;font-size:11.5px;line-height:1.72;color:var(--board-mut);
+  border-left:2px solid var(--pin);padding:3px 0 3px 12px;margin-top:4px}
+.note b{color:#f0c98a;font-weight:600}
+.note.wide{max-width:520px}
+
+/* ============ DEVICE FRAMES ============ */
+.phone{width:342px;height:712px;border-radius:34px;border:1px solid #2f343b;background:#000;
+  padding:9px;box-shadow:0 24px 60px rgba(0,0,0,.55);flex:none}
+.phone .screen{width:100%;height:100%;border-radius:27px;overflow:hidden;position:relative;display:flex;flex-direction:column}
+.notch{height:26px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 18px;
+  font-size:10.5px;font-family:var(--mono);letter-spacing:.02em}
+
+.pc{border-radius:11px;border:1px solid #2f343b;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.55);flex:none}
+.pcbar{height:34px;background:#22262b;display:flex;align-items:center;gap:8px;padding:0 13px;border-bottom:1px solid #2f343b}
+.pcbar .d{width:9px;height:9px;border-radius:50%;background:#3d434a}
+.pcbar .url{margin-left:14px;flex:1;background:#171a1e;border-radius:5px;height:20px;display:flex;align-items:center;
+  padding:0 10px;font-size:10px;color:#6f767e;font-family:var(--mono)}
+
+/* ================================================================
+   SKIN A — 员工侧：暖、暗、慢（现有调性降 30%）
+   ================================================================ */
+.skA{--bg:#0d1a17;--bg2:#122320;--panel:rgba(22,44,38,.6);--line:rgba(127,201,143,.13);
+  --cream:#f2ebe0;--mut:#93a89d;--mut2:#6c827a;--candle:#eeb96c;--green:#7fc98f;--coral:#e88b78;
+  background:linear-gradient(170deg,#0d1a17,#0b1613);color:var(--cream);font-size:13px}
+.skA .notch{color:var(--mut2);background:transparent}
+
+/* 企业IM外壳 */
+.imbar{flex:none;background:rgba(8,17,14,.6);border-bottom:1px solid var(--line);padding:9px 14px 0}
+.imbar .wm{font-size:10px;color:var(--mut2);letter-spacing:.04em;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.imtabs{display:flex;gap:20px;font-size:12.5px}
+.imtabs span{padding-bottom:8px;color:#4e5f58}
+.imtabs span.on{color:var(--candle);border-bottom:2px solid var(--candle);font-weight:600}
+
+.anonbar{flex:none;padding:11px 15px;background:rgba(127,201,143,.06);border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:9px}
+.anonbar .id{font-family:var(--mono);font-size:11.5px;color:var(--green);font-weight:600}
+.anonbar .tip{font-size:10px;color:var(--mut2);line-height:1.4}
+
+.segs{flex:none;display:flex;padding:12px 15px 4px;gap:7px}
+.seg{font-size:12.5px;padding:7px 15px;border-radius:100px;color:var(--mut);border:1px solid var(--line)}
+.seg.on{background:linear-gradient(135deg,var(--candle),#e19a4c);color:#0d1a17;font-weight:600;border-color:transparent}
+
+.feed{flex:1;overflow:hidden;padding:12px 15px;display:flex;flex-direction:column;gap:11px}
+.pcard{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:13px 14px}
+.pcard.mine{border-color:rgba(238,185,108,.3);background:rgba(238,185,108,.07)}
+.pmeta{display:flex;align-items:center;gap:7px;font-size:10px;color:var(--mut2);margin-bottom:8px;font-family:var(--mono)}
+.pmeta .dept{font-family:var(--sans);letter-spacing:.02em}
+.pmeta .you{font-family:var(--sans);background:rgba(238,185,108,.18);color:var(--candle);
+  padding:1px 6px;border-radius:4px;font-size:9.5px}
+.ptxt{font-family:var(--serif);font-size:14px;line-height:1.75;color:#f7f0e4}
+.pact{display:flex;align-items:center;gap:14px;margin-top:11px;font-size:11px;color:var(--mut)}
+.pact .hug{display:flex;align-items:center;gap:5px;background:rgba(127,201,143,.1);
+  border:1px solid rgba(127,201,143,.2);padding:4px 10px;border-radius:100px;color:var(--green)}
+.reply{margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:11.5px;color:var(--mut);line-height:1.65}
+.reply .rid{font-family:var(--mono);font-size:9.5px;color:var(--mut2);display:block;margin-bottom:3px}
+.safechk{font-size:9.5px;color:var(--green);margin-top:6px;display:flex;align-items:center;gap:4px}
+
+.composer{flex:none;border-top:1px solid var(--line);padding:11px 15px 15px;background:rgba(8,17,14,.5)}
+.cbox{background:rgba(8,17,14,.6);border:1px solid var(--line);border-radius:12px;padding:11px 13px;
+  font-size:12.5px;color:var(--mut2)}
+
+/* 私密对话 */
+.flame{flex:none;padding:20px 15px 16px;text-align:center;border-bottom:1px solid var(--line)}
+.flame .dot{width:34px;height:34px;margin:0 auto 11px;border-radius:50%;
+  background:radial-gradient(circle,#f6d49a,#eeb96c 42%,rgba(238,185,108,0) 72%);
+  box-shadow:0 0 26px rgba(238,185,108,.4)}
+.flame .t{font-size:12px;color:var(--mut);line-height:1.6}
+.stream{flex:1;padding:16px 15px;display:flex;flex-direction:column;gap:13px;overflow:hidden}
+.msg{max-width:86%}
+.msg .tm{font-size:9.5px;color:var(--mut2);font-family:var(--mono);margin-bottom:4px}
+.msg .bb{padding:11px 14px;border-radius:14px;line-height:1.72;font-size:13.5px}
+.msg.ai .bb{background:rgba(127,201,143,.07);border:1px solid var(--line);border-bottom-left-radius:4px;
+  font-family:var(--serif);font-size:14px}
+.msg.me{align-self:flex-end;text-align:right}
+.msg.me .bb{background:rgba(238,185,108,.14);border:1px solid rgba(238,185,108,.24);
+  border-bottom-right-radius:4px;font-family:var(--serif);color:#faeeda;text-align:left}
+.rescard{background:rgba(238,185,108,.09);border:1px solid rgba(238,185,108,.2);border-radius:13px;
+  padding:12px 13px;display:flex;gap:11px;align-items:center;margin-top:2px}
+.rescard .ic{width:32px;height:32px;border-radius:9px;background:rgba(238,185,108,.15);
+  display:grid;place-items:center;font-size:15px;flex:none}
+.rescard .rn{font-size:12.5px;font-weight:600;color:#faeeda}
+.rescard .rd{font-size:10.5px;color:var(--mut);margin-top:2px}
+.footer-a{flex:none;padding:11px 15px 15px;border-top:1px solid var(--line);display:flex;
+  justify-content:space-between;align-items:center;font-size:11px;color:var(--mut2)}
+
+/* 危机浮层 */
+.invite{background:rgba(232,139,120,.1);border:1px solid rgba(232,139,120,.3);border-radius:14px;
+  padding:14px;margin-top:4px}
+.invite .it{font-family:var(--serif);font-size:13.5px;line-height:1.75;color:#f8d8ce}
+.invite .btns{display:flex;gap:9px;margin-top:12px}
+.invite .b1{flex:1;text-align:center;padding:9px;border-radius:9px;background:var(--coral);
+  color:#2a100b;font-size:12.5px;font-weight:600}
+.invite .b2{flex:1;text-align:center;padding:9px;border-radius:9px;border:1px solid var(--line);
+  color:var(--mut);font-size:12.5px}
+.onlyyou{font-size:9.5px;color:var(--mut2);margin-top:9px;text-align:center;font-style:italic}
+
+.healer-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px;
+  display:flex;gap:12px;align-items:center;margin-top:10px}
+.healer-card .av{width:46px;height:46px;border-radius:50%;flex:none;
+  background:linear-gradient(140deg,#4a6d5f,#2e4a3f);display:grid;place-items:center;font-size:19px;
+  border:1.5px solid rgba(238,185,108,.35)}
+.healer-card .hn{font-size:13.5px;font-weight:600;color:#f7f0e4}
+.healer-card .hq{font-size:10.5px;color:var(--mut);margin-top:3px;font-family:var(--mono)}
+.healer-card .hs{font-size:10.5px;color:var(--green);margin-top:4px}
+
+/* ================================================================
+   SKIN B — 疗愈师：中性、克制、有时间压力
+   ================================================================ */
+.skB{--bg:#191c20;--panel:#21252a;--line:#2e333a;--txt:#e2e6ea;--mut:#8b939c;--mut2:#666e77;
+  --red:#e5674f;--amb:#d99a3c;--grn:#4fa87a;
+  background:var(--bg);color:var(--txt);font-size:12.5px}
+.skB .hd{padding:15px 22px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:13px;background:#1d2126}
+.skB .hd .av{width:34px;height:34px;border-radius:50%;background:linear-gradient(140deg,#3d5a4d,#2a3d34);
+  display:grid;place-items:center;font-size:15px;flex:none}
+.skB .hd .nm{font-size:13.5px;font-weight:600}
+.skB .hd .qz{font-size:10.5px;color:var(--mut);font-family:var(--mono);margin-top:2px}
+.skB .hd .cnt{margin-left:auto;text-align:right}
+.skB .hd .cnt .v{font-size:20px;font-weight:650;font-family:var(--mono);color:var(--red)}
+.skB .hd .cnt .l{font-size:10px;color:var(--mut);margin-top:1px}
+
+.qbar{display:flex;gap:0;border-bottom:1px solid var(--line);background:#1d2126;padding:0 22px}
+.qbar span{padding:11px 0;margin-right:24px;font-size:12px;color:var(--mut);border-bottom:2px solid transparent}
+.qbar span.on{color:var(--txt);border-bottom-color:var(--red);font-weight:600}
+
+.cases{padding:16px 22px;display:flex;flex-direction:column;gap:11px}
+.case{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:14px 16px;
+  border-left:3px solid var(--line);display:grid;grid-template-columns:1fr auto;gap:14px}
+.case.r{border-left-color:var(--red)}
+.case.y{border-left-color:var(--amb)}
+.case.done{border-left-color:var(--grn);opacity:.5}
+.case .cid{font-family:var(--mono);font-size:13px;font-weight:600;display:flex;align-items:center;gap:9px}
+.case .lvl{font-size:9.5px;padding:2px 7px;border-radius:4px;font-family:var(--sans);letter-spacing:.02em}
+.lvl.r{background:rgba(229,103,79,.16);color:var(--red)}
+.lvl.y{background:rgba(217,154,60,.16);color:var(--amb)}
+.lvl.g{background:rgba(79,168,122,.16);color:var(--grn)}
+.case .meta{font-size:10.5px;color:var(--mut2);margin-top:6px;font-family:var(--mono)}
+.tagrow{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.tg{font-size:10.5px;padding:3px 9px;border-radius:5px;background:#2a2f35;color:var(--mut);border:1px solid var(--line)}
+.locked{margin-top:10px;font-size:10.5px;color:var(--mut2);background:#1b1e22;border:1px dashed var(--line);
+  border-radius:6px;padding:8px 11px;display:flex;align-items:center;gap:7px}
+.sla{text-align:right;flex:none}
+.sla .lb{font-size:9.5px;color:var(--mut2);letter-spacing:.08em;margin-bottom:4px}
+.sla .tm{font-family:var(--mono);font-size:21px;font-weight:650;color:var(--red);letter-spacing:-.01em}
+.sla .tm.ok{color:var(--amb)}
+.sla .tm.gr{color:var(--grn);font-size:14px}
+.acts{display:flex;gap:8px;margin-top:13px;padding-top:13px;border-top:1px solid var(--line);grid-column:1/-1}
+.acts .bt{font-size:11.5px;padding:7px 14px;border-radius:6px;border:1px solid var(--line);color:var(--mut)}
+.acts .bt.pri{background:var(--red);border-color:var(--red);color:#fff;font-weight:600}
+.acts .log{margin-left:auto;font-size:10.5px;color:var(--mut2);font-family:var(--mono);align-self:center}
+
+/* ================================================================
+   SKIN C — HRBP：浅色、密集、无装饰
+   ================================================================ */
+.skC{--bg:#f4f6f8;--card:#fff;--line:#e2e6ea;--txt:#1b2026;--mut:#69727c;--mut2:#98a1ab;
+  --brand:#2d6a5a;--red:#c9503a;--amb:#c08424;--grn:#3d8b64;
+  background:var(--bg);color:var(--txt);font-size:12.5px}
+.skC .hd{background:var(--card);border-bottom:1px solid var(--line);padding:13px 24px;display:flex;align-items:center;gap:12px}
+.skC .hd .lg2{width:24px;height:24px;border-radius:6px;background:var(--brand);display:grid;place-items:center;
+  color:#fff;font-size:12px;font-weight:700;flex:none}
+.skC .hd h3{font-size:14px;font-weight:650}
+.skC .hd .who{margin-left:auto;font-size:11.5px;color:var(--mut);display:flex;align-items:center;gap:9px}
+.skC .hd .who .ava{width:24px;height:24px;border-radius:50%;background:#d8dee4;display:grid;place-items:center;font-size:10px;color:#5c666f}
+.navbar{background:var(--card);border-bottom:1px solid var(--line);padding:0 24px;display:flex;gap:26px}
+.navbar span{padding:10px 0;font-size:12.5px;color:var(--mut);border-bottom:2px solid transparent}
+.navbar span.on{color:var(--brand);border-bottom-color:var(--brand);font-weight:600}
+.syncbar{padding:8px 24px;font-size:10.5px;color:var(--mut2);font-family:var(--mono);
+  background:#eef1f4;border-bottom:1px solid var(--line);display:flex;gap:18px}
+
+.body-c{padding:18px 24px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.kp{background:var(--card);border:1px solid var(--line);border-radius:7px;padding:14px 15px}
+.kp .v{font-size:24px;font-weight:650;letter-spacing:-.02em}
+.kp .v small{font-size:12px;color:var(--mut);font-weight:400}
+.kp .l{font-size:11px;color:var(--mut);margin-top:5px}
+.kp .t{font-size:10px;margin-top:5px;color:var(--grn)}
+
+.grid2{display:grid;grid-template-columns:1.25fr 1fr;gap:12px;margin-bottom:12px}
+.cardC{background:var(--card);border:1px solid var(--line);border-radius:7px;padding:16px 17px}
+.cardC h4{font-size:12.5px;font-weight:650;margin-bottom:3px;display:flex;align-items:center;gap:7px}
+.cardC h4 .src{font-size:9.5px;font-weight:500;color:var(--mut2);background:#eef1f4;padding:2px 7px;border-radius:4px;margin-left:auto}
+.cardC .cs{font-size:10.5px;color:var(--mut2);margin-bottom:14px}
+.tbar{display:flex;align-items:center;gap:11px;margin-bottom:10px}
+.tbar .tn{font-size:11.5px;width:82px;color:var(--txt)}
+.tbar .tt{flex:1;height:16px;background:#eef1f4;border-radius:3px;overflow:hidden}
+.tbar .tt i{display:block;height:100%;background:var(--brand);border-radius:3px}
+.tbar .tv{font-size:11px;width:52px;text-align:right;color:var(--mut);font-family:var(--mono)}
+.tbar .tv.up{color:var(--red)}
+
+.donut{display:flex;align-items:center;gap:18px}
+.dl{flex:1}
+.dl .dr{display:flex;align-items:center;gap:9px;margin-bottom:9px;font-size:11.5px}
+.dl .dr .sq{width:9px;height:9px;border-radius:2px;flex:none}
+.dl .dr .dv{margin-left:auto;font-family:var(--mono);color:var(--mut)}
+
+table{width:100%;border-collapse:collapse;font-size:11.5px}
+th{text-align:left;padding:8px 10px;color:var(--mut2);font-weight:500;font-size:10.5px;
+  border-bottom:1px solid var(--line);letter-spacing:.03em}
+td{padding:9px 10px;border-bottom:1px solid #eef1f4}
+td.mono{font-family:var(--mono);color:var(--mut)}
+tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
+.pill{font-size:10px;padding:2px 8px;border-radius:4px;display:inline-block}
+.pill.g{background:#e6f2ec;color:var(--grn)}
+.pill.y{background:#faf1de;color:var(--amb)}
+.pill.r{background:#f9e8e4;color:var(--red)}
+
+.blind{background:#f0f5f2;border:1px solid #d5e5dd;border-radius:7px;padding:15px 17px;margin-top:12px}
+.blind h5{font-size:12px;font-weight:650;color:var(--brand);margin-bottom:9px;display:flex;align-items:center;gap:7px}
+.blind ul{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:6px 20px}
+.blind li{font-size:11.5px;color:var(--mut);display:flex;gap:7px;align-items:flex-start}
+.blind li::before{content:"✕";color:var(--red);font-size:10px;flex:none;margin-top:2px}
+
+/* 配置页 */
+.cfghead{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.cfghead .sel{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:8px 13px;
+  font-size:12px;display:flex;align-items:center;gap:9px}
+.cfghead .sel b{font-weight:600}
+.cfghead .saved{margin-left:auto;font-size:10.5px;color:var(--grn);font-family:var(--mono)}
+
+.ladder{background:var(--card);border:1px solid var(--line);border-radius:7px;padding:17px 18px;margin-bottom:12px}
+.lsig{display:flex;align-items:center;gap:10px;margin-bottom:15px;padding-bottom:13px;border-bottom:1px solid var(--line)}
+.lsig .lt{font-size:12.5px;font-weight:650}
+.lsig .em{font-size:15px}
+.lsig .ct{margin-left:auto;font-size:10.5px;color:var(--mut2)}
+.step{display:grid;grid-template-columns:98px 1fr;gap:14px;align-items:flex-start;margin-bottom:13px}
+.step .sl{font-size:11px;padding-top:7px}
+.step .sl .sn{font-weight:650;display:block;margin-bottom:2px}
+.step .sl .sd{color:var(--mut2);font-size:10px}
+.step .sv{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.chipC{background:#eef4f1;border:1px solid #d9e5df;color:#2d5a4c;font-size:11.5px;padding:6px 11px;
+  border-radius:5px;display:flex;align-items:center;gap:7px}
+.chipC .x{color:var(--mut2);font-size:10px}
+.addc{border:1px dashed var(--line);color:var(--mut2);font-size:11.5px;padding:6px 11px;border-radius:5px}
+.slaBox{background:#f9e8e4;border-color:#eccec6;color:var(--red)}
+
+.thresh{background:var(--card);border:1px solid var(--line);border-radius:7px;padding:17px 18px;margin-bottom:12px}
+.thresh h4{font-size:12.5px;font-weight:650;margin-bottom:14px}
+.trow{display:flex;align-items:center;gap:9px;font-size:12px;margin-bottom:11px;color:var(--txt);flex-wrap:wrap}
+.num{background:#eef1f4;border:1px solid var(--line);border-radius:5px;padding:4px 10px;
+  font-family:var(--mono);font-size:11.5px;display:inline-flex;align-items:center;gap:7px}
+.trow .arw{color:var(--mut2)}
+.trow .out{color:var(--mut);font-size:11.5px}
+
+.guard{background:var(--card);border:1px solid var(--line);border-radius:7px;padding:17px 18px}
+.guard h4{font-size:12.5px;font-weight:650;margin-bottom:5px;display:flex;align-items:center;gap:7px}
+.guard .gs{font-size:10.5px;color:var(--mut2);margin-bottom:14px}
+.radio{display:flex;align-items:flex-start;gap:9px;margin-bottom:10px;font-size:11.5px}
+.radio .rb{width:14px;height:14px;border-radius:50%;border:1.5px solid var(--mut2);flex:none;margin-top:1px}
+.radio.on .rb{border-color:var(--brand);border-width:4.5px}
+.radio.dis{opacity:.45}
+.radio .rt b{font-weight:600;display:block;margin-bottom:2px}
+.radio .rt .rd2{color:var(--mut2);font-size:10.5px}
+
+/* 入口 */
+.gate{background:linear-gradient(165deg,#0f1c19,#0a1512);padding:44px 40px;color:#f2ebe0;
+  display:flex;flex-direction:column;align-items:center}
+.gate .gt{font-size:20px;font-weight:600;letter-spacing:.02em}
+.gate .gs{font-size:12px;color:#93a89d;margin-top:9px;margin-bottom:30px}
+.roles{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;width:100%}
+.role{background:rgba(22,44,38,.6);border:1px solid rgba(127,201,143,.14);border-radius:13px;
+  padding:20px 16px;text-align:center}
+.role.act{border-color:rgba(238,185,108,.45);background:rgba(238,185,108,.09)}
+.role .ri{font-size:26px;margin-bottom:11px}
+.role .rn2{font-size:13.5px;font-weight:600}
+.role .rd3{font-size:11px;color:#93a89d;margin-top:5px}
+.role .rt2{font-size:9.5px;color:#6c827a;margin-top:9px;font-family:var(--mono)}
+.gatefoot{margin-top:26px;display:flex;align-items:center;gap:11px;font-size:11.5px;color:#93a89d}
+.tgl{width:34px;height:19px;border-radius:100px;background:rgba(127,201,143,.16);
+  border:1px solid rgba(127,201,143,.25);position:relative;flex:none}
+.tgl::after{content:"";position:absolute;left:3px;top:2.5px;width:12px;height:12px;border-radius:50%;background:#93a89d}
+
+@media(max-width:900px){.row{gap:24px}.grid2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="bhead">
+    <h1>MindBridge AI · 界面设计稿 v1</h1>
+    <div class="sub">
+      三个角色、四层界面。核心判断：<b>视觉分层不是装饰，是论证</b>——员工侧的温度与企业侧的冷静形成落差，
+      评委切换时能直接感受到"两个世界，被一套系统连起来了"，这正是"双轨"叙事的视觉证明。
+      三套皮肤共享同一组结构 token（间距 4px 基数、字号阶梯、动效曲线），只切换<b>色彩与信息密度</b>，
+      因此读起来是一个产品的三个模块，而不是三个产品。
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="lg"><div class="sw" style="background:linear-gradient(140deg,#0d1a17,#122320)"></div>
+      <div><b>员工侧</b>暖 · 暗 · 慢 · 大留白 · 衬线体承载倾诉</div></div>
+    <div class="lg"><div class="sw" style="background:linear-gradient(140deg,#191c20,#21252a)"></div>
+      <div><b>疗愈师</b>中性 · 克制 · 时间压力（SLA）· 等宽数字</div></div>
+    <div class="lg"><div class="sw" style="background:linear-gradient(140deg,#f4f6f8,#fff);border-color:#ccc"></div>
+      <div><b>HRBP</b>浅色 · 密集 · 无装饰 · 真实 HR SaaS</div></div>
+  </div>
+
+  <!-- ============ 0. 入口 ============ -->
+  <div class="sec-t"><span class="n">00</span><h2>入口 · 身份选择</h2>
+    <span class="d">不做密码框——真实感来自登进去之后界面完全不同</span></div>
+  <div class="row">
+    <div class="unit">
+      <div class="cap"><b>选择身份</b><span class="chip">GATE</span></div>
+      <div class="pc" style="width:760px">
+        <div class="pcbar"><div class="d"></div><div class="d"></div><div class="d"></div>
+          <div class="url">mindbridge-demo.html</div></div>
+        <div class="gate">
+          <div class="gt">你是谁？</div>
+          <div class="gs">点击任一身份进入 · 无需密码 · 可另开窗口同时登录不同身份</div>
+          <div class="roles">
+            <div class="role act"><div class="ri">👤</div><div class="rn2">员工 001</div>
+              <div class="rd3">研发中心</div><div class="rt2">→ 访客 7F3A</div></div>
+            <div class="role"><div class="ri">👤</div><div class="rn2">员工 002</div>
+              <div class="rd3">客服中心</div><div class="rt2">→ 访客 A91C</div></div>
+            <div class="role"><div class="ri">📊</div><div class="rn2">HRBP</div>
+              <div class="rd3">张敏 · 人力资源部</div><div class="rt2">组织看板 + 配置</div></div>
+            <div class="role"><div class="ri">🌿</div><div class="rn2">持证疗愈师</div>
+              <div class="rd3">李静 · UNIHEAL</div><div class="rt2">个案工作台</div></div>
+          </div>
+          <div class="gatefoot"><div class="tgl"></div>演示模式（对评委显示 AI 读数解说层，员工本人不可见）</div>
+        </div>
+      </div>
+      <div class="note wide">
+        每个员工身份下方显示<b>系统内匿名 ID</b>。同一 ID 在广场署名、在疗愈师队列里出现、
+        但在 HRBP 侧<b>永远不出现</b>——三端 ID 一致、可见范围不同，隐私边界靠界面演出来，不靠文字解释。
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 1. 员工侧 ============ -->
+  <div class="sec-t"><span class="n">01</span><h2>员工侧 · 手机</h2>
+    <span class="d">Step 1 匿名广场 → Step 2 私密对话 · 阶梯式照护的前两级</span></div>
+  <div class="row">
+
+    <!-- 广场 -->
+    <div class="unit">
+      <div class="cap"><b>匿名共鸣墙</b><span class="chip">STEP 1</span></div>
+      <div class="phone"><div class="screen skA">
+        <div class="notch"><span>9:41</span><span>●●● ⌁ ▮</span></div>
+        <div class="imbar">
+          <div class="wm">▸ 企业微信</div>
+          <div class="imtabs"><span>工作台</span><span>消息</span><span class="on">心理关爱</span><span>我的</span></div>
+        </div>
+        <div class="anonbar">
+          <span style="font-size:14px">🔒</span>
+          <div><div class="id">访客 7F3A</div>
+            <div class="tip">这是你在系统中的全部身份 · 连我们也不知道这是谁</div></div>
+        </div>
+        <div class="segs"><div class="seg on">共鸣墙</div><div class="seg">说说话</div><div class="seg">我的资源</div></div>
+        <div class="feed">
+          <div class="pcard">
+            <div class="pmeta">访客 3B2E<span class="dept">· 研发中心</span><span>· 2小时前</span></div>
+            <div class="ptxt">又是凌晨两点。看着屏幕，觉得自己像台还没坏的机器。</div>
+            <div class="pact"><span class="hug">🫂 我也是 · 12</span><span>3 条回应</span></div>
+            <div class="reply"><span class="rid">访客 5C7D 回应</span>那句"还没坏"看得我鼻子一酸。今晚早点睡吧。
+              <div class="safechk">✓ 回应经善意检测</div></div>
+          </div>
+          <div class="pcard mine">
+            <div class="pmeta">访客 7F3A<span class="you">你</span><span class="dept">· 研发中心</span><span>· 昨天</span></div>
+            <div class="ptxt">项目又延期了。不敢跟组里说我其实撑得很勉强。</div>
+            <div class="pact"><span class="hug">🫂 我也是 · 7</span><span>1 条回应</span></div>
+          </div>
+          <div class="pcard">
+            <div class="pmeta">访客 A91C<span class="dept">· 客服中心</span><span>· 昨天</span></div>
+            <div class="ptxt">被骂了四十分钟，最后还要说"很抱歉给您带来不便"。</div>
+            <div class="pact"><span class="hug">🫂 我也是 · 28</span><span>9 条回应</span></div>
+          </div>
+        </div>
+        <div class="composer"><div class="cbox">写点什么…只有你的匿名 ID 会被看到</div></div>
+      </div></div>
+      <div class="note">
+        <b>不做自由评论区</b>，只有「我也是」+ 经善意检测的支持性回应。
+        「我也是」的计数就是团体治疗里的<b>普遍性（universality）</b>——"原来不止我一个"，
+        这是 1 对 1 私密通道给不了的疗效因子。
+      </div>
+    </div>
+
+    <!-- 私密对话 -->
+    <div class="unit">
+      <div class="cap"><b>私密 1 对 1</b><span class="chip">STEP 2</span></div>
+      <div class="phone"><div class="screen skA">
+        <div class="notch"><span>9:41</span><span>●●● ⌁ ▮</span></div>
+        <div class="imbar">
+          <div class="wm">▸ 企业微信</div>
+          <div class="imtabs"><span>工作台</span><span>消息</span><span class="on">心理关爱</span><span>我的</span></div>
+        </div>
+        <div class="flame">
+          <div class="dot"></div>
+          <div class="t">只有你和我。<br>不记录身份，随时可以清空。</div>
+        </div>
+        <div class="stream">
+          <div class="msg ai"><div class="tm">14:28</div>
+            <div class="bb">我在这儿。今天有什么压在心里的话，都可以说给我听。</div></div>
+          <div class="msg me"><div class="tm">14:31</div>
+            <div class="bb">项目赶不上了，又要通宵。真怕这次做不完会被裁。</div></div>
+          <div class="msg ai"><div class="tm">14:31</div>
+            <div class="bb">听起来你被一种"来不及"的紧迫感压着，很紧、很累对吗？这里很安全，愿意再多说一点吗？</div></div>
+          <div class="msg ai" style="max-width:92%"><div class="tm">14:32</div>
+            <div class="rescard"><div class="ic">🌬️</div>
+              <div><div class="rn">三分钟呼吸着陆法</div><div class="rd">要不要现在试试？就三分钟</div></div></div></div>
+        </div>
+        <div class="footer-a"><span>🗑 清空我的记录</span><span style="font-family:var(--mono)">会话 7F3A · 未留存</span></div>
+      </div></div>
+      <div class="note">
+        <b>员工侧不出现任何预警等级、情绪标签、"已通知 HRBP"</b>。资源以"要不要试试"的自然口吻递出，
+        不是弹窗告警。原方案里那块实时读数面板已移入<b>演示模式浮层</b>——评委看得见，员工看不见。
+        AI 只有一簇烛光，<b>没有拟人形象</b>：避免依恋，也避免转接真人时的被抛弃感。
+      </div>
+    </div>
+
+    <!-- 危机 -->
+    <div class="unit">
+      <div class="cap"><b>危机时刻 · 知情同意转接</b><span class="chip">KEY</span></div>
+      <div class="phone"><div class="screen skA">
+        <div class="notch"><span>9:41</span><span>●●● ⌁ ▮</span></div>
+        <div class="imbar">
+          <div class="wm">▸ 企业微信</div>
+          <div class="imtabs"><span>工作台</span><span>消息</span><span class="on">心理关爱</span><span>我的</span></div>
+        </div>
+        <div class="stream" style="flex:1">
+          <div class="msg me"><div class="tm">23:14</div>
+            <div class="bb">我真的撑不下去了，觉得活着没有意义。</div></div>
+          <div class="msg ai" style="max-width:94%"><div class="tm">23:14</div>
+            <div class="bb">我很心疼你现在承受的这些。这些感受很重要，也值得被专业的人好好接住。</div></div>
+          <div class="invite">
+            <div class="it">我可以帮你联系一位真人疗愈师吗？<br>她是真实的人，会在两小时内联系你。</div>
+            <div class="btns"><div class="b1">好，帮我联系</div><div class="b2">我再想想</div></div>
+            <div class="onlyyou">你不点"好"，不会有任何人被通知</div>
+          </div>
+          <div class="healer-card">
+            <div class="av">🌿</div>
+            <div><div class="hn">李静</div>
+              <div class="hq">UNIHEAL 国际疗愈师 · UH-2024-0871</div>
+              <div class="hs">擅长：职业焦虑 · 存在性议题 · 正念减压</div></div>
+          </div>
+        </div>
+      </div></div>
+      <div class="note">
+        整个方案的<b>伦理落点</b>：升级的决定权在员工手里。不点"好"，没有任何人被通知。<br><br>
+        注意这一屏的对照——<b>AI 是一簇光，疗愈师有脸、有姓名、有执业编号</b>。
+        "AI 是工具，人才是治疗者"这句话，界面替你们说了，一个字都不用写。
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 2. 疗愈师 ============ -->
+  <div class="sec-t"><span class="n">02</span><h2>疗愈师 · 个案工作台</h2>
+    <span class="d">Step 3 专业干预 · "人工复核"从流程图变成可点击的操作</span></div>
+  <div class="row">
+    <div class="unit">
+      <div class="cap"><b>个案队列</b><span class="chip">STEP 3</span></div>
+      <div class="pc" style="width:900px">
+        <div class="pcbar"><div class="d"></div><div class="d"></div><div class="d"></div>
+          <div class="url">mindbridge.internal / healer / cases</div></div>
+        <div class="skB">
+          <div class="hd">
+            <div class="av">🌿</div>
+            <div><div class="nm">李静</div><div class="qz">UNIHEAL 国际疗愈师 · UH-2024-0871</div></div>
+            <div class="cnt"><div class="v">1</div><div class="l">待响应个案</div></div>
+          </div>
+          <div class="qbar"><span class="on">待响应 1</span><span>处理中 2</span><span>已闭环 14</span><span>全部</span></div>
+          <div class="cases">
+            <div class="case r">
+              <div>
+                <div class="cid">访客 7F3A <span class="lvl r">红色 · 危机信号</span></div>
+                <div class="meta">研发中心 · 触发 23:14 · 员工已授权转接</div>
+                <div class="tagrow">
+                  <span class="tg">存在性议题</span><span class="tg">职业身份焦虑</span>
+                  <span class="tg">持续失眠 · 7天</span><span class="tg">情绪温度 2.1/10</span>
+                </div>
+                <div class="locked">🔒 倾诉原文默认不可见 · 需员工二次授权后方可查看</div>
+              </div>
+              <div class="sla"><div class="lb">SLA 剩余</div><div class="tm">01:47:23</div></div>
+              <div class="acts">
+                <span class="bt pri">开始联系</span><span class="bt">申请查看原文</span>
+                <span class="bt">转介外部机构</span><span class="log">处置记录将写入审计日志</span>
+              </div>
+            </div>
+            <div class="case y">
+              <div>
+                <div class="cid">访客 A91C <span class="lvl y">黄色 · 信号累积</span></div>
+                <div class="meta">客服中心 · 7天内倾诉 6 次 · 系统自动升级</div>
+                <div class="tagrow"><span class="tg">情绪劳动耗竭</span><span class="tg">机械重复感</span></div>
+              </div>
+              <div class="sla"><div class="lb">SLA 剩余</div><div class="tm ok">05:12:40</div></div>
+            </div>
+            <div class="case done">
+              <div>
+                <div class="cid">访客 2D80 <span class="lvl g">已闭环</span></div>
+                <div class="meta">制造中心 · 昨日 16:20 完成电话确认 · 已安排沙盘疗愈</div>
+              </div>
+              <div class="sla"><div class="lb">响应用时</div><div class="tm gr">38 分钟</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="note wide">
+        三个决定专业感的细节：<b>①</b> 队列里只有匿名 ID，没有姓名工号；
+        <b>②</b> 原文默认锁着，标注"需员工二次授权"——这一条放出来，评审对隐私的疑虑基本就消了；
+        <b>③</b> SLA 实时走秒 + 处置写入审计日志，让"2 小时内响应"从承诺变成可追溯的机制。
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 3. HRBP 看板 ============ -->
+  <div class="sec-t"><span class="n">03</span><h2>HRBP · 组织看板</h2>
+    <span class="d">两层数据回答两个问题：公司出什么事了 / 人怎么样了</span></div>
+  <div class="row">
+    <div class="unit">
+      <div class="cap"><b>组织洞察</b><span class="chip">DASHBOARD</span></div>
+      <div class="pc" style="width:980px">
+        <div class="pcbar"><div class="d"></div><div class="d"></div><div class="d"></div>
+          <div class="url">mindbridge.internal / hr / dashboard</div></div>
+        <div class="skC">
+          <div class="hd"><div class="lg2">M</div><h3>MindBridge · 员工关爱后台</h3>
+            <div class="who"><div class="ava">张</div>张敏 · HRBP</div></div>
+          <div class="navbar"><span class="on">组织看板</span><span>干预阶梯配置</span><span>活动排期</span><span>报表导出</span></div>
+          <div class="syncbar"><span>数据截至 今日 14:30</span><span>下次同步 15:00</span><span>统计口径：团队级聚合 · 最小样本 5 人</span></div>
+          <div class="body-c">
+            <div class="kpis">
+              <div class="kp"><div class="v">42<small>%</small></div><div class="l">员工覆盖率</div><div class="t">↑ 较上月 +6pt</div></div>
+              <div class="kp"><div class="v">6.4<small>/10</small></div><div class="l">全员情绪温度</div><div class="t">↑ +0.8</div></div>
+              <div class="kp"><div class="v">92<small>%</small></div><div class="l">绿色 · 日常占比</div><div class="t" style="color:var(--mut)">多为轻量情绪</div></div>
+              <div class="kp"><div class="v">100<small>%</small></div><div class="l">红色个案疗愈师接管率</div><div class="t">零漏接</div></div>
+            </div>
+            <div class="grid2">
+              <div class="cardC">
+                <h4>组织议题热度 · 本周<span class="src">来源：匿名共鸣墙</span></h4>
+                <div class="cs">员工在广场上主动谈论什么 —— 回答"公司出什么事了"</div>
+                <div class="tbar"><span class="tn">加班强度</span><div class="tt"><i style="width:86%"></i></div><span class="tv up">↑ 38%</span></div>
+                <div class="tbar"><span class="tn">晋升与调薪</span><div class="tt"><i style="width:61%"></i></div><span class="tv up">↑ 12%</span></div>
+                <div class="tbar"><span class="tn">跨部门协作</span><div class="tt"><i style="width:44%"></i></div><span class="tv">— 持平</span></div>
+                <div class="tbar"><span class="tn">客户情绪</span><div class="tt"><i style="width:37%"></i></div><span class="tv">↓ 5%</span></div>
+                <div class="tbar"><span class="tn">工作意义感</span><div class="tt"><i style="width:23%"></i></div><span class="tv">↓ 9%</span></div>
+              </div>
+              <div class="cardC">
+                <h4>情绪分布 · 本周<span class="src">来源：私密通道</span></h4>
+                <div class="cs">聚合后的风险等级 —— 回答"人怎么样了"</div>
+                <div class="donut"><div class="dl">
+                  <div class="dr"><span class="sq" style="background:#3d8b64"></span>绿色 · 日常<span class="dv">92%</span></div>
+                  <div class="dr"><span class="sq" style="background:#c08424"></span>黄色 · 需关注<span class="dv">7%</span></div>
+                  <div class="dr"><span class="sq" style="background:#c9503a"></span>红色 · 已转疗愈师<span class="dv">1%</span></div>
+                </div></div>
+                <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--line);font-size:11px;color:var(--mut)">
+                  红色个案共 <b>2</b> 例，均已由持证疗愈师接管。<br>
+                  <span style="color:var(--mut2)">你无权查看个案详情。</span>
+                </div>
+              </div>
+            </div>
+            <div class="cardC">
+              <h4>部门概览</h4>
+              <div class="cs">仅显示有效样本 ≥5 人的部门</div>
+              <table>
+                <tr><th>部门</th><th>人数</th><th>参与率</th><th>情绪温度</th><th>主导议题</th><th>状态</th></tr>
+                <tr><td>研发中心</td><td class="mono">128</td><td class="mono">51%</td><td class="mono">5.8</td><td>加班强度</td><td><span class="pill y">需关注</span></td></tr>
+                <tr><td>客服中心</td><td class="mono">86</td><td class="mono">63%</td><td class="mono">5.2</td><td>客户情绪</td><td><span class="pill y">需关注</span></td></tr>
+                <tr><td>销售中心</td><td class="mono">54</td><td class="mono">38%</td><td class="mono">7.1</td><td>晋升与调薪</td><td><span class="pill g">良好</span></td></tr>
+                <tr class="masked"><td>法务部</td><td class="mono">3</td><td colspan="4">有效样本 3 人（&lt;5）· 按隐私规则不予展示</td></tr>
+              </table>
+            </div>
+            <div class="blind">
+              <h5>🛡 你在本系统中看不到什么</h5>
+              <ul>
+                <li>任何员工的姓名、工号、账号</li>
+                <li>任何一条倾诉或发帖的原文</li>
+                <li>红色个案的详情与处置内容</li>
+                <li>样本不足 5 人的部门数据</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="note wide">
+        最后那个<b>「你看不到什么」</b>区块，是整个 demo 里最能证明专业性的一屏内容——
+        它说明你们不是想不到，而是<b>主动放弃了展示</b>。同理，法务部那行"样本 3 人不予展示"
+        比任何隐私声明都有说服力。
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 4. 配置 ============ -->
+  <div class="sec-t"><span class="n">04</span><h2>HRBP · 干预阶梯配置</h2>
+    <span class="d">最值钱的一屏：配置界面 = 可复制模式的证据（复赛第五部分）</span></div>
+  <div class="row">
+    <div class="unit">
+      <div class="cap"><b>干预阶梯 · 阈值 · 隐私护栏</b><span class="chip">★ CONFIG</span></div>
+      <div class="pc" style="width:980px">
+        <div class="pcbar"><div class="d"></div><div class="d"></div><div class="d"></div>
+          <div class="url">mindbridge.internal / hr / config</div></div>
+        <div class="skC">
+          <div class="hd"><div class="lg2">M</div><h3>MindBridge · 员工关爱后台</h3>
+            <div class="who"><div class="ava">张</div>张敏 · HRBP</div></div>
+          <div class="navbar"><span>组织看板</span><span class="on">干预阶梯配置</span><span>活动排期</span><span>报表导出</span></div>
+          <div class="body-c">
+            <div class="cfghead">
+              <div class="sel">行业模板：<b>互联网 / IT</b> ▾</div>
+              <div class="sel">生效范围：<b>研发中心</b> ▾</div>
+              <div class="saved">✓ 已保存 · 由 张敏 于 14:32 修改</div>
+            </div>
+
+            <div class="ladder">
+              <div class="lsig"><span class="em">😰</span><span class="lt">情绪信号：焦虑</span>
+                <span class="ct">本周命中 214 次</span></div>
+              <div class="step"><div class="sl"><span class="sn">L1 自助</span><span class="sd">绿色 · 自动推送</span></div>
+                <div class="sv"><span class="chipC">三分钟呼吸着陆法 <span class="x">✕</span></span>
+                  <span class="chipC">正念音频 <span class="x">✕</span></span><span class="addc">＋ 添加资源</span></div></div>
+              <div class="step"><div class="sl"><span class="sn">L2 团体</span><span class="sd">黄色 · 推荐报名</span></div>
+                <div class="sv"><span class="chipC">情绪红绿灯正念工作坊 <span class="x">✕</span></span>
+                  <span class="chipC">身份重塑叙事疗愈小组 <span class="x">✕</span></span><span class="addc">＋</span></div></div>
+              <div class="step"><div class="sl"><span class="sn">L3 一对一</span><span class="sd">红色 · 人工介入</span></div>
+                <div class="sv"><span class="chipC slaBox">持证疗愈师 · SLA 2 小时 ▾</span>
+                  <span class="chipC">外部转介机构 <span class="x">✕</span></span></div></div>
+            </div>
+
+            <div class="thresh">
+              <h4>升级阈值</h4>
+              <div class="trow">连续 <span class="num">3 ▾</span> 天出现"累 / 撑不住"
+                <span class="arw">→</span><span class="out">推送能量唤醒工作坊 + 提醒 HRBP 关注团队</span></div>
+              <div class="trow"><span class="num">7 ▾</span> 天内倾诉 ≥ <span class="num">5 ▾</span> 次
+                <span class="arw">→</span><span class="out">升级黄色 · 自动预约疗愈师评估</span></div>
+              <div class="trow">命中危机词库
+                <span class="arw">→</span><span class="out">立即征求员工同意 · 同意后转接疗愈师</span></div>
+            </div>
+
+            <div class="guard">
+              <h4>🛡 隐私护栏</h4>
+              <div class="gs">以下设置由伦理委员会锁定，HRBP 不可单方修改</div>
+              <div class="trow" style="margin-bottom:16px">看板最小样本量 <span class="num">5 ▾</span> 人
+                <span class="out">低于此值的部门不出数</span></div>
+              <div style="font-size:11.5px;font-weight:600;margin-bottom:10px">广场出现危机信号时——</div>
+              <div class="radio on"><div class="rb"></div><div class="rt">
+                <b>仅向发帖人本人发出私聊邀请</b>
+                <div class="rd2">不通知任何第三方。升级与否由员工决定。</div></div></div>
+              <div class="radio dis"><div class="rb"></div><div class="rt">
+                <b>自动上报 HRBP</b>
+                <div class="rd2">⛔ 该模式已被伦理委员会禁用：构成未告知监控</div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="note wide">
+        <b>「行业模板」下拉是杀手锏</b>——切到"医护 / 护理"，整套阶梯瞬间换成巴林特小组那一套。
+        一个下拉切换整套方案，就是"可复制模式"最直观的证明。<br><br>
+        隐私护栏里那个<b>被禁用的单选项</b>要留着、灰着、写明禁用理由：
+        它证明你们不只是做了正确选择，而是<b>知道另一个选择存在并明确拒绝了它</b>。
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
