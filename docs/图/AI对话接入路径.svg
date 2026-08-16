@@ -1,0 +1,157 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 900" width="1240" height="900" font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif">
+<defs>
+  <marker id="a2" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+    <path d="M0 0.5 L8 4.5 L0 8.5 z" fill="#8a968f"/>
+  </marker>
+  <marker id="a2r" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
+    <path d="M0 0.5 L8 4.5 L0 8.5 z" fill="#b0453a"/>
+  </marker>
+  <style>
+    .h  {font-size:25px; font-weight:700; fill:#23302b}
+    .sub{font-size:13px; fill:#6e7d76}
+    .col{font-size:14px; font-weight:700; fill:#1d6b52; letter-spacing:.08em}
+    .colA{font-size:14px; font-weight:700; fill:#a8761d; letter-spacing:.08em}
+    .bt {font-size:14px; font-weight:600; fill:#23302b}
+    .bd {font-size:11.5px; fill:#67756e}
+    .lb {font-size:11px; fill:#8a968f}
+    .mono{font-family:"SF Mono",Menlo,monospace; font-size:11px; fill:#1d6b52}
+    .red{font-size:12px; fill:#b0453a; font-weight:600}
+    .tag{font-size:10.5px; font-weight:700; fill:#fff}
+  </style>
+</defs>
+
+<rect width="1240" height="900" fill="#fbfcfb"/>
+
+<text class="h" x="46" y="52">AI 对话能力：当前实现与接入路径</text>
+<text class="sub" x="46" y="78">Demo 未接入大模型 API。本图说明当前用什么、为什么这样选、以及接入后规则层为何仍然保留</text>
+
+<!-- ================= 上：现在 ================= -->
+<text class="col" x="46" y="126">现在 · Demo 内置规则引擎（零依赖，单个 HTML 文件即可运行）</text>
+
+<rect x="46" y="142" width="1148" height="140" rx="12" fill="#f3f8f5" stroke="#cfe2d8"/>
+
+<rect x="68" y="170" width="118" height="88" rx="8" fill="#fff" stroke="#cfe2d8"/>
+<text class="bt" x="86" y="198">员工输入</text>
+<text class="bd" x="86" y="220">自由文本</text>
+<text class="bd" x="86" y="240">或转发内容</text>
+
+<path d="M192 214 L216 214" stroke="#8a968f" stroke-width="1.6" fill="none" marker-end="url(#a2)"/>
+
+<rect x="222" y="170" width="178" height="88" rx="8" fill="#fff" stroke="#cfe2d8"/>
+<text class="bt" x="240" y="198">分句 · 词典匹配</text>
+<text class="bd" x="240" y="220">7 类情绪 · 300+ 关键词</text>
+<text class="bd" x="240" y="240">按小句加权，越靠后越重</text>
+
+<path d="M406 214 L430 214" stroke="#8a968f" stroke-width="1.6" fill="none" marker-end="url(#a2)"/>
+
+<rect x="436" y="170" width="178" height="88" rx="8" fill="#fff" stroke="#cfe2d8"/>
+<text class="bt" x="454" y="198">语法与强度判别</text>
+<text class="bd" x="454" y="220">否定语境排除误报</text>
+<text class="bd" x="454" y="240">程度副词、感叹、叠字加权</text>
+
+<path d="M620 214 L644 214" stroke="#8a968f" stroke-width="1.6" fill="none" marker-end="url(#a2)"/>
+
+<rect x="650" y="170" width="178" height="88" rx="8" fill="#fdf4f2" stroke="#eccdc6"/>
+<text class="bt" x="668" y="198" fill="#a8453a">危机词判定</text>
+<text class="bd" x="668" y="220">含隐晦表达词库</text>
+<text class="red" x="668" y="240">否定语境保守降级</text>
+
+<path d="M834 214 L858 214" stroke="#8a968f" stroke-width="1.6" fill="none" marker-end="url(#a2)"/>
+
+<rect x="864" y="170" width="178" height="88" rx="8" fill="#fff" stroke="#cfe2d8"/>
+<text class="bt" x="882" y="198">会话状态累积</text>
+<text class="bd" x="882" y="220">连续信号 → 升级黄色</text>
+<text class="bd" x="882" y="240">跨 session 共享画像</text>
+
+<path d="M1048 214 L1072 214" stroke="#8a968f" stroke-width="1.6" fill="none" marker-end="url(#a2)"/>
+
+<rect x="1078" y="170" width="94" height="88" rx="8" fill="#fff" stroke="#cfe2d8"/>
+<text class="bt" x="1096" y="198">回应生成</text>
+<text class="bd" x="1096" y="220">片段组合</text>
+<text class="bd" x="1096" y="240">非查表</text>
+
+<!-- ================= 中：为什么现在不接 ================= -->
+<text class="col" x="46" y="330">为什么 Demo 阶段刻意不接大模型</text>
+
+<rect x="46" y="346" width="366" height="130" rx="10" fill="#fff" stroke="#dbe4df"/>
+<text class="bt" x="68" y="374">① 评委需要能直接打开</text>
+<text class="bd" x="68" y="398">单个 HTML 文件，双击即运行。</text>
+<text class="bd" x="68" y="420">不需要 API Key、不需要联网、</text>
+<text class="bd" x="68" y="442">不需要部署后端，也不会因额度</text>
+<text class="bd" x="68" y="464">耗尽或网络异常而当场失败。</text>
+
+<rect x="437" y="346" width="366" height="130" rx="10" fill="#fff" stroke="#dbe4df"/>
+<text class="bt" x="459" y="374">② 判定过程需要可展示</text>
+<text class="bd" x="459" y="398">演示模式会实时显示命中了哪个词、</text>
+<text class="bd" x="459" y="420">强度多少、命中哪条规则、为何升级。</text>
+<text class="bd" x="459" y="442">规则引擎每一步都可解释；</text>
+<text class="bd" x="459" y="464">大模型的黑箱输出讲不清这一点。</text>
+
+<rect x="828" y="346" width="366" height="130" rx="10" fill="#fff" stroke="#dbe4df"/>
+<text class="bt" x="850" y="374">③ 演示必须可复现</text>
+<text class="bd" x="850" y="398">同样的输入永远得到同样的判定，</text>
+<text class="bd" x="850" y="420">路演与评审不会出现意外输出。</text>
+<text class="bd" x="850" y="442">大模型的随机性在现场是风险，</text>
+<text class="bd" x="850" y="464">在产品里才是价值。</text>
+
+<!-- ================= 下：接入后 ================= -->
+<text class="colA" x="46" y="524">接入后 · 生产形态　—　规则层不是过渡方案，它降级为安全兜底层并长期保留</text>
+
+<rect x="46" y="540" width="1148" height="200" rx="12" fill="#fffaf0" stroke="#ecd9ae"/>
+
+<rect x="68" y="576" width="118" height="88" rx="8" fill="#fff" stroke="#e2d6bc"/>
+<text class="bt" x="86" y="604">员工输入</text>
+<text class="bd" x="86" y="626">自由文本</text>
+<text class="bd" x="86" y="646">或转发内容</text>
+
+<path d="M192 620 L216 620" stroke="#8a968f" stroke-width="1.6" fill="none" marker-end="url(#a2)"/>
+
+<!-- 前置安全层 -->
+<rect x="222" y="562" width="216" height="116" rx="8" fill="#f3f8f5" stroke="#a9d2bd" stroke-width="1.6"/>
+<rect x="222" y="562" width="216" height="20" rx="8" fill="#1d6b52"/>
+<rect x="222" y="572" width="216" height="10" fill="#1d6b52"/>
+<text class="tag" x="234" y="577">前置安全层 · 同一套规则引擎</text>
+<text class="bt" x="240" y="606">危机词判定优先</text>
+<text class="bd" x="240" y="628">命中红色 → <tspan font-weight="700" fill="#a8453a">不调用模型</tspan></text>
+<text class="bd" x="240" y="650">直接走固定话术 + 转接邀请</text>
+<text class="bd" x="240" y="670">避免模型在高危场景自由发挥</text>
+
+<path d="M444 620 L468 620" stroke="#8a968f" stroke-width="1.6" fill="none" marker-end="url(#a2)"/>
+
+<!-- 模型 -->
+<rect x="474" y="562" width="278" height="116" rx="8" fill="#fff" stroke="#e2d6bc"/>
+<text class="bt" x="494" y="592">大模型生成回应</text>
+<text class="bd" x="494" y="616">系统提示词硬约束：</text>
+<text class="bd" x="494" y="636">不做诊断 · 不建议用药 · 不替代专业</text>
+<text class="bd" x="494" y="656">情绪标签与预警等级<tspan font-weight="700">仍由规则层输出</tspan></text>
+<text class="lb" x="494" y="672">模型只负责"怎么说"，不负责"判定什么"</text>
+
+<path d="M758 620 L782 620" stroke="#8a968f" stroke-width="1.6" fill="none" marker-end="url(#a2)"/>
+
+<!-- 后置校验 -->
+<rect x="788" y="562" width="216" height="116" rx="8" fill="#f3f8f5" stroke="#a9d2bd" stroke-width="1.6"/>
+<rect x="788" y="562" width="216" height="20" rx="8" fill="#1d6b52"/>
+<rect x="788" y="572" width="216" height="10" fill="#1d6b52"/>
+<text class="tag" x="800" y="577">后置校验 · 同一套规则引擎</text>
+<text class="bt" x="806" y="606">输出再过一遍边界检查</text>
+<text class="bd" x="806" y="628">拦截诊断性措辞、用药建议</text>
+<text class="bd" x="806" y="650">拦截越界承诺</text>
+<text class="bd" x="806" y="670">不合格则回落固定话术</text>
+
+<path d="M1010 620 L1034 620" stroke="#8a968f" stroke-width="1.6" fill="none" marker-end="url(#a2)"/>
+
+<rect x="1040" y="576" width="132" height="88" rx="8" fill="#fff" stroke="#e2d6bc"/>
+<text class="bt" x="1058" y="604">送达员工</text>
+<text class="bd" x="1058" y="626">机器人会话</text>
+<text class="bd" x="1058" y="646">或树洞页面</text>
+
+<text class="lb" x="68" y="712">模型可选：Claude / DeepSeek / 通义等。判定逻辑与合规约束不依赖具体模型，可随时替换或私有化部署。</text>
+
+<!-- ================= 底：工作量 ================= -->
+<line x1="46" y1="768" x2="1194" y2="768" stroke="#dde5e1"/>
+<text class="col" x="46" y="800">接入所需工作</text>
+<text class="bd" x="46" y="826">① 后端服务：承接会话、保管密钥（密钥不可下发到前端）　　② 系统提示词与边界约束的撰写与红队测试</text>
+<text class="bd" x="46" y="848">③ 前置／后置校验接线（规则引擎已具备，直接复用）　　　　④ 超时与失败回落到规则引擎，保证服务永不中断</text>
+<text class="bd" x="46" y="870">⑤ 会话内容加密存储与保留期策略　　　　　　　　　　　　　⑥ 成本与并发压测</text>
+
+</svg>

@@ -53,7 +53,7 @@ input,textarea{font-family:inherit;outline:none;border:none;background:none;colo
 
 /* ==================== WECOM 工作台 ==================== */
 #wecom{background:#0a0d0c}
-#wecom.on{display:grid;place-items:center}
+#wecom.on,#imchat.on,#botchat.on{display:grid;place-items:center}
 .phone{width:352px;height:min(738px,94vh);border-radius:36px;border:1px solid #2c3238;background:#000;
   padding:9px;box-shadow:0 30px 70px rgba(0,0,0,.6);position:relative}
 .phone .screen{width:100%;height:100%;border-radius:28px;overflow:hidden;display:flex;flex-direction:column;position:relative}
@@ -836,7 +836,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
   .phone .screen{border-radius:0}
   .notch{display:none}
   .center{display:block}
-  #wecom.on,#auth.on{display:block}
+  #wecom.on,#imchat.on,#botchat.on,#auth.on{display:block}
   #wecom .wcbody{padding:14px}
   #gate.on{display:block;padding:26px 18px 90px}
   .gwrap{width:100%;padding:0}
@@ -995,7 +995,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
       <div class="dtbar" id="im-bar">
         <span class="dbi">😊</span><span class="dbi">＋</span>
         <div class="dbin">发消息…</div>
-        <button class="dbdemo" id="im-demo">长按消息试试 ›<em>演示用快捷入口</em></button>
+        <button class="dbdemo" id="im-demo">长按消息进行转发<em>消息历史纯属虚构，供 Demo 演示使用</em></button>
       </div>
 
       <div class="sheet" id="im-sheet">
@@ -1436,7 +1436,7 @@ const ROLES={
     anon:'4A6B',alias:'小溪',icon:'👤',
     work:{title:'本周工作节奏',
       items:[['56','h','在校时长'],['22','节','连堂课时'],['9','次','周末加班审批'],['14','项','待办积压']],
-      line:'这周你在学校待了 56 小时，有三天到晚上八点以后。'},
+      line:'这周你在学校待了很久，最晚忙到接近晚上十二点。辛苦了，也记得给自己留一点休息的时间。'},
     convs:[
       {id:'g1',nm:'三年级2班家长群',n:'48人',av:'👨‍👩‍👧',tm:'21:40',
        pv:'李梓涵妈妈：老师你怎么教的，我家孩子这次才62分',
@@ -1527,10 +1527,25 @@ const SEED={
   chats:{}, bot:{},
   topics:{加班强度:86,'晋升与调薪':61,'跨部门协作':44,'客户情绪':37,'工作意义感':23},
 };
+const BOT_INTRO='我是 MindBridge，一个匿名的心理支持助手。\n有什么想说的，随时发给我。';
+const LEGACY_BOT_INTRO='我是 MindBridge，学校员工关爱的助手。\n有什么想说的，随时发给我。';
 let DB=load();
 function load(){try{const r=localStorage.getItem(KEY);return r?JSON.parse(r):structuredClone(SEED)}catch(e){return structuredClone(SEED)}}
 function save(){DB.v=(DB.v||0)+1;try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){}bc&&bc.postMessage(DB.v)}
 let bc=null;try{bc=new BroadcastChannel(CH)}catch(e){}
+// 兼容已保存的演示数据：仅替换旧版固定文案与虚构标签，不触碰用户输入。
+(function migrateGenericDemoCopy(){
+  let changed=false;
+  Object.values(DB.bot||{}).forEach(ms=>ms.forEach(m=>{
+    if(m.w==='ai'&&m.t===LEGACY_BOT_INTRO){m.t=BOT_INTRO;changed=true}
+  }));
+  (DB.cases||[]).forEach(c=>{
+    if((c.tags||[]).join('|')==='存在性议题|职业身份焦虑|持续失眠 · 7天'){
+      c.tags=['危机信号','待专业评估'];changed=true;
+    }
+  });
+  if(changed)save();
+})();
 if(bc)bc.onmessage=()=>pull();
 window.addEventListener('storage',e=>{if(e.key===KEY)pull()});
 setInterval(pull,350);                       // file:// 兜底
@@ -1601,14 +1616,10 @@ const RED_REPLY='我很心疼你现在承受的这些。这些感受很重要，
    否则会把对方的攻击性算成员工自己的情绪。
    ========================================================================== */
 const SCENE=[
-  {id:'家校沟通',w:['家长','孩子','成绩','分','作业','家长会','班主任','老师','投诉','单元测','考'],
-   res:'「痛点速写 + ABC情绪理论」工作坊'},
-  {id:'客户冲突',w:['客户','投诉','工单','退款','差评','态度','质检','体验'],
-   res:'「心流插花」艺术疗愈'},
-  {id:'上下级',w:['总','主任','领导','汇报','排期','上线','绩效','面谈','复盘','背锅','必须'],
-   res:'「跨团队疗愈小组」'},
-  {id:'同事协作',w:['对接','推诿','甩锅','配合','协作','交接'],
-   res:'「跨团队疗愈小组」'},
+  {id:'家校沟通',w:['家长','孩子','成绩','分','作业','家长会','班主任','老师','投诉','单元测','考']},
+  {id:'客户冲突',w:['客户','投诉','工单','退款','差评','态度','质检','体验']},
+  {id:'上下级',w:['总','主任','领导','汇报','排期','上线','绩效','面谈','复盘','背锅','必须']},
+  {id:'同事协作',w:['对接','推诿','甩锅','配合','协作','交接']},
 ];
 function detectScene(txt){
   let best=null,bs=0;
@@ -1806,14 +1817,11 @@ function genReply(a,st,text){
   return s||FALLBACK[seed(text+st.turn)%FALLBACK.length];
 }
 /* ---------- 资源推送时机 ---------- */
-function pickRes(a,st,scene){
+function pickRes(a,st){
   if(a.lv==='red'||a.intent)return null;
   if(!a.n)return null;
   if(st.lastRes!=null&&st.turn-st.lastRes<3)return null;   // 冷却：至少隔 3 轮，避免刷屏
-  let r=EMO[a.top]&&EMO[a.top].res; if(!r)return null;
-  // 有转发场景时，优先推场景对应的行业方案（引用只影响"推什么"，不影响"判什么"）
-  if(scene&&!st.given.includes(scene.res))
-    r={n:scene.res,d:`匹配场景「${scene.id}」· 来自方案书行业版`,i:'🎯'};
+  const r=EMO[a.top]&&EMO[a.top].res; if(!r)return null;
   if(st.given.includes(r.n))return null;
   if(a.inten<1.2&&st.turn<2)return null;   // 只有"有点累"这类弱信号才等一轮
   st.given.push(r.n); st.lastRes=st.turn; return r;
@@ -1932,10 +1940,15 @@ function renderGroup(){
   CURG.msgs.forEach((m,i)=>{
     const d=document.createElement('div');
     d.className='gm'+(m.me?' mine':'')+(PICKED.includes(i)?' picked':'');
-    d.innerHTML=`<div class="gsel">✓</div>
+    const selected=PICKED.includes(i);
+    d.innerHTML=`<button type="button" class="gsel" aria-label="${selected?'取消选择':'选择消息'}" aria-pressed="${selected}">✓</button>
       ${m.me?'':`<div class="gav">${m.av||'👤'}</div>`}
       <div class="gbd">${m.me?'':`<div class="gnm">${esc(m.f)}</div>`}
         <div class="gbb">${esc(m.t)}</div><div class="gtm">${m.tm}</div></div>`;
+    d.querySelector('.gsel').onclick=e=>{
+      e.stopPropagation();
+      togglePick(i);
+    };
     d.querySelector('.gbb').onclick=()=>{
       if(PICKING){togglePick(i);return}
       SHEETI=i;$('#im-sheet').classList.add('on');
@@ -2009,7 +2022,7 @@ function bootEmp(){
   DB.bot=DB.bot||{};
   if(!DB.bot[ME.anon])DB.bot[ME.anon]=[
     {w:'work',ts:Date.now()-6e4},
-    {w:'ai',t:'我是 MindBridge，学校员工关爱的助手。\n有什么想说的，随时发给我。',ts:Date.now()-5.9e4}];
+    {w:'ai',t:BOT_INTRO,ts:Date.now()-5.9e4}];
   if(!DB.chats[ME.anon])DB.chats[ME.anon]=[
     {w:'ai',t:'我在这儿。今天有什么压在心里的话，都可以说给我听。',ts:Date.now()}];
   renderWall();renderChat();renderBot();renderRes();
@@ -2158,13 +2171,13 @@ const PRESETS={
 };
 function renderPresets(){
   const list=PRESETS[MEID]||PRESETS.emp1;
-  [['#presets','#chatin'],['#bot-presets','#bot-in']].forEach(([pb,inp])=>{
+  [['#presets','#chatin','chat'],['#bot-presets','#bot-in','bot']].forEach(([pb,inp,which])=>{
     const b=$(pb);if(!b)return;b.innerHTML='';
     const hint=document.createElement('div');hint.className='preset-hint';
     hint.textContent='示例 · 点击直接发送';b.appendChild(hint);
     list.forEach(p=>{
       const x=document.createElement('button');x.className='pst';x.textContent=p.t;
-      x.onclick=()=>{const i=$(inp);i.value=p.s;i.dispatchEvent(new Event('input'));send(inp)};
+      x.onclick=()=>{const i=$(inp);i.value=p.s;i.dispatchEvent(new Event('input'));send(inp,which)};
       b.appendChild(x);
     });
   });
@@ -2303,7 +2316,7 @@ function send(inpSel,which){
       xray(v,a,'生成共情回应 + 转接邀请。<b style="color:#e88b78">未通知任何人</b>——等待员工授权。');
     }else{
       push({w:'ai',t:genReply(a,st,v),ts:Date.now()},which);
-      const r=pickRes(a,st,a.scene);
+      const r=pickRes(a,st);
       if(r)setTimeout(()=>push({w:'res',n:r.n,d:r.d,i:r.i,ts:Date.now()},which),900);
       xray(v,a,r?`推送绿色自助资源「${r.n}」· 以邀请口吻呈现，不显示预警等级`
         :(a.intent?`识别为「${a.intent.id}」类提问 · 走专项应答，不推资源`
@@ -2379,7 +2392,7 @@ function consent(which){
   push({w:'ai',t:'好。我已经把这条信号交给李佳了——她是真实的人，只会看到你的匿名编号，看不到你的名字。',ts:Date.now()},which);
   setTimeout(()=>push({w:'healer',ts:Date.now()},which),700);
   DB.cases.push({id:'c'+Date.now(),anon:ME.anon,dept:ME.dept,level:'r',
-    tags:['存在性议题','职业身份焦虑','持续失眠 · 7天'],
+    tags:['危机信号','待专业评估'],
     t:Date.now(),sla:Date.now()+2*3600*1000,status:'pending',log:[]});
   save();
   toast('已转接 · 疗愈师工作台已实时收到个案');
