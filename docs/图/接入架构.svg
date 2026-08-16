@@ -1,4 +1,8 @@
+<<<<<<< ours
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 940" width="1240" height="940" font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif">
+=======
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 690" width="1240" height="690" font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif">
+>>>>>>> theirs
 <defs>
   <marker id="ar" markerWidth="9" markerHeight="9" refX="8" refY="4.5" orient="auto">
     <path d="M0 0.5 L8 4.5 L0 8.5 z" fill="#7d8a84"/>
@@ -20,7 +24,11 @@
   </style>
 </defs>
 
+<<<<<<< ours
 <rect width="1240" height="940" fill="#fbfcfb"/>
+=======
+<rect width="1240" height="690" fill="#fbfcfb"/>
+>>>>>>> theirs
 
 <text class="h" x="46" y="52">MindBridge 与办公平台的接入架构</text>
 <text class="sub" x="46" y="78">以钉钉为例。三条接入通道各自拿到什么、在哪一步丢弃身份、出口处谁能看到多少</text>
@@ -127,6 +135,7 @@
 
 <text class="lb" x="922" y="646">信息在每一层都在减少，而不是每一层都能还原</text>
 
+<<<<<<< ours
 <!-- ============ 底部：平台差异 ============ -->
 <line x1="46" y1="676" x2="1194" y2="676" stroke="#dde5e1"/>
 <text class="col" x="46" y="708">平台能力差异　—　为什么 Demo 选择钉钉</text>
@@ -154,5 +163,8 @@
 <text class="bd" x="856" y="824">✓ 日历忙闲、OKR 可作压力信号</text>
 <text class="bd" x="856" y="846">△ 教育行业渗透率低于钉钉</text>
 <text class="lb" x="856" y="876">互联网企业优先</text>
+=======
+<text class="bd" x="46" y="660">三条通道均为钉钉／企业微信／飞书的标准开放能力，不依赖任何平台的专有功能。</text>
+>>>>>>> theirs
 
 </svg>

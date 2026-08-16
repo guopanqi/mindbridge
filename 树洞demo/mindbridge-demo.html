@@ -9,6 +9,7 @@
   --sans:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",-apple-system,sans-serif;
   --serif:"Songti SC","STSong","Noto Serif SC",serif;
   --mono:"SF Mono",Menlo,Consolas,monospace;
+  --ctl-h:48px;
   --s:4px;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased}
@@ -762,9 +763,11 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
 #ctl .quick{font-size:9.5px;color:#5f666e;letter-spacing:.08em}
 #ctl .sw{display:flex;gap:5px}
 #ctl .sw button{font-size:11.5px;padding:5px 12px;border-radius:6px;color:#8d949c;
-  border:1px solid rgba(255,255,255,.09);transition:.2s}
+  border:1px solid rgba(255,255,255,.09);transition:.2s;display:flex;flex-direction:column;align-items:center;gap:2px}
+#ctl .sw button small{font-size:8px;font-weight:400;color:#596168;white-space:nowrap}
 #ctl .sw button:hover{color:#e6e8ea;border-color:rgba(255,255,255,.25)}
 #ctl .sw button.on{background:#eeb96c;color:#0d1a17;font-weight:600;border-color:transparent}
+#ctl .sw button.on small{color:rgba(13,26,23,.62)}
 #ctl .rt{margin-left:auto;display:flex;align-items:center;gap:12px}
 #ctl .tg{display:flex;align-items:center;gap:8px}
 #ctl .tgb{width:34px;height:19px;border-radius:100px;background:rgba(255,255,255,.1);
@@ -777,7 +780,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
   border-radius:6px;padding:5px 9px;transition:.2s}
 #ctl .mini:hover{color:#e6e8ea;border-color:rgba(255,255,255,.25)}
 /* ==================== 演示模式 X光层 ==================== */
-#xray{position:fixed;top:0;right:0;bottom:44px;width:326px;z-index:880;background:rgba(14,18,17,.96);
+#xray{position:fixed;top:0;right:0;bottom:var(--ctl-h);width:326px;z-index:880;background:rgba(14,18,17,.96);
   backdrop-filter:blur(18px);border-left:1px solid rgba(238,185,108,.22);padding:20px 18px;
   overflow-y:auto;color:#e2e6ea;transform:translateX(100%);transition:.4s cubic-bezier(.2,.8,.2,1)}
 #xray.on{transform:none}
@@ -815,7 +818,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
   pointer-events:none;box-shadow:0 10px 34px rgba(0,0,0,.5);max-width:80vw;text-align:center}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 
-.pad{padding-bottom:44px}
+.pad{padding-bottom:var(--ctl-h)}
 .center{position:absolute;inset:0;display:grid;place-items:center}
 /* 演示控制 · 移动端浮标 */
 /* 抬高以避开输入框的发送按钮 */
@@ -825,11 +828,26 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
   box-shadow:0 8px 26px rgba(0,0,0,.45);align-items:center;justify-content:center}
 #ctlfab.on{transform:rotate(45deg)}
 
+/* 桌面端控制条参与布局，避免覆盖手机外壳底部 tabbar */
+@media(min-width:761px){
+  #wecom.on,#imchat.on,#botchat.on{padding-bottom:var(--ctl-h)}
+  .phone{height:min(738px,calc(94dvh - var(--ctl-h) - 12px))}
+  .center{bottom:var(--ctl-h)}
+}
+
 @media(max-width:760px){
+  :root{--ctl-h:0px}
   .roles{grid-template-columns:repeat(2,1fr)}
   .kpis{grid-template-columns:repeat(2,1fr)}
   .grid2{grid-template-columns:1fr}
   .blind ul{grid-template-columns:1fr}
+  .rhy{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .rhy .ri{min-width:0;padding:10px 11px}
+  .cardC h4{align-items:flex-start;flex-wrap:wrap}
+  .cardC h4 .src{margin-left:0}
+  .table-card{overflow-x:auto}
+  .table-card table{min-width:620px}
+  .wkcard .wi .wl,.wkcard .wsrc{font-size:10.5px}
 
   /* ① 手机上脱掉手机壳：内容直接铺满，不再二次裁切 */
   .phone{width:100%;height:100%;border:none;border-radius:0;padding:0;box-shadow:none;background:#0a0d0c}
@@ -1209,7 +1227,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
         <span hidden>活动排期</span><span hidden>报表导出</span>
       </div>
       <div class="syncbar">
-        <span id="sync-t">数据截至 --:--</span><span>下次同步 15:00</span>
+        <span>演示数据 · 非真实组织统计</span><span>用于展示聚合口径与交互流程</span>
         <span>统计口径：团队级聚合 · 最小样本 5 人</span>
       </div>
       <div class="bodyC"><div class="inner">
@@ -1239,7 +1257,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
               </div>
             </div>
           </div>
-          <div class="cardC">
+          <div class="cardC table-card">
             <h4>部门概览</h4>
             <div class="cs">仅显示有效样本 ≥5 人的部门</div>
             <table>
@@ -1263,13 +1281,13 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
             <h4>团队节奏 · 三年级组<span class="src">来源：钉钉考勤 / 审批 / 待办</span></h4>
             <div class="cs">回答「他们有多忙」—— 全部为行为元数据，不含任何消息内容</div>
             <div class="rhy">
-              <div class="ri"><div class="rv">11.2<small>h</small></div><div class="rl">在校时长中位数</div>
-                <div class="rt up">较基准 +1.8h</div></div>
-              <div class="ri"><div class="rv">22<small>节</small></div><div class="rl">周连堂课时</div>
-                <div class="rt up">超基准 30%</div></div>
+              <div class="ri"><div class="rv">20:42</div><div class="rl">下班打卡中位时间</div>
+                <div class="rt">仅反映打卡记录时间</div></div>
+              <div class="ri"><div class="rv">38<small>%</small></div><div class="rl">晚间下班打卡占比</div>
+                <div class="rt">口径：20:00 后</div></div>
               <div class="ri"><div class="rv">14<small>次</small></div><div class="rl">加班·调休审批</div>
                 <div class="rt up">其中 9 次在周末</div></div>
-              <div class="ri"><div class="rv">14<small>项</small></div><div class="rl">待办积压均值</div>
+              <div class="ri"><div class="rv">14<small>项</small></div><div class="rl">未完成待办均值</div>
                 <div class="rt">较上周持平</div></div>
             </div>
             <div class="rhynote">
@@ -1395,11 +1413,11 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
   <button class="home" id="demo-home">← 返回演示页</button>
   <span class="quick">快速切换</span>
   <div class="sw" id="swrole">
-    <button data-r="emp3">周敏 · 教师</button>
-    <button data-r="emp1">王磊 · 研发</button>
-    <button data-r="emp2">陈雨 · 客服</button>
-    <button data-r="hr">张敏 · HRBP</button>
-    <button data-r="healer">李佳 · 疗愈师</button>
+    <button data-r="emp3">周敏 · 教师<small>实验第二小学</small></button>
+    <button data-r="emp1">王磊 · 研发<small>星原科技</small></button>
+    <button data-r="emp2">陈雨 · 客服<small>星原科技</small></button>
+    <button data-r="hr">张敏 · HRBP<small>服务：星原科技 / 实验二小</small></button>
+    <button data-r="healer">李佳 · 疗愈师<small>服务商：UNIHEAL</small></button>
   </div>
   <div class="rt">
     <div class="tg"><span>演示模式</span><button class="tgb" id="xtgl"></button></div>
@@ -1428,15 +1446,23 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
 const KEY='mb_demo_v1', CH='mb_demo_ch';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 
+/* 控制条在中等桌面宽度下可能换行，按实际高度为主舞台留位 */
+const ctlEl=$('#ctl');
+function syncCtlHeight(){
+  document.documentElement.style.setProperty('--ctl-h',innerWidth<=760?'0px':Math.ceil(ctlEl.getBoundingClientRect().height)+'px');
+}
+if('ResizeObserver' in window)new ResizeObserver(syncCtlHeight).observe(ctlEl);
+addEventListener('resize',syncCtlHeight);syncCtlHeight();
+
 /* ---------- 角色 ----------
-   work : L1 元数据（考勤/审批/日程/待办，标准接口可得，不含任何消息内容）
+   work : L1 元数据（考勤/审批/待办，标准接口可得，不含任何消息内容）
    convs: 钉钉消息列表 + 群聊内容，用于演示 L0 主动转发                        */
 const ROLES={
   emp3:{kind:'emp',name:'周敏',dept:'三年级组',org:'实验第二小学',emp:'T10237',
     anon:'4A6B',alias:'小溪',icon:'👤',
     work:{title:'本周工作节奏',
-      items:[['56','h','在校时长'],['22','节','连堂课时'],['9','次','周末加班审批'],['14','项','待办积压']],
-      line:'这周你在学校待了很久，最晚忙到接近晚上十二点。辛苦了，也记得给自己留一点休息的时间。'},
+      items:[['23',':48','最晚下班打卡'],['3','天','晚间下班打卡'],['2','项','加班·调休审批'],['14','项','未完成待办']],
+      line:'这周有三天较晚完成下班打卡，最晚一次是 23:48。辛苦了，也记得给自己留一点休息的时间。'},
     convs:[
       {id:'g1',nm:'三年级2班家长群',n:'48人',av:'👨‍👩‍👧',tm:'21:40',
        pv:'李梓涵妈妈：老师你怎么教的，我家孩子这次才62分',
@@ -1458,7 +1484,7 @@ const ROLES={
   emp1:{kind:'emp',name:'王磊',dept:'研发中心',org:'星原科技',emp:'E20481',
     anon:'7F3A',alias:'小芳',icon:'👤',
     work:{title:'本周工作节奏',
-      items:[['20',':38','下班打卡中位'],['3.1','h','日均会议'],['18','次','加班审批'],['4.7','h','周末在线']],
+      items:[['20',':38','下班打卡中位'],['4','天','晚间下班打卡'],['3','项','加班·调休审批'],['12','项','未完成待办']],
       line:'这周你有四天在晚上八点半以后打的下班卡。'},
     convs:[
       {id:'g1',nm:'星火项目攻坚群',n:'26人',av:'🚀',tm:'23:14',
@@ -1476,7 +1502,7 @@ const ROLES={
   emp2:{kind:'emp',name:'陈雨',dept:'客服中心',org:'星原科技',emp:'E20977',
     anon:'A91C',alias:'小华',icon:'👤',
     work:{title:'本周工作节奏',
-      items:[['9.5','h','日均在线时长'],['186','通','日均接线'],['6','次','连班审批'],['0','天','完整休息日']],
+      items:[['21',':14','最晚下班打卡'],['6','天','连续出勤'],['2','项','排班调整审批'],['8','项','未完成待办']],
       line:'这周你连着上了六天，没有一个完整的休息日。'},
     convs:[
       {id:'g1',nm:'客服二组 · 工作群',n:'14人',av:'🎧',tm:'20:05',
@@ -1502,22 +1528,26 @@ function clearAuthFlow(){
 }
 function authLater(fn,delay){authTimers.push(setTimeout(fn,delay))}
 const ALIASES={
-  '7F3A':'小芳','A91C':'小华','3B2E':'小陈','5C7D':'小林','2D80':'小李','6E15':'小周','4A6B':'小溪'
+  '7F3A':'小芳','A91C':'小华','3B2E':'小陈','5C7D':'小林','2D80':'小李','6E15':'小周','4A6B':'小溪','8C1D':'小禾'
 };
 function displayIdentity(anon,alias){return `${alias||ALIASES[anon]||'小伙伴'}-${anon}`}
 
 /* ---------- 存储 ---------- */
+const makeSchoolWallPost=()=>({id:'p-school-demo',org:'实验第二小学',anon:'8C1D',dept:'教职工',
+  text:'最近总觉得时间不够用。希望这个周末能真正休息一下。',
+  t:Date.now()-3.6e6,hugs:[],hugN:6,reps:[]});
 const SEED={
-  v:1,
+  v:1,orgWallV:1,
   posts:[
-    {id:'p1',anon:'3B2E',dept:'研发中心',text:'又是凌晨两点。看着屏幕，觉得自己像台还没坏的机器。',
+    {id:'p1',org:'星原科技',anon:'3B2E',dept:'研发中心',text:'又是凌晨两点。看着屏幕，觉得自己像台还没坏的机器。',
      t:Date.now()-7.2e6,hugs:['A91C','5C7D','2D80'],hugN:12,
      reps:[{anon:'5C7D',text:'那句"还没坏"看得我鼻子一酸。今晚早点睡吧。',t:Date.now()-6e6}]},
-    {id:'p2',anon:'A91C',dept:'客服中心',text:'被骂了四十分钟，最后还要说"很抱歉给您带来不便"。',
+    {id:'p2',org:'星原科技',anon:'A91C',dept:'客服中心',text:'被骂了四十分钟，最后还要说"很抱歉给您带来不便"。',
      t:Date.now()-9e7,hugs:[],hugN:28,
      reps:[{anon:'3B2E',text:'你已经做得很好了。那些话是冲着工牌来的，不是冲着你。',t:Date.now()-8e7}]},
-    {id:'p3',anon:'6E15',dept:'制造中心',text:'上了八年夜班。最难受的不是累，是回家时天还没亮，没人可以说话。',
+    {id:'p3',org:'星原科技',anon:'6E15',dept:'制造中心',text:'上了八年夜班。最难受的不是累，是回家时天还没亮，没人可以说话。',
      t:Date.now()-1.7e8,hugs:[],hugN:19,reps:[]},
+    makeSchoolWallPost(),
   ],
   cases:[
     {id:'c0',anon:'2D80',dept:'制造中心',level:'y',tags:['社交隔离','轮班疲劳'],
@@ -1544,6 +1574,13 @@ let bc=null;try{bc=new BroadcastChannel(CH)}catch(e){}
       c.tags=['危机信号','待专业评估'];changed=true;
     }
   });
+  if((DB.orgWallV||0)<1){
+    (DB.posts||[]).forEach(p=>{
+      if(!p.org){p.org=p.dept==='三年级组'||p.dept==='教职工'?'实验第二小学':'星原科技'}
+    });
+    if(!(DB.posts||[]).some(p=>p.org==='实验第二小学'))DB.posts.push(makeSchoolWallPost());
+    DB.orgWallV=1;changed=true;
+  }
   if(changed)save();
 })();
 if(bc)bc.onmessage=()=>pull();
@@ -1867,7 +1904,7 @@ function enterApp(){
   if(AUTHED[MEID]){bootEmp();go('empApp');return}
   clearAuthFlow();
   $('#auth-staff').classList.add('hide');$('#auth-emp').classList.remove('hide');
-  $('#a-nm').textContent=ME.name;$('#a-dt').textContent=ME.dept+' · 工号 '+ME.emp;
+  $('#a-nm').textContent=ME.name;$('#a-dt').textContent=ME.org+' · '+ME.dept+' · 工号 '+ME.emp;
   $('#a-id').textContent=displayIdentity(ME.anon,ME.alias);
   ['a1','a2','a3'].forEach(i=>$('#'+i).classList.remove('in','out'));
   $('#a-bar').style.width='0';
@@ -2045,7 +2082,7 @@ const expandedThreads=new Set();
 function renderWall(){
   if(!ME||ME.kind!=='emp')return;
   const f=$('#feed');f.innerHTML='';
-  [...DB.posts].sort((a,b)=>b.t-a.t).forEach(p=>{
+  DB.posts.filter(p=>p.org===ME.org).sort((a,b)=>b.t-a.t).forEach(p=>{
     const mine=p.anon===ME.anon, did=p.hugs.includes(ME.anon);
     const expanded=expandedThreads.has(p.id), replies=expanded?p.reps:p.reps.slice(-2);
     const d=document.createElement('div');d.className='pcard'+(mine?' mine':'');
@@ -2131,7 +2168,7 @@ $('#postbtn').onclick=()=>{
     composerCheck.textContent='内容可能包含攻击性表达，请调整后再发布';composerCheck.style.color='var(--coral)';return;
   }
   const a=analyze(v);
-  DB.posts.push({id:'p'+Date.now(),anon:ME.anon,dept:ME.dept,text:v,t:Date.now(),hugs:[],hugN:0,reps:[]});
+  DB.posts.push({id:'p'+Date.now(),org:ME.org,anon:ME.anon,dept:ME.dept,text:v,t:Date.now(),hugs:[],hugN:0,reps:[]});
   save();postin.value='';postin.style.height='40px';wallComposer.classList.remove('open');renderWall();
   xray(v,a,a.lv==='red'?'广场检测到危机信号 → 仅向发帖人本人发出私聊邀请，未通知任何第三方':'仅计入部门议题聚类，不做个体风险分级');
   if(a.lv==='red'){
@@ -2208,7 +2245,7 @@ function bubble(m){
       <div class="wt">${w.title}</div>
       <div class="wg">${w.items.map(([v,u,l])=>
         `<div class="wi"><div class="wv">${v}<small>${u}</small></div><div class="wl">${l}</div></div>`).join('')}</div>
-      <div class="wsrc">来自考勤打卡、审批与待办。<br>不包含任何聊天内容。</div></div>
+      <div class="wsrc">依据考勤打卡、审批与待办生成。<br>打卡仅反映记录时间，不代表实际工作时长。不包含任何聊天内容。</div></div>
       <div class="bb" style="margin-top:9px">${esc(w.line)}</div>`;
     return d;
   }
@@ -2491,7 +2528,6 @@ $$('.navbar span[data-c]').forEach(s=>s.onclick=()=>{
 });
 function renderHR(){
   if(MEID!=='hr')return;
-  $('#sync-t').textContent='数据截至 今日 '+hhmm(Date.now());
   $('#savedlb').textContent='✓ 已保存 · 由 张敏 于 '+hhmm(Date.now())+' 修改';
   // 议题热度：种子 + 广场实时叠加
   const tp={...DB.topics};
