@@ -145,18 +145,33 @@ input,textarea{font-family:inherit;outline:none;border:none;background:none;colo
 .gm.picked .gbb{box-shadow:0 0 0 2px #1e7aff}
 .dtstream.picking .gm .gbb{cursor:pointer}
 
+/* 输入栏（不可用，仅还原真实界面） */
+.dtbar{flex:none;background:#fff;border-top:1px solid #e6e8ea;padding:9px 13px 12px;
+  display:flex;align-items:center;gap:10px;position:relative}
+.dtbar .dbi{font-size:19px;opacity:.32;flex:none}
+.dtbar .dbin{flex:1;background:#f2f3f5;border-radius:16px;padding:8px 13px;font-size:12.5px;
+  color:#b8bdc2}
+.dtbar .dbdemo{position:absolute;right:13px;bottom:52px;background:rgba(29,107,82,.95);color:#fff;
+  font-size:11px;padding:7px 12px;border-radius:100px;box-shadow:0 6px 18px rgba(29,107,82,.32);
+  line-height:1.35;text-align:left}
+.dtbar .dbdemo em{display:block;font-style:normal;font-size:9px;opacity:.75}
+
 /* 长按操作条 */
 .sheet{position:absolute;left:0;right:0;bottom:0;z-index:30;background:#fff;border-top:1px solid #e6e8ea;
   transform:translateY(101%);transition:.28s cubic-bezier(.2,.8,.2,1);border-radius:14px 14px 0 0;
   box-shadow:0 -8px 30px rgba(0,0,0,.12)}
 .sheet.on{transform:none}
-.sheet .sh{font-size:11px;color:#9aa0a6;text-align:center;padding:11px 0 9px;border-bottom:1px solid #f0f1f3}
-.sheet .sb{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:14px 10px 18px}
+.sheet .sb{display:grid;grid-template-columns:repeat(4,1fr);gap:10px 6px;padding:18px 10px 8px}
 .sheet .sb button{text-align:center;font-size:11px;color:#3d4348}
 .sheet .sb button .si{display:block;width:42px;height:42px;margin:0 auto 6px;border-radius:11px;
   background:#f2f3f5;display:grid;place-items:center;font-size:18px}
-.sheet .sb button.pri .si{background:linear-gradient(140deg,#1d6b52,#2d8f6a)}
-.sheet .sb button.pri{color:#1d6b52;font-weight:600}
+.sheet .sb button.off{opacity:.3;pointer-events:none}
+.sheet .shf{font-size:10px;color:#b0b5ba;text-align:center;padding:10px 0 18px}
+
+/* 机器人标签 */
+.botTag{display:inline-block;margin-left:7px;font-size:9.5px;font-weight:500;color:#8a8f94;
+  background:#f0f1f3;border-radius:4px;padding:2px 5px;vertical-align:middle}
+.mrow .mnm .botTag{margin-left:6px}
 /* 多选底栏 */
 .pickbar{position:absolute;left:0;right:0;bottom:0;z-index:29;background:#fff;border-top:1px solid #e6e8ea;
   padding:12px 15px;display:none;align-items:center;gap:12px;box-shadow:0 -6px 22px rgba(0,0,0,.08)}
@@ -233,41 +248,17 @@ input,textarea{font-family:inherit;outline:none;border:none;background:none;colo
 .wkcard .wsrc{font-size:9.5px;color:#7d9488;margin-top:10px;line-height:1.6;
   padding-top:9px;border-top:1px solid rgba(120,160,140,.22)}
 
-/* ---- 转发引用卡 ---- */
-.qcard{background:#fff;border:1px solid #e6e8ea;border-radius:13px;padding:12px 13px;animation:rise .5s both}
-.qcard .qh{font-size:10.5px;color:#8a8f94;display:flex;align-items:center;gap:6px;margin-bottom:9px}
-.qcard .qh .qsrc{background:#eef2f6;border-radius:5px;padding:2px 7px;color:#5a6066;font-size:9.5px}
-.qcard .qh .qrv{margin-left:auto;color:#c4553b;font-size:10px;cursor:pointer}
-.ql{border-left:2.5px solid #d0d5da;padding:2px 0 2px 10px;margin-bottom:7px}
-.ql:last-of-type{margin-bottom:0}
-.ql .qf{font-size:10px;color:#9aa0a6;margin-bottom:2px}
-.ql .qt{font-size:12.5px;line-height:1.65;color:#3d4348;font-family:var(--serif)}
-.mask .ql{border-left-color:#c9d6e2;background:#fafbfc;border-radius:0 6px 6px 0;padding:6px 8px 6px 10px}
-.qcard .qburn{font-size:10px;color:#9aa0a6;font-style:italic;padding:4px 0 0}
-.qcard.burned .ql .qt{color:#b0b5ba;font-style:italic}
-
-/* ---- 脱敏确认卡 ---- */
-.mask{background:#fff;border:1px solid #e6e8ea;border-radius:14px;padding:14px;animation:rise .5s both}
-.mask .mh{font-size:12.5px;font-weight:600;color:#191919;margin-bottom:3px}
-.mask .msub{font-size:10.5px;color:#9aa0a6;margin-bottom:11px}
-.mask .mtb{border:1px solid #eef0f2;border-radius:9px;overflow:hidden;margin-bottom:10px}
-.mask .mr{display:grid;grid-template-columns:1fr 16px 1fr;gap:6px;align-items:center;
-  padding:8px 10px;font-size:11px;border-bottom:1px solid #f2f3f5}
-.mask .mr:last-child{border-bottom:none}
-.mask .mr.hd{background:#f7f8fa;color:#9aa0a6;font-size:9.5px}
-.mask .mr .o{color:#b0b5ba;text-decoration:line-through;word-break:break-all}
-.mask .mr .ar{color:#c4c9cf;text-align:center;font-size:11px}
-.mask .mr .n{color:#1d6b52;font-weight:500;word-break:break-all}
-.mask .msum{font-size:10.5px;color:#1d6b52;background:#eef7f2;border-radius:7px;
-  padding:7px 9px;margin-bottom:12px}
-.mask .mbt{display:flex;flex-direction:column;gap:7px}
-.mask .mbt button{padding:10px;border-radius:9px;font-size:12.5px;text-align:center;transition:.2s}
-.mask .mbt .m1{background:linear-gradient(135deg,#1d6b52,#2d8f6a);color:#fff;font-weight:600}
-.mask .mbt .m2{border:1px solid #e0e3e6;color:#5a6066}
-.mask .mbt .m3{color:#9aa0a6;font-size:11.5px;padding:6px}
-.mask .mfoot{font-size:9.5px;color:#9aa0a6;text-align:center;margin-top:10px;line-height:1.6}
-.mask.done{opacity:.72}
-.mask .mdone{text-align:center;font-size:11.5px;color:#1d6b52;padding:8px 0 2px}
+/* ---- 转发的聊天记录卡（钉钉合并转发样式） ---- */
+.qcard{background:#fff;border:1px solid #e6e8ea;border-radius:9px;padding:11px 12px;
+  animation:rise .5s both;box-shadow:0 1px 2px rgba(0,0,0,.05)}
+.qcard .qh{font-size:11.5px;color:#3d4348;font-weight:600;display:flex;align-items:center;
+  gap:7px;margin-bottom:8px;padding-bottom:8px;border-bottom:1px solid #f0f1f3}
+.qcard .qh .qsrc{margin-left:auto;font-weight:400;color:#9aa0a6;font-size:10px}
+.qcard .qline{font-size:11.5px;line-height:1.65;color:#6b7075;margin-bottom:4px;
+  overflow:hidden;text-overflow:ellipsis;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.qcard .qline b{color:#3d4348;font-weight:500}
+.qcard .qmore{font-size:10.5px;color:#9aa0a6;margin-top:5px}
+.qcard .qfoot{font-size:9.5px;color:#a8adb2;margin-top:9px;padding-top:8px;border-top:1px solid #f0f1f3}
 
 /* ---- 主动关怀 系统横幅 ---- */
 .pushbar{position:absolute;left:9px;right:9px;top:9px;z-index:60;background:rgba(255,255,255,.97);
@@ -1000,22 +991,30 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
         <div class="ht" id="im-t">群聊</div>
         <div class="hs" id="im-n"></div>
       </div>
-      <div class="dtnote" id="im-note">长按任意一条消息，可以转发给 MindBridge</div>
       <div class="dtstream" id="im-stream"></div>
+      <div class="dtbar" id="im-bar">
+        <span class="dbi">😊</span><span class="dbi">＋</span>
+        <div class="dbin">发消息…</div>
+        <button class="dbdemo" id="im-demo">长按消息试试 ›<em>演示用快捷入口</em></button>
+      </div>
 
       <div class="sheet" id="im-sheet">
-        <div class="sh" id="im-sh">消息操作</div>
         <div class="sb">
-          <button data-a="fwd" class="pri"><span class="si">🕯</span>转发</button>
+          <button data-a="copy" class="off"><span class="si">📄</span>复制</button>
+          <button data-a="fwd"><span class="si">↪️</span>转发</button>
+          <button data-a="fav" class="off"><span class="si">⭐</span>收藏</button>
+          <button data-a="quote" class="off"><span class="si">💬</span>引用</button>
           <button data-a="multi"><span class="si">☑️</span>多选</button>
-          <button data-a="copy"><span class="si">📋</span>复制</button>
-          <button data-a="cancel"><span class="si">✕</span>取消</button>
+          <button data-a="todo" class="off"><span class="si">✅</span>待办</button>
+          <button data-a="ding" class="off"><span class="si">📌</span>DING</button>
+          <button data-a="more" class="off"><span class="si">⋯</span>更多</button>
         </div>
+        <div class="shf" id="im-sh">仅「转发」「多选」在本演示中可用</div>
       </div>
 
       <div class="pickbar" id="im-pick">
         <span class="pcx" id="pk-cancel">取消</span>
-        <div class="pc">已选 <b id="pk-n">0</b> 条<span id="pk-max"></span></div>
+        <div class="pc">已选 <b id="pk-n">0</b> 条</div>
         <button class="pgo" id="pk-go">转发</button>
       </div>
 
@@ -1042,25 +1041,17 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
       <div class="notch"><span>21:41</span><span>●●● ⌁ ▮</span></div>
       <div class="dthead">
         <button class="bk" id="bot-back">‹</button>
-        <div class="ht">MindBridge</div>
-        <div class="hs" id="bot-anon"></div>
+        <div class="ht">MindBridge<span class="botTag">机器人</span></div>
+        <div class="hs">···</div>
       </div>
       <div class="stream" id="bot-stream"></div>
       <div class="presets" id="bot-presets"></div>
       <div class="inrow">
-        <button class="sendb" id="bot-clip" aria-label="带入聊天" style="background:#f2f3f5">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#5a6066" stroke-width="2" stroke-linecap="round">
-            <path d="M21 11.5a6 6 0 01-6 6H8a5 5 0 010-10h8a4 4 0 010 8H9a3 3 0 010-6h7"/></svg>
-        </button>
-        <textarea id="bot-in" rows="1" placeholder="说点心里话…"></textarea>
+        <textarea id="bot-in" rows="1" placeholder="发消息…"></textarea>
         <button class="sendb" id="bot-send" aria-label="发送">
           <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"
             stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
         </button>
-      </div>
-      <div class="footA">
-        <span class="clr" id="bot-more">☰ 进入完整应用（广场 · 我的资源）</span>
-        <span class="clr" id="bot-clr">🗑 清空</span>
       </div>
     </div></div>
   </section>
@@ -1533,7 +1524,8 @@ const SEED={
      t:Date.now()-1.8e8,sla:Date.now()-1.7e8,status:'done',resp:38,
      log:['16:20 完成电话确认','已安排「沙盘疗愈·心声共鸣」']},
   ],
-  chats:{}, topics:{加班强度:86,'晋升与调薪':61,'跨部门协作':44,'客户情绪':37,'工作意义感':23},
+  chats:{}, bot:{},
+  topics:{加班强度:86,'晋升与调薪':61,'跨部门协作':44,'客户情绪':37,'工作意义感':23},
 };
 let DB=load();
 function load(){try{const r=localStorage.getItem(KEY);return r?JSON.parse(r):structuredClone(SEED)}catch(e){return structuredClone(SEED)}}
@@ -1862,9 +1854,9 @@ function enter(r,fast){
     },1900);
   }
 }
-/* 进入 MindBridge：首次播匿名化动画，之后直接进机器人会话 */
-function enterMB(){
-  if(AUTHED[MEID]){go('botchat');markRead();return}
+/* 工作台图标 → 打开 MindBridge 应用（网页），首次走匿名化授权 */
+function enterApp(){
+  if(AUTHED[MEID]){bootEmp();go('empApp');return}
   clearAuthFlow();
   $('#auth-staff').classList.add('hide');$('#auth-emp').classList.remove('hide');
   $('#a-nm').textContent=ME.name;$('#a-dt').textContent=ME.dept+' · 工号 '+ME.emp;
@@ -1875,13 +1867,13 @@ function enterMB(){
   authLater(()=>$('#a1').classList.add('in'),120);
   authLater(()=>{$('#a2').classList.add('in');authLater(()=>$('#a-bar').style.width='100%',60)},900);
   authLater(()=>{$('#a1').classList.add('out');$('#a3').classList.add('in')},2300);
-  authLater(()=>{AUTHED[MEID]=1;bootEmp();openBot();},3900);
+  authLater(()=>{AUTHED[MEID]=1;bootEmp();go('empApp')},3900);
 }
-$('#wc-enter').onclick=enterMB;
+$('#wc-enter').onclick=enterApp;
 function finishStaff(){
   if(MEID==='hr'){renderHR();go('hrApp')}else{renderHealer();go('healerApp')}
 }
-$('#e-back').onclick=()=>go('botchat');
+$('#e-back').onclick=()=>go('wecom');
 
 /* ==========================================================================
    钉钉外壳：消息页 / 工作台
@@ -1900,12 +1892,12 @@ function renderDT(){
   const box=$('#wc-msgs');box.innerHTML='';
   // MindBridge 机器人会话置顶
   const bot=document.createElement('button');bot.className='mrow';
-  const last=(DB.chats[ME.anon]||[]).slice(-1)[0];
+  const last=((DB.bot||{})[ME.anon]||[]).slice(-1)[0];
   bot.innerHTML=`<div class="mav mb">🕯${UNREAD?`<span class="dot">${UNREAD}</span>`:''}</div>
-    <div class="mbody"><div class="mtop"><span class="mnm">MindBridge</span>
+    <div class="mbody"><div class="mtop"><span class="mnm">MindBridge<span class="botTag">机器人</span></span>
       <span class="mtm">${last?hhmm(last.ts):'21:41'}</span></div>
       <div class="mpv">${UNREAD?'<b>[有新消息]</b> ':''}${esc(botPreview(last))}</div></div>`;
-  bot.onclick=enterMB;box.appendChild(bot);
+  bot.onclick=()=>{bootEmp();openBot()};box.appendChild(bot);
   // 群聊
   (ME.convs||[]).forEach(c=>{
     const r=document.createElement('button');r.className='mrow';
@@ -1920,8 +1912,7 @@ function botPreview(m){
   if(m.w==='res')return '[疗愈资源] '+m.n;
   if(m.w==='inv')return '[转接邀请]';
   if(m.w==='healer')return '[疗愈师已接入]';
-  if(m.w==='quote')return '[转发的聊天记录]';
-  if(m.w==='mask')return '[待确认的转发内容]';
+  if(m.w==='quote')return '[聊天记录]';
   if(m.w==='work')return ME.work?ME.work.line:'我在这儿。';
   return (m.t||'').slice(0,24);
 }
@@ -1937,8 +1928,7 @@ function openGroup(id){
 function renderGroup(){
   const s=$('#im-stream');s.innerHTML='';s.classList.toggle('picking',PICKING);
   $('#im-pick').classList.toggle('on',PICKING);
-  $('#im-note').textContent=PICKING?'最多可选 5 条，选好后点右下角「转发」'
-    :'点任意一条消息，可以转发给 MindBridge';
+  $('#im-bar').classList.toggle('hide',PICKING);
   CURG.msgs.forEach((m,i)=>{
     const d=document.createElement('div');
     d.className='gm'+(m.me?' mine':'')+(PICKED.includes(i)?' picked':'');
@@ -1948,19 +1938,17 @@ function renderGroup(){
         <div class="gbb">${esc(m.t)}</div><div class="gtm">${m.tm}</div></div>`;
     d.querySelector('.gbb').onclick=()=>{
       if(PICKING){togglePick(i);return}
-      SHEETI=i;$('#im-sh').textContent=`来自 ${m.me?'我':m.f}`;$('#im-sheet').classList.add('on');
+      SHEETI=i;$('#im-sheet').classList.add('on');
     };
     s.appendChild(d);
   });
   s.scrollTop=s.scrollHeight;
   $('#pk-n').textContent=PICKED.length;
-  $('#pk-max').textContent=PICKED.length>=5?' · 已达上限':'';
   $('#pk-go').disabled=!PICKED.length;
 }
 function togglePick(i){
   const at=PICKED.indexOf(i);
-  if(at>=0)PICKED.splice(at,1);
-  else{if(PICKED.length>=5){toast('最多带入 5 条 —— 避免变相导出整个群');return}PICKED.push(i)}
+  if(at>=0)PICKED.splice(at,1);else PICKED.push(i);
   renderGroup();
 }
 let SHEETI=null;
@@ -1968,8 +1956,11 @@ $$('#im-sheet .sb button').forEach(b=>b.onclick=()=>{
   const a=b.dataset.a;$('#im-sheet').classList.remove('on');
   if(a==='fwd'){PICKED=[SHEETI];openFwd()}
   else if(a==='multi'){PICKING=true;PICKED=[SHEETI];renderGroup()}
-  else if(a==='copy')toast('已复制');
 });
+$('#im-demo').onclick=()=>{
+  const s=$('#im-stream'),bbs=s.querySelectorAll('.gbb');
+  if(bbs.length)bbs[bbs.length-1].click();
+};
 $('#im-sheet').addEventListener('click',e=>{if(e.target.id==='im-sheet')$('#im-sheet').classList.remove('on')});
 $('#pk-cancel').onclick=()=>{PICKING=false;PICKED=[];renderGroup()};
 $('#pk-go').onclick=()=>{if(PICKED.length)openFwd()};
@@ -1978,17 +1969,15 @@ $('#fwd-x').onclick=()=>$('#im-fwd').classList.remove('on');
 $('#im-fwd').addEventListener('click',e=>{if(e.target.id==='im-fwd')$('#im-fwd').classList.remove('on')});
 $('#im-back').onclick=()=>{PICKING=false;PICKED=[];go('wecom')};
 
-/* 转发给 MindBridge → 进机器人会话，生成待确认的脱敏卡 */
+/* 转发给 MindBridge → 进机器人会话，直接脱敏落地 */
 $('#fwd-mb').onclick=()=>{
   $('#im-fwd').classList.remove('on');
   const picked=PICKED.slice().sort((a,b)=>a-b).map(i=>CURG.msgs[i]);
   const masked=maskAll(picked,CURG.nm);
   PICKING=false;PICKED=[];
-  if(!AUTHED[MEID]){AUTHED[MEID]=1}
-  bootEmp();
-  push({w:'mask',quotes:masked.quotes,pairs:masked.pairs,group:masked.group,
-    counts:masked.counts,src:'钉钉 · '+masked.group,ts:Date.now()});
-  openBot();
+  bootEmp();openBot();
+  toast('已转发 · 内容已脱敏');
+  setTimeout(()=>landQuote(masked,masked.group),260);
 };
 $('#demo-home').onclick=()=>{
   clearAuthFlow();ME=null;MEID=null;
@@ -2013,13 +2002,17 @@ $('#reset').onclick=()=>{if(confirm('重置全部演示数据？')){DB=structure
 /* ==========================================================================
    员工端
    ========================================================================== */
+/* 机器人会话与树洞私密对话是两个独立 session：
+   各自保存各自的消息记录，共享同一个匿名身份、员工画像与预警状态（DB.st）。 */
 function bootEmp(){
   $('#e-anon').textContent=displayIdentity(ME.anon,ME.alias);
-  $('#bot-anon').textContent=displayIdentity(ME.anon,ME.alias);
-  if(!DB.chats[ME.anon])DB.chats[ME.anon]=[
+  DB.bot=DB.bot||{};
+  if(!DB.bot[ME.anon])DB.bot[ME.anon]=[
     {w:'work',ts:Date.now()-6e4},
-    {w:'ai',t:'我在这儿。今天有什么压在心里的话，都可以说给我听。',ts:Date.now()-5.9e4}];
-  renderWall();renderChat();renderRes();
+    {w:'ai',t:'我是 MindBridge，学校员工关爱的助手。\n有什么想说的，随时发给我。',ts:Date.now()-5.9e4}];
+  if(!DB.chats[ME.anon])DB.chats[ME.anon]=[
+    {w:'ai',t:'我在这儿。今天有什么压在心里的话，都可以说给我听。',ts:Date.now()}];
+  renderWall();renderChat();renderBot();renderRes();
 }
 function openBot(){renderPresets();renderDT();markRead();go('botchat');
   setTimeout(()=>{const s=$('#bot-stream');s.scrollTop=s.scrollHeight},60)}
@@ -2179,17 +2172,17 @@ function renderPresets(){
 
 function renderChat(){
   if(!ME||ME.kind!=='emp')return;
-  const list=DB.chats[ME.anon]||[];
-  // H5：带隐私说明
   const s=$('#stream');s.innerHTML='';
   const privacy=document.createElement('div');privacy.className='privacy-note';
   privacy.innerHTML='<div class="dot"></div><div class="t">你在这里说的每一句话，都属于隐私。<span>不记录真实身份，你可以随时清空本次对话。</span></div>';
   s.appendChild(privacy);
-  list.forEach(m=>s.appendChild(bubble(m)));
+  (DB.chats[ME.anon]||[]).forEach(m=>s.appendChild(bubble(m)));
   s.scrollTop=s.scrollHeight;
-  // 机器人会话：同一份记录
+}
+function renderBot(){
+  if(!ME||ME.kind!=='emp')return;
   const b=$('#bot-stream');b.innerHTML='';
-  list.forEach(m=>b.appendChild(bubble(m)));
+  ((DB.bot||{})[ME.anon]||[]).forEach(m=>b.appendChild(bubble(m)));
   b.scrollTop=b.scrollHeight;
 }
 function bubble(m){
@@ -2206,48 +2199,17 @@ function bubble(m){
       <div class="bb" style="margin-top:9px">${esc(w.line)}</div>`;
     return d;
   }
-  /* L0 转发：脱敏确认 */
-  if(m.w==='mask'){
-    d.className='msg ai';d.style.maxWidth='97%';
-    const c=m.counts||{},sum=[c.names?`${c.names} 个姓名`:'',c.groups?`${c.groups} 个群名`:'',
-      c.phones?`${c.phones} 个手机号`:''].filter(Boolean).join(' · ');
-    d.innerHTML=`<div class="tm">${hhmm(m.ts)}</div><div class="mask${m.done?' done':''}">
-      <div class="mh">收到 ${m.quotes.length} 条转发消息</div>
-      <div class="msub">来自${esc(m.src||'钉钉')}</div>
-      ${m.quotes.map(q=>`<div class="ql"><div class="qf">${esc(q.from)}</div>
-        <div class="qt">${esc(q.text||'（内容已销毁）')}</div></div>`).join('')}
-      <div class="mtb" style="margin-top:11px"><div class="mr hd"><span>原文</span><span></span><span>我收到的</span></div>
-        ${(m.pairs||[]).map(([o,n])=>
-          `<div class="mr"><span class="o">${esc(o)}</span><span class="ar">→</span><span class="n">${esc(n)}</span></div>`).join('')}</div>
-      ${sum?`<div class="msum">✓ 已抹除 ${sum}</div>`:''}
-      ${m.done?`<div class="mdone">— 你已选择「${esc(m.done)}」—</div>`:
-      `<div class="mbt">
-        <button class="m1">只让 AI 看这一次</button>
-        <button class="m2">存进我的情绪线索</button>
-        <button class="m3">撤回，不用了</button></div>
-       <div class="mfoot">无论选哪个，HR 和主管都看不到这段内容</div>`}
-    </div>`;
-    if(!m.done){
-      const pick=(label,mode)=>{if(m.done)return;m.done=label;confirmQuote(m,mode)};
-      d.querySelector('.m1').onclick=()=>pick('只让 AI 看这一次','once');
-      d.querySelector('.m2').onclick=()=>pick('存进我的情绪线索','keep');
-      d.querySelector('.m3').onclick=()=>pick('撤回，不用了','drop');
-    }
-    return d;
-  }
-  /* L0 转发：已确认的引用 */
+  /* L0 转发：聊天记录卡片（钉钉合并转发的样子） */
   if(m.w==='quote'){
     d.className='msg me';d.style.maxWidth='94%';
-    d.innerHTML=`<div class="tm">${hhmm(m.ts)}</div><div class="qcard${m.burned?' burned':''}">
-      <div class="qh">📎 带入 ${m.quotes.length} 条<span class="qsrc">${esc(m.src||'')}</span>
-        ${m.revoked?'':'<span class="qrv">撤回</span>'}</div>
-      ${m.revoked?'<div class="qburn">你已撤回这段内容，它没有参与任何分析。</div>':
-        m.quotes.map(q=>`<div class="ql"><div class="qf">${esc(q.from)}</div>
-          <div class="qt">${esc(q.text||'（内容已销毁）')}</div></div>`).join('')
-        +(m.burned?'<div class="qburn">内容已按你的选择销毁，仅保留来源记录。</div>':'')}
+    const c=m.counts||{},sum=[c.names?`${c.names} 个姓名`:'',c.groups?'群名':'',
+      c.phones?`${c.phones} 个手机号`:''].filter(Boolean).join('、');
+    d.innerHTML=`<div class="tm">${hhmm(m.ts)}</div><div class="qcard">
+      <div class="qh">📄 聊天记录<span class="qsrc">${esc(m.src||'')}</span></div>
+      ${m.quotes.slice(0,3).map(q=>`<div class="qline"><b>${esc(q.from)}：</b>${esc(q.text)}</div>`).join('')}
+      ${m.quotes.length>3?`<div class="qmore">共 ${m.quotes.length} 条</div>`:''}
+      <div class="qfoot">已抹除 ${sum||'可识别信息'} · 原文不留存</div>
     </div>`;
-    const rv=d.querySelector('.qrv');
-    if(rv)rv.onclick=()=>{m.revoked=1;m.quotes=[];save();renderChat();toast('已撤回 · 内容已删除')};
     return d;
   }
   if(m.w==='res'){d.className='msg ai';d.style.maxWidth='94%';
@@ -2262,9 +2224,11 @@ function bubble(m){
       `<div class="btns"><button class="b1">好，帮我联系</button><button class="b2">我再想想</button></div>
        <div class="onlyyou">你不点"好"，不会有任何人被通知</div>`}</div>`;
     if(!decided){
-      d.querySelector('.b1').onclick=()=>{if(m.done)return;m.done='好，帮我联系';consent()};
+      // 邀请卡可能出现在两个 session 中的任意一个，按它所在的流决定回写位置
+      const wh=()=>d.closest('#bot-stream')?'bot':'chat';
+      d.querySelector('.b1').onclick=()=>{if(m.done)return;m.done='好，帮我联系';consent(wh())};
       d.querySelector('.b2').onclick=()=>{if(m.done)return;m.done='我再想想';
-        push({w:'ai',t:'好，我不催你。我一直都在这儿。',ts:Date.now()})};
+        push({w:'ai',t:'好，我不催你。我一直都在这儿。',ts:Date.now()},wh())};
     }
     return d}
   if(m.w==='healer'){d.className='msg ai';d.style.maxWidth='96%';
@@ -2275,45 +2239,56 @@ function bubble(m){
   d.innerHTML=`<div class="tm">${hhmm(m.ts)}</div><div class="bb">${esc(m.t)}</div>`;
   return d;
 }
-function push(m){DB.chats[ME.anon].push(m);save();renderChat();renderDT()}
-/* 当前可见的会话流（机器人 or H5） */
-function curStream(){return $('#botchat').classList.contains('on')?$('#bot-stream'):$('#stream')}
+/* which: 'bot' 机器人会话 | 'chat' H5 树洞。两者独立存储，共享 DB.st 的画像与预警。 */
+function store(which){
+  if(which==='bot'){DB.bot=DB.bot||{};return DB.bot[ME.anon]||(DB.bot[ME.anon]=[])}
+  return DB.chats[ME.anon]||(DB.chats[ME.anon]=[]);
+}
+function push(m,which){store(which||'chat').push(m);save();renderChat();renderBot();renderDT()}
+function curStream(which){return which==='bot'?$('#bot-stream'):$('#stream')}
 
-/* ---------- 转发引用确认 ---------- */
-function confirmQuote(m,mode){
-  save();renderChat();
-  if(mode==='drop'){push({w:'ai',t:'好，这段我不看了。',ts:Date.now()});return}
-  const q={w:'quote',quotes:m.quotes.map(x=>({from:x.from,text:x.text})),
-    src:m.src,mode,burned:false,ts:Date.now()};
-  push(q);
-  const qtxt=m.quotes.map(x=>x.text).join('。');
+/* ---------- 转发落地 ----------
+   直接收下、直接脱敏、直接销毁原文，不让员工做选择题。 */
+function landQuote(masked,srcName){
+  const qtxt=masked.quotes.map(x=>x.text).join('。');
   const st=getST(ME.anon);
   st.quote=qtxt;                       // 供后续几轮做场景加权
   const a=analyze('',st,{quote:qtxt});
+  push({w:'quote',quotes:masked.quotes.map(x=>({from:x.from,text:x.text})),
+    src:srcName,scene:a.scene?a.scene.id:'',counts:masked.counts,ts:Date.now()},'bot');
+  const s=$('#bot-stream');
+  const tp=document.createElement('div');tp.className='msg ai';
+  tp.innerHTML='<div class="bb typing"><i></i><i></i><i></i></div>';
+  s.appendChild(tp);s.scrollTop=s.scrollHeight;
   setTimeout(()=>{
-    // 只转发不说话 —— 先问，不判定
-    push({w:'ai',t:'你把这段转过来，是它哪一句让你最不舒服？',ts:Date.now()});
+    tp.remove();
+    push({w:'ai',t:openingFor(a.scene),ts:Date.now()},'bot');
+    st.turn++;st.lastTs=Date.now();
     xray(qtxt,{emo:a.scene?[a.scene.id]:['待判定'],lv:'green',hits:[],inten:a.inten,n:0,
       rule:a.scene?`识别场景「${a.scene.id}」· 引用内容不产出情绪标签`:'引用内容仅作场景识别'},
-      '<b>不做判定，先提问</b>——不从第三方的话里推断员工的情绪。'+
-      (mode==='once'?'<br>正文将在应答后销毁，仅保留来源记录。':''));
-    // 「只看这一次」：应答完成后销毁正文，销毁过程可见
-    if(mode==='once')setTimeout(()=>{
-      q.burned=true;q.quotes=q.quotes.map(x=>({from:x.from,text:''}));
-      m.quotes=m.quotes.map(x=>({from:x.from,text:''}));
-      save();renderChat();toast('引用正文已销毁 · 仅保留来源记录');
-    },7000);
-  },900);
+      '先承接情绪，再了解情况。<b>不从第三方的话里推断员工的情绪</b>——情绪标签只由员工自己的话产生。');
+    save();
+  },1400);
+}
+/* 转发之后的第一句：先安慰，再了解，不追问"哪句最难受" */
+const OPENING={
+  家校沟通:'这样的话被当着一群人问出来，换谁都会难受。\n你带这个班多久了？',
+  客户冲突:'被这样对待，心里肯定很不是滋味。\n当时你是怎么撑下来的？',
+  上下级:'看到了。这种时候，压力多半是没处放的。\n你手上现在同时压着几件事？',
+  同事协作:'看到了。这种来回拉扯最耗人。\n这事拖多久了？',
+};
+function openingFor(scene){
+  return (scene&&OPENING[scene.id])||'我看到了。\n这段发生的时候，你心里是什么感觉？';
 }
 
-function send(inpSel){
+function send(inpSel,which){
   const inp=$(inpSel),v=inp.value.trim();if(!v)return;
   inp.value='';inp.style.height='40px';
   $$('.presets').forEach(p=>p.classList.remove('show'));
-  push({w:'me',t:v,ts:Date.now()});
+  push({w:'me',t:v,ts:Date.now()},which);
   const st=getST(ME.anon);
   const a=analyze(v,st,{quote:st.quote});
-  const s=curStream();
+  const s=curStream(which);
   const tp=document.createElement('div');tp.className='msg ai';
   tp.innerHTML='<div class="bb typing"><i></i><i></i><i></i></div>';
   s.appendChild(tp);s.scrollTop=s.scrollHeight;
@@ -2323,13 +2298,13 @@ function send(inpSel){
   setTimeout(()=>{
     tp.remove();
     if(a.lv==='red'){
-      push({w:'ai',t:RED_REPLY,ts:Date.now()});
-      setTimeout(()=>push({w:'inv',ts:Date.now()}),800);
+      push({w:'ai',t:RED_REPLY,ts:Date.now()},which);
+      setTimeout(()=>push({w:'inv',ts:Date.now()},which),800);
       xray(v,a,'生成共情回应 + 转接邀请。<b style="color:#e88b78">未通知任何人</b>——等待员工授权。');
     }else{
-      push({w:'ai',t:genReply(a,st,v),ts:Date.now()});
+      push({w:'ai',t:genReply(a,st,v),ts:Date.now()},which);
       const r=pickRes(a,st,a.scene);
-      if(r)setTimeout(()=>push({w:'res',n:r.n,d:r.d,i:r.i,ts:Date.now()}),900);
+      if(r)setTimeout(()=>push({w:'res',n:r.n,d:r.d,i:r.i,ts:Date.now()},which),900);
       xray(v,a,r?`推送绿色自助资源「${r.n}」· 以邀请口吻呈现，不显示预警等级`
         :(a.intent?`识别为「${a.intent.id}」类提问 · 走专项应答，不推资源`
         :'仅共情承接 —— 未到推送时机，避免打扰'));
@@ -2339,13 +2314,14 @@ function send(inpSel){
     save();
   },wait);
 }
-function sendChat(){send('#chatin')}
+function sendChat(){send('#chatin','chat')}
 /* 关键：点按钮/预设时阻止输入框失焦，否则 presets 收起会让布局跳动、click 落空 */
-[['#chatsend','#chatin','#presets'],['#bot-send','#bot-in','#bot-presets']].forEach(([bt,inp,pre])=>{
-  $(bt).onclick=()=>send(inp);
+[['#chatsend','#chatin','#presets','chat'],['#bot-send','#bot-in','#bot-presets','bot']]
+.forEach(([bt,inp,pre,wh])=>{
+  $(bt).onclick=()=>send(inp,wh);
   $(bt).addEventListener('mousedown',e=>e.preventDefault());
   $(pre).addEventListener('mousedown',e=>e.preventDefault());
-  $(inp).addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send(inp)}});
+  $(inp).addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send(inp,wh)}});
   $(inp).addEventListener('focus',()=>$(pre).classList.add('show'));
   $(inp).addEventListener('blur',()=>setTimeout(()=>{
     if(document.activeElement!==$(inp))$(pre).classList.remove('show')},260));
@@ -2353,21 +2329,13 @@ function sendChat(){send('#chatin')}
     this.style.height='40px';this.style.height=Math.min(this.scrollHeight,88)+'px';
     if(this.value.trim())$(pre).classList.add('show')});
 });
-const clearChat=()=>{
+$('#clrbtn').onclick=()=>{
   if(confirm('将永久删除本会话全部记录，且无法恢复。确认清空？')){
     DB.chats[ME.anon]=[{w:'ai',t:'已经清空了。我们从这里重新开始。',ts:Date.now()}];
-    DB.st&&delete DB.st[ME.anon];
-    save();renderChat();renderDT();toast('记录已永久删除');
+    save();renderChat();toast('记录已永久删除');
   }
 };
-$('#clrbtn').onclick=clearChat;
-$('#bot-clr').onclick=clearChat;
 $('#bot-back').onclick=()=>{go('wecom');armPush()};
-$('#bot-more').onclick=()=>go('empApp');
-$('#bot-clip').onclick=()=>{
-  const g=(ME.convs||[])[0];if(!g){toast('没有可带入的会话');return}
-  openGroup(g.id);toast('点一条消息 → 转发 → MindBridge');
-};
 
 /* ==========================================================================
    主动关怀
@@ -2391,7 +2359,7 @@ function armPush(){
     if(!ME||ME.kind!=='emp')return;
     if($('#botchat').classList.contains('on'))return;     // 人已经回来了，不再推
     st.pushed=1;UNREAD=1;
-    push({w:'ai',t:rule.msg,ts:Date.now()});
+    push({w:'ai',t:rule.msg,ts:Date.now()},'bot');
     renderDT();showPush(rule.msg,rule.real);
   },rule.delay);
 }
@@ -2400,16 +2368,16 @@ function showPush(msg,real){
     p.querySelector('.pmsg').textContent=msg;
     p.querySelector('.pnote').textContent=`（演示：实际为${real}触达。措辞不含任何具体内容——即使被企业看到也无害。）`;
     p.classList.add('on');
-    p.onclick=()=>{hidePush();enterMB()};
+    p.onclick=()=>{hidePush();bootEmp();openBot()};
   });
   clearTimeout(showPush._t);showPush._t=setTimeout(hidePush,9000);
 }
 function hidePush(){$$('[data-push]').forEach(p=>p.classList.remove('on'))}
 
 /* ---------- 知情同意 → 建单 ---------- */
-function consent(){
-  push({w:'ai',t:'好。我已经把这条信号交给李佳了——她是真实的人，只会看到你的匿名编号，看不到你的名字。',ts:Date.now()});
-  setTimeout(()=>push({w:'healer',ts:Date.now()}),700);
+function consent(which){
+  push({w:'ai',t:'好。我已经把这条信号交给李佳了——她是真实的人，只会看到你的匿名编号，看不到你的名字。',ts:Date.now()},which);
+  setTimeout(()=>push({w:'healer',ts:Date.now()},which),700);
   DB.cases.push({id:'c'+Date.now(),anon:ME.anon,dept:ME.dept,level:'r',
     tags:['存在性议题','职业身份焦虑','持续失眠 · 7天'],
     t:Date.now(),sla:Date.now()+2*3600*1000,status:'pending',log:[]});
@@ -2423,7 +2391,9 @@ function consent(){
 function renderRes(){
   if(!ME||ME.kind!=='emp')return;
   const box=$('#reslist');
-  const got=(DB.chats[ME.anon]||[]).filter(m=>m.w==='res');
+  // 两个 session 是独立的，但推给你的资源汇总在一处
+  const got=[...(DB.chats[ME.anon]||[]),...((DB.bot||{})[ME.anon]||[])]
+    .filter(m=>m.w==='res').sort((a,b)=>a.ts-b.ts);
   if(!got.length){box.innerHTML='<div class="emptyA">还没有收到资源。<br>在「说说话」里聊聊，<br>合适的会自己找上来。</div>';return}
   box.innerHTML='';
   got.slice().reverse().forEach(m=>{
@@ -2771,7 +2741,7 @@ function xray(txt,a,act){
    ========================================================================== */
 function renderAll(){
   if(!ME)return;
-  if(ME.kind==='emp'){renderWall();renderChat();renderRes()}
+  if(ME.kind==='emp'){renderWall();renderChat();renderBot();renderRes();renderDT()}
   if(MEID==='healer')renderHealer();
   if(MEID==='hr')renderHR();
 }
