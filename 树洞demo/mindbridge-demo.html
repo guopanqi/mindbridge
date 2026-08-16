@@ -1249,6 +1249,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
       <div class="navbar">
         <span class="on" data-c="dash">组织看板</span>
         <span data-c="cfg">干预阶梯配置</span>
+        <span data-c="sensing">办公数据感知</span>
         <!-- 功能尚未接入，实现后移除 hidden -->
         <span hidden>活动排期</span><span hidden>报表导出</span>
       </div>
@@ -1345,35 +1346,6 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
             <div class="mx-wrap"><table class="mx" id="mx"></table></div>
           </div>
 
-          <div class="cardC">
-            <h4>办公数据感知能力<span class="src">分两级授权</span></h4>
-            <div class="cs">MindBridge 从钉钉获取的数据分为两级。
-              <b>一级为行为元数据，不含任何聊天内容</b>，随应用安装默认开启；
-              <b>二级为群聊消息读取，需企业单独审批</b>，默认全部关闭。</div>
-
-            <div class="lvl">
-              <div class="lvhd">
-                <span class="lvtag one">一级</span>
-                <span class="lvt">行为元数据</span>
-                <span class="lvs">随应用安装授权 · 默认开启 · 不含任何聊天内容</span>
-              </div>
-              <div class="grp" id="lv1-list"></div>
-              <div class="lvnote">以上均为钉钉标准开放接口。团队级聚合，最小样本 8 人，
-                不落个人档案，不与绩效、晋升、续聘挂钩。员工可自行退出统计。</div>
-            </div>
-
-            <div class="lvl">
-              <div class="lvhd">
-                <span class="lvtag two">二级</span>
-                <span class="lvt">群聊消息读取</span>
-                <span class="lvs">需企业单独审批 · 默认全部关闭</span>
-              </div>
-              <div class="cs" style="margin:0 0 10px">是否可开启<b>不按行业判断，按群的成员构成判断</b>——
-                群里只要有非本企业人员，你就无法代他们同意。</div>
-              <div class="grp" id="grp-list"></div>
-            </div>
-          </div>
-
           <div class="cardC policy-card crisis">
             <h4><i class="dotL r"></i>红色预警 · 专业介入流程</h4>
             <div class="cs">命中危机词库后停止自动内容推荐，转入人工响应流程。HRBP 可查看流程，不可修改。</div>
@@ -1390,6 +1362,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
                 <div class="service-editor" id="refer-services" data-kind="refer"></div></div>
             </div>
           </div>
+
           <div class="cardC policy-card">
             <h4>系统升级规则</h4>
             <div class="cs">规则由专业团队制定并经伦理审查，系统自动执行，HRBP 不可单方调整。</div>
@@ -1419,6 +1392,38 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
                 <div class="rd2">该模式已被伦理委员会禁用：构成未告知监控</div></div></div>
               <span class="panel-lock" role="img" tabindex="0" aria-label="由伦理委员会审定，HRBP 不可修改"
                 data-tip="由伦理委员会审定，HRBP 不可修改">🔒</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 办公数据感知独立于干预阶梯：这是数据授权与隐私配置，不是干预策略。 -->
+        <div class="paneC" id="c-sensing">
+          <div class="cardC">
+            <h4>办公数据感知能力<span class="src">分两级授权</span></h4>
+            <div class="cs">MindBridge 从钉钉获取的数据分为两级。
+              <b>一级为行为元数据，不含任何聊天内容</b>，随应用安装默认开启；
+              <b>二级为群聊消息读取，需企业单独审批</b>，默认全部关闭。</div>
+
+            <div class="lvl">
+              <div class="lvhd">
+                <span class="lvtag one">一级</span>
+                <span class="lvt">行为元数据</span>
+                <span class="lvs">随应用安装授权 · 默认开启 · 不含任何聊天内容</span>
+              </div>
+              <div class="grp" id="lv1-list"></div>
+              <div class="lvnote">以上均为钉钉标准开放接口。团队级聚合，最小样本 8 人，
+                不落个人档案，不与绩效、晋升、续聘挂钩。员工可自行退出统计。</div>
+            </div>
+
+            <div class="lvl">
+              <div class="lvhd">
+                <span class="lvtag two">二级</span>
+                <span class="lvt">群聊消息读取</span>
+                <span class="lvs">需企业单独审批 · 默认全部关闭</span>
+              </div>
+              <div class="cs" style="margin:0 0 10px">是否可开启<b>不按行业判断，按群的成员构成判断</b>——
+                群里只要有非本企业人员，你就无法代他们同意。</div>
+              <div class="grp" id="grp-list"></div>
             </div>
           </div>
         </div>
@@ -1898,8 +1903,8 @@ function enter(r,fast){
   ME=ROLES[r];MEID=r;
   $$('#swrole button').forEach(b=>b.classList.toggle('on',b.dataset.r===r));
   if(ME.kind==='emp'){
-    bootEmp();renderDT();
-    if(fast){go('botchat');return}
+    bootEmp();renderDT();showWork();
+    if(fast){go('wecom');return}
     go('wecom');
   }else{
     $('#auth-emp').classList.add('hide');$('#auth-staff').classList.remove('hide');
@@ -1942,6 +1947,12 @@ $('#e-back').onclick=()=>go('wecom');
    钉钉外壳：消息页 / 工作台
    ========================================================================== */
 let UNREAD=0;
+function showWork(){
+  $$('#wc-tab button').forEach(b=>b.classList.toggle('on',b.dataset.t==='work'));
+  $('#wc-msgs').classList.add('hide');
+  $('#wc-work').classList.remove('hide');
+  $('#wc-t').textContent='工作台';
+}
 $$('#wc-tab button').forEach(b=>b.onclick=()=>{
   $$('#wc-tab button').forEach(x=>x.classList.toggle('on',x===b));
   const msgs=b.dataset.t==='msgs';
