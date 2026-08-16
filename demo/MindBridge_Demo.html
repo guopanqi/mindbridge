@@ -1,0 +1,785 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MindBridge AI · 企业员工心理安全与成长共生系统</title>
+<style>
+/* ============================================================
+   MindBridge AI — 设计令牌
+   沿用团队 PPT 工具包配色：Forest & Moss + warm amber
+   ============================================================ */
+:root{
+  --forest:#2C5F2D; --forest2:#244C25; --forest3:#356B36;
+  --moss:#7BA05B;   --mossl:#AEC79A;   --mosst:#EDF1E6;
+  --amber:#E1943B;  --amberl:#F3D9A8;
+  --cream:#F5F1E8;  --card:#FBF8F1;
+  --ink:#2E2A24;    --mute:#6E6A60;    --line:#E3DCCB;
+  --white:#fff;
+  --green:#5C9A5E; --yellow:#E1943B; --red:#C4553B;
+  --r:14px; --r-sm:10px;
+  --sh:0 2px 10px rgba(110,106,96,.13);
+  --sh-lg:0 10px 34px rgba(110,106,96,.22);
+  --fs: "PingFang SC","Microsoft YaHei","Hiragino Sans GB",system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:var(--fs);background:var(--cream);color:var(--ink);
+     font-size:15px;line-height:1.65;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;font-size:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,textarea,select{font-family:inherit;font-size:inherit;color:inherit}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:#D9D2C1;border-radius:4px}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ---------- 通用原子 ---------- */
+.hide{display:none !important}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:999px;
+      font-size:12px;font-weight:600;line-height:1.5}
+.pill-green{background:#E6F0E4;color:#3E7340}
+.pill-amber{background:#FBEBD4;color:#B0701F}
+.pill-red{background:#F7E2DC;color:#A5402A}
+.pill-ghost{background:var(--mosst);color:var(--forest)}
+.dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
+.muted{color:var(--mute)}
+.tiny{font-size:12px;line-height:1.55}
+.btn{background:var(--forest);color:#fff;padding:11px 20px;border-radius:var(--r-sm);
+     font-weight:600;transition:.16s;display:inline-flex;align-items:center;gap:7px;justify-content:center}
+.btn:hover{background:var(--forest3)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-ghost{background:transparent;border:1px solid var(--line);color:var(--ink)}
+.btn-ghost:hover{background:var(--mosst);border-color:var(--mossl)}
+.btn-amber{background:var(--amber)}
+.btn-amber:hover{background:#CE8430}
+
+/* ============================================================
+   身份选择（登录）
+   ============================================================ */
+#login{min-height:100%;display:flex;flex-direction:column;align-items:center;
+       justify-content:center;padding:40px 24px;
+       background:radial-gradient(1100px 620px at 50% -10%,#FFFDF7 0%,var(--cream) 62%)}
+.brand{text-align:center;margin-bottom:6px}
+.brand h1{font-size:34px;font-weight:800;letter-spacing:-.5px;color:var(--forest)}
+.brand h1 span{color:var(--amber)}
+.brand .sub{color:var(--mute);margin-top:8px;font-size:15px}
+.brand .claim{margin-top:16px;display:inline-block;padding:7px 16px;border-radius:999px;
+              background:var(--mosst);color:var(--forest);font-size:13.5px;font-weight:600}
+.login-q{margin:42px 0 18px;font-size:14px;color:var(--mute);letter-spacing:3px}
+.roles{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;max-width:900px}
+.role{width:198px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+      padding:22px 18px;text-align:center;transition:.18s;box-shadow:var(--sh)}
+.role:hover{transform:translateY(-4px);box-shadow:var(--sh-lg);border-color:var(--mossl)}
+.role .av{width:52px;height:52px;border-radius:50%;margin:0 auto 12px;display:grid;
+          place-items:center;font-size:23px;background:var(--mosst)}
+.role.hr .av{background:#E8EEF6}
+.role.th .av{background:var(--amberl)}
+.role .nm{font-weight:700;font-size:16.5px}
+.role .rl{font-size:12.5px;color:var(--mute);margin-top:3px}
+.role .tag{margin-top:12px;font-size:11.5px;padding:3px 9px;border-radius:999px;
+           background:var(--mosst);color:var(--forest);display:inline-block}
+.role.hr .tag{background:#E8EEF6;color:#3C5A80}
+.role.th .tag{background:var(--amberl);color:#8E5B18}
+.login-foot{margin-top:40px;text-align:center;max-width:640px}
+.login-foot .hintline{font-size:12.5px;color:var(--mute);line-height:1.9}
+.login-actions{margin-top:18px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.login-actions .btn{padding:8px 15px;font-size:13px;font-weight:600}
+
+/* ============================================================
+   外壳
+   ============================================================ */
+#app{min-height:100%;display:none;flex-direction:column}
+#app.on{display:flex}
+.topbar{height:52px;background:var(--forest);color:#fff;display:flex;align-items:center;
+        gap:14px;padding:0 16px;flex:0 0 auto;position:sticky;top:0;z-index:60}
+.topbar .logo{font-weight:800;letter-spacing:-.3px;font-size:16px}
+.topbar .logo span{color:var(--amberl)}
+.topbar .who{margin-left:auto;display:flex;align-items:center;gap:10px;font-size:13px}
+.topbar .who .badge{background:rgba(255,255,255,.16);padding:4px 11px;border-radius:999px;font-weight:600}
+.topbar button.tb{background:rgba(255,255,255,.14);padding:5px 12px;border-radius:8px;
+                  font-size:12.5px;font-weight:600;transition:.15s}
+.topbar button.tb:hover{background:rgba(255,255,255,.26)}
+.stage{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:26px 20px 40px}
+
+/* ---------- 行业选择器 ---------- */
+.indbar{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);
+        padding:4px 6px 4px 12px;border-radius:999px;font-size:12.5px}
+.indbar select{background:transparent;border:none;color:#fff;font-weight:700;font-size:12.5px;
+               padding:3px 4px;outline:none;cursor:pointer}
+.indbar select option{color:var(--ink)}
+
+/* ============================================================
+   员工端 · 手机框
+   ============================================================ */
+.phones{display:flex;gap:26px;justify-content:center;align-items:flex-start;flex-wrap:wrap}
+.phone{width:372px;height:756px;background:var(--card);border-radius:34px;
+       border:1px solid var(--line);box-shadow:var(--sh-lg);
+       display:flex;flex-direction:column;overflow:hidden;position:relative}
+.ph-label{position:absolute;top:-24px;left:0;font-size:12px;color:var(--mute);font-weight:600}
+.ph-top{flex:0 0 auto;padding:16px 18px 12px;background:var(--forest);color:#fff}
+.ph-top .r1{display:flex;align-items:center;gap:8px}
+.ph-top .appname{font-weight:700;font-size:15.5px}
+.ph-top .anon{margin-left:auto;font-size:11px;background:rgba(255,255,255,.17);
+              padding:3px 9px;border-radius:999px;font-weight:600}
+.ph-top .vow{margin-top:9px;font-size:11.5px;color:#D6E4D2;display:flex;align-items:center;gap:5px}
+.ph-body{flex:1;overflow-y:auto;overflow-x:hidden}
+.ph-tabs{flex:0 0 auto;height:60px;display:flex;border-top:1px solid var(--line);background:var(--card)}
+.ph-tabs button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+                gap:3px;font-size:11.5px;color:var(--mute);font-weight:600;transition:.15s}
+.ph-tabs button .ic{font-size:19px;line-height:1}
+.ph-tabs button.on{color:var(--forest)}
+.ph-tabs button.on .ic{transform:translateY(-1px)}
+
+/* ---------- 共鸣墙 ---------- */
+.wall-head{padding:16px 16px 10px}
+.wall-head h3{font-size:17px;font-weight:700}
+.wall-head p{font-size:12.5px;color:var(--mute);margin-top:3px}
+.wall-stat{margin:12px 16px 4px;background:var(--mosst);border-radius:var(--r-sm);
+           padding:11px 14px;font-size:12.5px;color:var(--forest);font-weight:600;
+           display:flex;align-items:center;gap:8px}
+.wall-stat b{font-size:16px;font-weight:800}
+
+.composer{margin:12px 16px;background:#fff;border:1px solid var(--line);
+          border-radius:var(--r);padding:12px;box-shadow:var(--sh)}
+.composer textarea{width:100%;border:none;outline:none;resize:none;height:62px;
+                   font-size:14px;line-height:1.6;background:transparent}
+.composer textarea::placeholder{color:#B8B2A4}
+.composer .cfoot{display:flex;align-items:center;gap:8px;margin-top:6px;
+                 border-top:1px solid var(--line);padding-top:9px}
+.composer .cnt{font-size:11.5px;color:var(--mute);margin-left:auto}
+.composer .btn{padding:7px 15px;font-size:13px;border-radius:8px}
+.kindness{margin:0 16px 10px;font-size:12px;padding:9px 12px;border-radius:var(--r-sm);
+          display:flex;gap:8px;align-items:flex-start;line-height:1.6}
+.kindness.checking{background:#F1EEE5;color:var(--mute)}
+.kindness.pass{background:#E6F0E4;color:#3E7340}
+.kindness.soft{background:#FBEBD4;color:#8E5B18}
+.kindness.mask{background:#E8EEF6;color:#3C5A80}
+.spin{width:12px;height:12px;border:2px solid #CFC8B7;border-top-color:var(--forest);
+      border-radius:50%;animation:sp .7s linear infinite;flex:0 0 auto;margin-top:3px}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+.wall-list{padding:4px 16px 22px;display:flex;flex-direction:column;gap:12px}
+.wcard{background:#fff;border:1px solid var(--line);border-radius:var(--r);
+       padding:14px;box-shadow:var(--sh);animation:pop .35s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes pop{from{opacity:0;transform:translateY(-8px) scale(.98)}to{opacity:1;transform:none}}
+.wcard.mine{border-color:var(--mossl);background:#FDFDF9}
+.wcard .txt{font-size:14.5px;line-height:1.7}
+.wcard .meta{display:flex;align-items:center;gap:7px;margin-top:9px;font-size:11.5px;color:var(--mute)}
+.wcard .meta .id{font-weight:700;color:#9A9386;letter-spacing:.4px}
+.wcard .meta .mine-tag{background:var(--mosst);color:var(--forest);padding:2px 7px;
+                       border-radius:999px;font-weight:700}
+.wcard .bar{display:flex;align-items:center;gap:8px;margin-top:11px;padding-top:10px;
+            border-top:1px solid var(--line)}
+.metoo{display:inline-flex;align-items:center;gap:6px;padding:6px 13px;border-radius:999px;
+       background:var(--mosst);color:var(--forest);font-size:12.5px;font-weight:700;transition:.15s}
+.metoo:hover{background:var(--mossl)}
+.metoo.on{background:var(--forest);color:#fff}
+.metoo .n{font-variant-numeric:tabular-nums}
+.echo-add{font-size:12px;color:var(--mute);padding:6px 10px;border-radius:999px;
+          border:1px dashed var(--line);transition:.15s}
+.echo-add:hover{border-color:var(--mossl);color:var(--forest);background:var(--mosst)}
+.echoes{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.echo{font-size:12px;padding:4px 11px;border-radius:999px;background:#F3F0E7;
+      color:#5F5A4F;animation:pop .3s ease}
+.echo.new{background:var(--amberl);color:#8E5B18}
+.echo-note{margin-top:8px;font-size:10.5px;color:#A9A294;letter-spacing:.3px}
+.echo-input{display:flex;gap:6px;margin-top:9px}
+.echo-input input{flex:1;border:1px solid var(--line);border-radius:999px;padding:7px 13px;
+                  font-size:12.5px;outline:none;background:#fff}
+.echo-input input:focus{border-color:var(--mossl)}
+.echo-input button{padding:7px 14px;border-radius:999px;background:var(--forest);
+                   color:#fff;font-size:12.5px;font-weight:600}
+.echo-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.echo-chips button{font-size:12px;padding:5px 11px;border-radius:999px;
+                   border:1px solid var(--line);color:var(--mute);transition:.15s}
+.echo-chips button:hover{border-color:var(--mossl);color:var(--forest);background:var(--mosst)}
+
+/* ---------- 危机信号 · 就地邀请（不上报） ---------- */
+.invite{margin-top:12px;padding:13px 14px;border-radius:var(--r-sm);
+        background:linear-gradient(180deg,#FFF8EC,#FDF1DC);border:1px solid var(--amberl);
+        animation:pop .5s ease}
+.invite .t{font-size:13.5px;line-height:1.7;color:#7C5314}
+.invite .row{display:flex;gap:8px;margin-top:10px}
+.invite .btn{padding:8px 15px;font-size:13px;border-radius:8px}
+.invite .seen{margin-top:9px;font-size:10.5px;color:#A98A54;display:flex;align-items:center;gap:5px}
+
+/* ---------- 空态 ---------- */
+.empty{padding:44px 24px;text-align:center;color:var(--mute)}
+.empty .ic{font-size:34px;opacity:.5}
+.empty p{margin-top:10px;font-size:13px;line-height:1.8}
+
+/* ---------- 占位（下一批实现） ---------- */
+.todo{padding:56px 24px;text-align:center;color:var(--mute)}
+.todo .ic{font-size:36px;opacity:.45}
+.todo h4{margin-top:12px;color:var(--ink);font-size:15px}
+.todo p{margin-top:7px;font-size:12.5px;line-height:1.8}
+.todo .next{margin-top:16px;display:inline-block;padding:6px 13px;border-radius:999px;
+            background:var(--mosst);color:var(--forest);font-size:11.5px;font-weight:700}
+
+/* ---------- PC 端（HRBP / 疗愈师）占位外壳 ---------- */
+.desk{width:100%;max-width:1120px;background:var(--card);border:1px solid var(--line);
+      border-radius:var(--r);box-shadow:var(--sh-lg);overflow:hidden}
+.desk-head{padding:20px 24px;border-bottom:1px solid var(--line);display:flex;
+           align-items:center;gap:12px;background:#fff}
+.desk-head h2{font-size:19px;font-weight:700}
+.desk-head .pill{margin-left:auto}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     身份选择
+     ============================================================ -->
+<div id="login">
+  <div class="brand">
+    <h1>MindBridge <span>AI</span></h1>
+    <div class="sub">企业员工心理安全与成长共生系统 · 双轨模型演示</div>
+    <div class="claim">AI 全程在场，但每一个影响真人的决定，都由人按下确认键</div>
+  </div>
+
+  <div class="login-q">请 选 择 你 的 身 份</div>
+  <div class="roles" id="roles"></div>
+
+  <div class="login-foot">
+    <div class="hintline">
+      本演示为<b>单文件离线原型</b>，全部数据保存在你本机浏览器中，不上传任何服务器。<br>
+      想看跨账号联动：<b>用另一个浏览器标签页打开本文件</b>，以「员工 002」登录，两边实时同步。
+    </div>
+    <div class="login-actions">
+      <button class="btn btn-ghost" id="btn-dual">⧉ 同屏双设备模式</button>
+      <button class="btn btn-ghost" id="btn-reset">↺ 重置演示数据</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     应用外壳
+     ============================================================ -->
+<div id="app">
+  <div class="topbar">
+    <div class="logo">MindBridge <span>AI</span></div>
+    <div class="indbar">
+      行业模板
+      <select id="industry"></select>
+    </div>
+    <div class="who">
+      <span class="badge" id="who-badge"></span>
+      <button class="tb" id="btn-switch">切换身份</button>
+    </div>
+  </div>
+  <div class="stage" id="stage"></div>
+</div>
+
+<script>
+/* ============================================================
+   0. 六大行业配置层
+   内容全部取自《MindBridge AI 方案书》第六、七章，
+   保证 Demo 与 PDF 方案书口径完全一致。
+   ============================================================ */
+const INDUSTRIES = {
+  it: {
+    name:"互联网 / IT",
+    detect:["AI树洞"],
+    pains:["赶工焦虑","「被替代」存在性恐慌"],
+    depts:["研发部","产品部","测试部","设计部"],
+    ladder:{
+      green:[{t:"三分钟呼吸着陆法",k:"音频 · 3分钟"},{t:"可控/不可控四象限工作纸",k:"工具 · 5分钟"}],
+      yellow:[{t:"「情绪红绿灯」正念工作坊",k:"团体 · 90分钟 · 15-30人"}],
+      red:[{t:"「身份重塑」叙事疗愈深度小组",k:"深度小组 · 2小时×4周 · 6-8人"}]
+    },
+    seeds:[
+      {txt:"项目又双叒延期了，明明每天都在加班，还是觉得自己拖了后腿。", n:1204, ec:["我也这样","你已经很努力了"]},
+      {txt:"最怕手机在半夜响。", n:876, ec:["抱抱","+1"]},
+      {txt:"35 岁生日那天，我第一次认真想：如果明天被优化了，我还剩什么。", n:1533, ec:["同感","你不是一个人"]},
+      {txt:"今天需求第七次变更，我已经不生气了，就是有点麻。", n:642, ec:["麻了"]}
+    ],
+    topics:[["加班",38],["职业发展",26],["需求变更",19],["调薪",11],["团队协作",6]]
+  },
+  fin: {
+    name:"金融 / 银行",
+    detect:["AI树洞","AI思想画像"],
+    pains:["业绩高压","决策疲劳","竞争性孤独"],
+    depts:["对公业务部","零售银行部","风控部","投行部"],
+    ladder:{
+      green:[{t:"5分钟正念音频",k:"音频 · 5分钟"},{t:"情绪暂停法卡片",k:"工具 · 随身"}],
+      yellow:[{t:"「积极心理与管理提升」培训",k:"讲座+互动 · 3.5小时"}],
+      red:[{t:"「跨团队疗愈小组」",k:"跨部门对话 · 2小时"}]
+    },
+    seeds:[
+      {txt:"月底最后三天，报表上的数字比我的心跳还快。", n:983, ec:["懂","一起熬"]},
+      {txt:"办公室里所有人都在笑，但我知道大家都在硬撑。", n:1471, ec:["+1","抱抱"]},
+      {txt:"下午三点以后，我已经没有能力再做任何一个判断了。", n:729, ec:["决策疲劳是真的"]}
+    ],
+    topics:[["业绩指标",42],["加班",24],["晋升",17],["客户压力",12],["团队氛围",5]]
+  },
+  med: {
+    name:"医护 / 护理",
+    detect:["1分钟心灵体检","AI树洞"],
+    pains:["共情疲劳","生死无意义感","夜班躯体紧绷"],
+    depts:["急诊科","ICU","护理部","门诊部"],
+    ladder:{
+      green:[{t:"交班后工间舒展操",k:"引导 · 10分钟"},{t:"身体扫描音频",k:"音频 · 8分钟"}],
+      yellow:[{t:"巴林特小组",k:"案例研讨 · 2小时 · 8-12人"}],
+      red:[{t:"「天气预报 + 困境盲盒」团体工作坊",k:"团体 · 75分钟"}]
+    },
+    seeds:[
+      {txt:"今天又送走一个，回到值班室，发现自己已经哭不出来了。", n:1688, ec:["抱抱","辛苦了"]},
+      {txt:"连着三个夜班，回家躺下反而睡不着。", n:912, ec:["一样","保重"]},
+      {txt:"家属那句话，我到现在还在想。明明我什么都做了。", n:1105, ec:["你尽力了","不是你的错"]}
+    ],
+    topics:[["夜班排班",35],["医患沟通",29],["共情疲劳",22],["职业前景",9],["人手不足",5]]
+  },
+  edu: {
+    name:"教育",
+    detect:["AI树洞"],
+    pains:["职业倦怠","家校沟通焦虑","多重角色耗竭"],
+    depts:["小学部","初中部","教务处","德育处"],
+    ladder:{
+      green:[{t:"3秒情绪暂停法卡片",k:"工具 · 随身"},{t:"每日三件好事打卡",k:"打卡 · 2分钟"}],
+      yellow:[{t:"奥尔夫音乐疗愈工作坊",k:"团体音乐 · 100分钟"}],
+      red:[{t:"「先育己、再育人」沉浸式工作坊",k:"沉浸式 · 半天"}]
+    },
+    seeds:[
+      {txt:"晚上十点，家长群还在响。我已经分不清哪些是工作时间了。", n:1342, ec:["同感","+1"]},
+      {txt:"我把耐心全给了学生，回家对自己孩子却一句好话都说不出。", n:1596, ec:["抱抱","我也是"]},
+      {txt:"备课、填表、家访、值周——我到底哪一个身份是我自己。", n:874, ec:["懂"]}
+    ],
+    topics:[["家校沟通",40],["非教学事务",27],["职业倦怠",18],["考核压力",10],["班级管理",5]]
+  },
+  cs: {
+    name:"客服 / 服务业",
+    detect:["AI树洞"],
+    pains:["情绪劳动疲劳","客户负面情绪污染","机械重复感"],
+    depts:["呼叫中心","在线客服组","投诉处理组","门店服务组"],
+    ladder:{
+      green:[{t:"情绪暂停提醒",k:"推送 · 即时"},{t:"芳香导入引导音频",k:"音频 · 6分钟"}],
+      yellow:[{t:"「心流插花」艺术疗愈",k:"手作 · 100分钟"}],
+      red:[{t:"正念冥想 + 芳香疗愈",k:"团体体验 · 50分钟"}]
+    },
+    seeds:[
+      {txt:"挂断电话的那一秒，笑容从我脸上掉下来，像面具一样。", n:1827, ec:["太真实了","抱抱"]},
+      {txt:"客户骂了我十分钟，我说了十二次「非常抱歉」。", n:1266, ec:["辛苦","你没有错"]},
+      {txt:"每天说着一样的话，有时候会突然想不起来自己是谁。", n:703, ec:["+1"]}
+    ],
+    topics:[["客户冲突",44],["排班",21],["考核话术",18],["晋升通道",11],["休息时间",6]]
+  },
+  mfg: {
+    name:"制造业 / 汽车业",
+    detect:["1分钟心灵体检","AI+摄像头（高危岗位）"],
+    pains:["产线孤独感","高强度加班躯体化","安全责任心理重压"],
+    depts:["总装车间","焊装车间","质检部","设备科"],
+    ladder:{
+      green:[{t:"身体扫描音频",k:"音频 · 10分钟"},{t:"渐进式肌肉放松",k:"引导 · 12分钟"}],
+      yellow:[{t:"「沙盘疗愈 · 心声共鸣」",k:"个人+团队 · 90分钟"}],
+      red:[{t:"「心灵驿站」常态化服务",k:"驻场一对一 · 每周2天"}]
+    },
+    seeds:[
+      {txt:"一个班下来，说过的话不超过十句。", n:1049, ec:["+1","我也是"]},
+      {txt:"这个月第三次上夜班，肩膀一直是硬的。", n:812, ec:["保重身体"]},
+      {txt:"最怕的不是累，是怕自己哪个环节出错，连累到别人。", n:1385, ec:["懂你","你很负责"]}
+    ],
+    topics:[["排班与加班",37],["安全压力",25],["身体不适",20],["技能晋升",12],["班组沟通",6]]
+  }
+};
+
+/* ============================================================
+   1. 身份定义
+   无密码 —— 真实感来自登录后权限与界面的差异，而不是密码框
+   ============================================================ */
+const IDENTITIES = [
+  {id:"emp001", kind:"employee", name:"员工 001", role:"研发部 · 后端工程师",
+   icon:"🧑‍💻", tag:"匿名身份 7F3A", anon:"7F3A"},
+  {id:"emp002", kind:"employee", name:"员工 002", role:"研发部 · 测试工程师",
+   icon:"👩‍💻", tag:"匿名身份 B29C", anon:"B29C"},
+  {id:"hrbp",   kind:"hrbp", name:"张 敏", role:"HRBP · 员工关系",
+   icon:"📊", tag:"仅可见聚合数据"},
+  {id:"healer", kind:"healer", name:"李老师", role:"UNIHEAL 持证国际疗愈师",
+   icon:"🕊️", tag:"仅可见匿名 ID"}
+];
+
+/* ============================================================
+   2. 数据层 —— localStorage + BroadcastChannel
+   不需要数据库：同源多标签页实时同步，断网可跑，可作邮件附件
+   ============================================================ */
+const KEY = "mindbridge.demo.v1";
+const chan = ("BroadcastChannel" in window) ? new BroadcastChannel(KEY) : null;
+
+const DB = {
+  data:null,
+  load(){
+    try{ this.data = JSON.parse(localStorage.getItem(KEY)) || null; }catch(e){ this.data = null; }
+    if(!this.data) this.seed();
+    return this.data;
+  },
+  seed(){
+    this.data = { industry:"it", posts:{}, session:{} };
+    Object.keys(INDUSTRIES).forEach(k=>{
+      this.data.posts[k] = INDUSTRIES[k].seeds.map((s,i)=>({
+        id: k+"-seed-"+i,
+        text: s.txt,
+        author: "访客"+["4A1D","9C7E","2F88","6B03"][i%4],
+        authorId: "seed",
+        metoo: s.n,
+        metooBy: [],
+        echoes: (s.ec||[]).map(t=>({text:t, by:"seed"})),
+        ts: Date.now() - (i+1)*3600e3*(6+i*3),
+        crisis:false
+      }));
+    });
+    this.save(false);
+  },
+  save(broadcast=true){
+    localStorage.setItem(KEY, JSON.stringify(this.data));
+    if(broadcast && chan) chan.postMessage({t:"sync"});
+  },
+  reset(){ localStorage.removeItem(KEY); this.seed(); if(chan) chan.postMessage({t:"sync"}); },
+  posts(ind){ return (this.data.posts[ind]||[]).slice().sort((a,b)=>b.ts-a.ts); }
+};
+
+/* ============================================================
+   3. 善意检测 + 去标识化
+   代码词表即时拦截（0 延迟），模型语义复核留接口（下一批接入）
+   ============================================================ */
+const HOSTILE = ["傻逼","废物","滚","垃圾公司","去死","蠢货","狗屎","混蛋","无能的领导"];
+const CRISIS  = ["不想活","活不下去","结束这一切","没有意义了","消失算了","撑不下去了","轻生","自杀"];
+// 去标识化：具体部门 / 项目 / 姓名会让匿名当场失效
+const IDENTIFY_RE = [
+  /[一-龥]{1,4}(部|科|组|中心|车间|门店)/g,
+  /(小|老)[一-龥]{1}(?=[，。、！？\s]|$)/g,
+  /[A-Za-z]{2,}\s?项目/g
+];
+
+function kindnessCheck(text){
+  const hit = HOSTILE.find(w=>text.includes(w));
+  return hit ? {ok:false, word:hit} : {ok:true};
+}
+function crisisCheck(text){
+  // 危机信号走确定性正则，不依赖模型 —— 漏判后果不可承受
+  return CRISIS.some(w=>text.includes(w));
+}
+function deidentify(text){
+  let masked = text, changed = false;
+  IDENTIFY_RE.forEach(re=>{
+    masked = masked.replace(re, m=>{ changed = true; return "●".repeat(Math.min(m.length,3)); });
+  });
+  return {text:masked, changed};
+}
+
+/* ============================================================
+   4. 应用状态
+   ============================================================ */
+const S = { me:null, tab:"wall", dual:false, echoOpen:null };
+const $  = s=>document.querySelector(s);
+const el = (t,c,h)=>{ const n=document.createElement(t); if(c)n.className=c; if(h!=null)n.innerHTML=h; return n; };
+const esc = s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const ind = ()=>INDUSTRIES[DB.data.industry];
+
+/* ============================================================
+   5. 登录页
+   ============================================================ */
+function renderLogin(){
+  const box = $("#roles"); box.innerHTML = "";
+  IDENTITIES.forEach(p=>{
+    const cls = p.kind==="hrbp" ? "role hr" : p.kind==="healer" ? "role th" : "role";
+    const n = el("button", cls, `
+      <div class="av">${p.icon}</div>
+      <div class="nm">${p.name}</div>
+      <div class="rl">${p.role}</div>
+      <div class="tag">${p.tag}</div>`);
+    n.onclick = ()=>login(p);
+    box.appendChild(n);
+  });
+}
+function login(p){
+  S.me = p; S.tab = "wall"; S.dual = false;
+  $("#login").style.display = "none";
+  $("#app").classList.add("on");
+  $("#who-badge").textContent = p.icon + "  " + p.name;
+  renderStage();
+}
+function logout(){
+  S.me = null; S.dual = false;
+  $("#app").classList.remove("on");
+  $("#login").style.display = "flex";
+}
+
+/* ============================================================
+   6. 行业选择器
+   ============================================================ */
+function renderIndustrySelect(){
+  const sel = $("#industry"); sel.innerHTML = "";
+  Object.entries(INDUSTRIES).forEach(([k,v])=>{
+    const o = el("option"); o.value = k; o.textContent = v.name; sel.appendChild(o);
+  });
+  sel.value = DB.data.industry;
+  sel.onchange = ()=>{ DB.data.industry = sel.value; DB.save(); renderStage(); };
+}
+
+/* ============================================================
+   7. 舞台路由
+   ============================================================ */
+function renderStage(){
+  const st = $("#stage"); st.innerHTML = "";
+  $("#industry").value = DB.data.industry;
+
+  if(S.me.kind === "employee"){
+    const wrap = el("div","phones");
+    if(S.dual){
+      wrap.appendChild(phoneFor(IDENTITIES[0], "左：员工 001（研发部）"));
+      wrap.appendChild(phoneFor(IDENTITIES[1], "右：员工 002（研发部）"));
+    }else{
+      wrap.appendChild(phoneFor(S.me));
+    }
+    st.appendChild(wrap);
+  }else{
+    st.appendChild(deskPlaceholder());
+  }
+}
+
+/* ============================================================
+   8. 员工端 · 手机
+   phoneFor 接收身份参数 —— 同屏双设备模式下可挂载两个实例
+   ============================================================ */
+function phoneFor(person, label){
+  const ph = el("div","phone");
+  if(label) ph.appendChild(el("div","ph-label",label));
+
+  ph.appendChild(el("div","ph-top", `
+    <div class="r1">
+      <div class="appname">🕯️ 情绪小站</div>
+      <div class="anon">访客 ${person.anon}</div>
+    </div>
+    <div class="vow">🔒 你在系统中只是一个代号，连我们也不知道这是谁</div>`));
+
+  const body = el("div","ph-body");
+  ph.appendChild(body);
+
+  const tabs = el("div","ph-tabs");
+  [["wall","🤝","共鸣墙"],["talk","💬","说说话"],["res","🔋","充充电"]].forEach(([k,ic,nm])=>{
+    const b = el("button", S.tab===k?"on":"", `<span class="ic">${ic}</span><span>${nm}</span>`);
+    b.onclick = ()=>{ S.tab = k; renderStage(); };
+    tabs.appendChild(b);
+  });
+  ph.appendChild(tabs);
+
+  if(S.tab === "wall")      renderWall(body, person);
+  else if(S.tab === "talk") renderTalkPlaceholder(body);
+  else                      renderResPlaceholder(body);
+
+  return ph;
+}
+
+/* ---------- 8.1 共鸣墙（Step 1） ---------- */
+function renderWall(body, person){
+  const I = ind();
+
+  body.appendChild(el("div","wall-head",`
+    <h3>共鸣墙</h3>
+    <p>说出来，然后看看有多少人也这样。这里没有跟帖，也没有争论。</p>`));
+
+  const total = DB.posts(DB.data.industry).reduce((a,p)=>a+p.metoo,0);
+  body.appendChild(el("div","wall-stat",
+    `<span>🌿</span><span>今天，有 <b>${total.toLocaleString()}</b> 位同事和你一样，在这里说了话</span>`));
+
+  /* --- 发帖 --- */
+  const comp = el("div","composer",`
+    <textarea placeholder="想说点什么？发出来之前，我们会替你抹掉能认出你的信息。" maxlength="120"></textarea>
+    <div class="cfoot">
+      <span class="tiny muted">🛡️ 自动去标识化 · 善意检测</span>
+      <span class="cnt">0 / 120</span>
+      <button class="btn">发到墙上</button>
+    </div>`);
+  const ta   = comp.querySelector("textarea");
+  const cnt  = comp.querySelector(".cnt");
+  const send = comp.querySelector("button");
+  ta.oninput = ()=>{ cnt.textContent = ta.value.length + " / 120"; };
+  body.appendChild(comp);
+
+  const note = el("div","kindness hide");
+  body.appendChild(note);
+
+  send.onclick = ()=>{
+    const raw = ta.value.trim();
+    if(!raw) return;
+    send.disabled = true;
+
+    // ① 善意检测（可见的 0.6 秒 —— 这是演示资产，不是性能损耗）
+    note.className = "kindness checking";
+    note.innerHTML = `<span class="spin"></span><span>正在做善意检测与去标识化…</span>`;
+
+    setTimeout(()=>{
+      const k = kindnessCheck(raw);
+      if(!k.ok){
+        note.className = "kindness soft";
+        note.innerHTML = `<span>🌱</span><span><b>这句话可能会伤到人。</b>
+          共鸣墙只承接你的感受，不承接对具体人的攻击 —— 试着说说
+          「这件事让我觉得……」？<br><span class="tiny">（命中词：${esc(k.word)}）</span></span>`;
+        send.disabled = false; return;
+      }
+
+      // ② 去标识化
+      const d = deidentify(raw);
+      // ③ 危机信号：确定性正则，不通知任何人
+      const crisis = crisisCheck(raw);
+
+      const post = {
+        id: "p"+Date.now()+Math.random().toString(36).slice(2,6),
+        text: d.text, author: "访客"+person.anon, authorId: person.id,
+        metoo: 0, metooBy: [], echoes: [], ts: Date.now(), crisis
+      };
+      DB.data.posts[DB.data.industry].unshift(post);
+      DB.save();
+
+      note.className = d.changed ? "kindness mask" : "kindness pass";
+      note.innerHTML = d.changed
+        ? `<span>🛡️</span><span><b>已替你隐去可能暴露身份的信息</b>（部门 / 项目 / 姓名），再发上墙。</span>`
+        : `<span>✅</span><span>已通过善意检测，发布成功。</span>`;
+      ta.value = ""; cnt.textContent = "0 / 120"; send.disabled = false;
+      setTimeout(()=>{ note.classList.add("hide"); }, 4200);
+      renderStage();
+    }, 620);
+  };
+
+  /* --- 卡片流（扁平，无楼层） --- */
+  const list = el("div","wall-list");
+  const posts = DB.posts(DB.data.industry);
+  if(!posts.length){
+    list.appendChild(el("div","empty",`<div class="ic">🌿</div><p>还没有人说话。<br>第一句话，可以由你开始。</p>`));
+  }
+  posts.forEach(p=> list.appendChild(wallCard(p, person)) );
+  body.appendChild(list);
+}
+
+function wallCard(p, person){
+  const mine  = p.authorId === person.id;
+  const voted = p.metooBy.includes(person.id);
+  const c = el("div", mine ? "wcard mine" : "wcard");
+
+  c.appendChild(el("div","txt", esc(p.text)));
+  c.appendChild(el("div","meta",
+    `<span class="id">${esc(p.author)}</span><span>·</span><span>${timeAgo(p.ts)}</span>` +
+    (mine ? `<span class="mine-tag">我发的</span>` : "")));
+
+  const bar = el("div","bar");
+  const mt = el("button", voted ? "metoo on" : "metoo",
+    `<span>🤝</span><span>${voted?"我也是":"我也是"}</span><span class="n">${p.metoo.toLocaleString()}</span>`);
+  mt.onclick = ()=>{
+    if(voted){ p.metoo--; p.metooBy = p.metooBy.filter(x=>x!==person.id); }
+    else     { p.metoo++; p.metooBy.push(person.id); }
+    DB.save(); renderStage();
+  };
+  bar.appendChild(mt);
+
+  const add = el("button","echo-add","＋ 说句支持的话");
+  add.onclick = ()=>{ S.echoOpen = (S.echoOpen===p.id ? null : p.id); renderStage(); };
+  bar.appendChild(add);
+  c.appendChild(bar);
+
+  if(p.echoes.length){
+    const ec = el("div","echoes");
+    p.echoes.forEach(e=> ec.appendChild(el("span", e.by===person.id?"echo new":"echo", esc(e.text))) );
+    c.appendChild(ec);
+    c.appendChild(el("div","echo-note","· 回应经善意检测 · 不可回复回应，此处不设楼层 ·"));
+  }
+
+  // 支持性回应输入（扁平：只能回应帖子本身，不能回应回应）
+  if(S.echoOpen === p.id){
+    const chips = el("div","echo-chips");
+    ["我也这样","抱抱","你已经很好了","辛苦了","你不是一个人"].forEach(t=>{
+      const b = el("button","",t); b.onclick = ()=>pushEcho(p, t, person); chips.appendChild(b);
+    });
+    c.appendChild(chips);
+
+    const box = el("div","echo-input",
+      `<input maxlength="20" placeholder="写一句支持的话（20字内）"><button>发送</button>`);
+    const inp = box.querySelector("input"), btn = box.querySelector("button");
+    btn.onclick = ()=>{ const v = inp.value.trim(); if(v) pushEcho(p, v, person); };
+    inp.onkeydown = e=>{ if(e.key==="Enter") btn.click(); };
+    c.appendChild(box);
+    setTimeout(()=>inp.focus(),30);
+  }
+
+  // 危机信号 → 不上报，就地邀请（响应只有发帖人自己看得到）
+  if(p.crisis && mine){
+    const iv = el("div","invite",`
+      <div class="t">看到你刚刚写的。<br>如果想找个人好好说说，这里有一条<b>只有你和 TA</b> 的通道。</div>
+      <div class="row">
+        <button class="btn btn-amber">好，去说说话</button>
+        <button class="btn btn-ghost">现在不用</button>
+      </div>
+      <div class="seen">👁️ 这条提示只有你看得到 —— 系统没有通知任何人</div>`);
+    iv.querySelectorAll("button")[0].onclick = ()=>{ S.tab = "talk"; renderStage(); };
+    iv.querySelectorAll("button")[1].onclick = ()=>{ p.crisis = false; DB.save(); renderStage(); };
+    c.appendChild(iv);
+  }
+  return c;
+}
+
+function pushEcho(p, text, person){
+  const k = kindnessCheck(text);
+  if(!k.ok){ alert("这句话没有通过善意检测，换一种说法试试？"); return; }
+  p.echoes.push({text:text.slice(0,20), by:person.id});
+  S.echoOpen = null; DB.save(); renderStage();
+}
+
+function timeAgo(ts){
+  const d = Math.floor((Date.now()-ts)/1000);
+  if(d<60) return "刚刚";
+  if(d<3600) return Math.floor(d/60)+" 分钟前";
+  if(d<86400) return Math.floor(d/3600)+" 小时前";
+  return Math.floor(d/86400)+" 天前";
+}
+
+/* ---------- 8.2 / 8.3 下一批实现 ---------- */
+function renderTalkPlaceholder(body){
+  body.appendChild(el("div","todo",`
+    <div class="ic">💬</div>
+    <h4>私密 1 对 1 对话（Step 2）</h4>
+    <p>左侧员工看到的共情对话 ＋ 右侧系统的结构化读数，<br>同屏并列 —— 接真实 Claude API。</p>
+    <div class="next">下一批交付</div>`));
+}
+function renderResPlaceholder(body){
+  const I = ind();
+  body.appendChild(el("div","todo",`
+    <div class="ic">🔋</div>
+    <h4>我的资源（Step 1 自助层）</h4>
+    <p>当前行业模板：<b>${I.name}</b><br>
+       绿色自助资源：${I.ladder.green.map(x=>x.t).join("、")}</p>
+    <div class="next">下一批交付</div>`));
+}
+
+/* ---------- 8.4 PC 端占位 ---------- */
+function deskPlaceholder(){
+  const isHR = S.me.kind === "hrbp";
+  const d = el("div","desk");
+  d.appendChild(el("div","desk-head",
+    `<h2>${isHR ? "📊 组织看板 · 干预阶梯配置" : "🕊️ 个案工作台"}</h2>
+     <span class="pill ${isHR?"pill-ghost":"pill-amber"}">${isHR?"仅可见聚合数据 · <5人不出数":"仅可见匿名 ID"}</span>`));
+  d.appendChild(el("div","todo",`
+    <div class="ic">${isHR?"📊":"🕊️"}</div>
+    <h4>${isHR ? "HRBP 端" : "持证疗愈师端"}</h4>
+    <p>${isHR
+      ? "组织议题热度（广场·匿名聚合）＋ 情绪分布与风险等级（私密层·聚合）<br>＋ 干预阶梯配置（可切行业模板 · 隐私护栏可配置）"
+      : "预警工单 · SLA 倒计时 · <b>人工复核闸门</b> · 处置闭环"}</p>
+    <div class="next">下一批交付</div>`));
+  return d;
+}
+
+/* ============================================================
+   9. 启动
+   ============================================================ */
+DB.load();
+renderLogin();
+renderIndustrySelect();
+
+$("#btn-switch").onclick = logout;
+$("#btn-reset").onclick  = ()=>{ if(confirm("重置全部演示数据？")){ DB.reset(); alert("已重置"); } };
+$("#btn-dual").onclick   = ()=>{ S.me = IDENTITIES[0]; S.tab = "wall"; S.dual = true;
+  $("#login").style.display="none"; $("#app").classList.add("on");
+  $("#who-badge").textContent = "⧉  同屏双设备"; renderStage(); };
+
+// 跨标签页实时同步
+if(chan) chan.onmessage = e=>{ if(e.data && e.data.t==="sync"){ DB.load(); if(S.me) renderStage(); } };
+window.addEventListener("storage", e=>{ if(e.key===KEY){ DB.load(); if(S.me) renderStage(); } });
+</script>
+</body>
+</html>
