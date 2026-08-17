@@ -273,8 +273,8 @@ input,textarea{font-family:inherit;outline:none;border:none;background:none;colo
 .pushbar .ph .pn{font-size:11px;color:#5a6066;font-weight:600}
 .pushbar .ph .pt{margin-left:auto;font-size:10px;color:#b0b5ba}
 .pushbar .pmsg{font-size:13px;color:#191919;line-height:1.6;font-family:var(--serif)}
-.pushbar .pnote{font-size:9.5px;color:#a8adb2;margin-top:7px;padding-top:7px;
-  border-top:1px solid #f0f1f3;line-height:1.5}
+.pushbar .pnote{font-size:9.5px;color:#916822;margin-top:7px;padding:6px 7px;border:1px solid #ecdba9;
+  border-radius:5px;background:#fff8e8;line-height:1.5}
 
 /* ==================== AUTH 匿名化 ==================== */
 #auth{background:linear-gradient(168deg,#0f1c19,#0a1512);color:#f2ebe0}
@@ -455,9 +455,132 @@ input,textarea{font-family:inherit;outline:none;border:none;background:none;colo
 .preset-hint{width:100%;font-size:9.5px;color:var(--mut2);line-height:1.4}
 .pst{font-size:10.5px;color:var(--mut);background:rgba(127,201,143,.055);border:1px solid var(--line);
   padding:5px 10px;border-radius:100px}
-/* 我的资源 */
-.reslist{flex:1;overflow-y:auto;padding:14px 15px;display:flex;flex-direction:column;gap:10px}
+/* 我的活动 */
+.reslist{flex:1;overflow-y:auto;padding:14px 15px 22px;display:flex;flex-direction:column;gap:10px}
 .emptyA{text-align:center;color:var(--mut2);font-size:12px;padding:50px 20px;line-height:1.9;font-style:italic}
+.activity-context{display:flex;align-items:center;gap:9px;min-height:31px;padding:2px 1px 5px}
+.activity-context-main{display:flex;align-items:center;gap:8px;min-width:0}
+.activity-context-label{font-size:10.5px;color:var(--mut2);white-space:nowrap}
+.context-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 8px;border-radius:100px;
+  border:1px solid rgba(238,185,108,.22);color:var(--candle);font-size:9.5px;background:rgba(238,185,108,.06)}
+.context-edit{margin-left:auto;flex:none;padding:5px 9px;border-radius:7px;border:1px solid var(--line);color:var(--mut);font-size:10.5px}
+.context-edit:hover{color:var(--candle);border-color:rgba(238,185,108,.36)}
+.activity-card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px 14px;animation:rise .4s both}
+.activity-card.recommended{border-color:rgba(238,185,108,.28);background:rgba(238,185,108,.055)}
+.activity-card .activity-top{display:flex;align-items:center;gap:7px;margin-bottom:8px}
+.activity-type{font-size:9px;padding:2px 7px;border-radius:100px;background:rgba(127,201,143,.1);color:var(--green)}
+.activity-type.offline{background:rgba(238,185,108,.1);color:var(--candle)}
+.activity-state{margin-left:auto;font-size:9.5px;color:var(--mut2)}
+.activity-title{font-size:13px;font-weight:650;color:#faeeda;line-height:1.45}
+.activity-reason{font-size:10.5px;color:var(--mut);line-height:1.65;margin-top:5px}
+.activity-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px;font-size:9.5px;color:var(--mut2)}
+.activity-meta span{padding-right:8px;border-right:1px solid var(--line)}
+.activity-meta span:last-child{border-right:0}
+.activity-btn{width:100%;margin-top:11px;border-radius:9px;padding:9px 12px;background:rgba(238,185,108,.14);
+  color:var(--candle);font-size:11.5px;font-weight:600;border:1px solid rgba(238,185,108,.18)}
+.activity-btn.secondary{background:rgba(127,201,143,.06);color:var(--green);border-color:rgba(127,201,143,.15)}
+/* 可跳过的处境选择与活动体验，都限定在员工端手机内 */
+.emp-overlay{position:absolute;inset:28px 0 0;z-index:35;background:#0d1a17;color:var(--cream);
+  display:flex;flex-direction:column;animation:fin .25s both}
+.overlay-head{flex:none;padding:13px 15px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+.overlay-back{font-size:18px;color:var(--mut);width:28px;height:28px;display:grid;place-items:center}
+.overlay-head h3{font-size:14px;font-weight:650}
+.overlay-body{flex:1;overflow-y:auto;padding:30px 20px 24px}
+.context-intro{text-align:center;padding:14px 4px 22px}
+.context-intro h2{font-family:var(--serif);font-size:20px;line-height:1.4;font-weight:600}
+.context-intro p{max-width:272px;margin:10px auto 0;font-size:10.5px;color:var(--mut);line-height:1.72}
+.context-options{display:flex;flex-direction:column;gap:9px}
+.context-option{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 14px;
+  border-radius:14px;border:1px solid var(--line);background:var(--panel);color:var(--cream);transition:.2s}
+.context-option .ci{flex:none;width:34px;height:34px;border-radius:10px;font-size:16px;margin-top:0;
+  display:grid;place-items:center;background:rgba(127,201,143,.08)}
+.context-option .ct{flex:1;min-width:0;margin-top:0}
+.context-option .chev{flex:none;color:var(--mut2);font-family:var(--serif);font-size:19px;font-weight:300;margin-top:0;transition:.2s}
+.context-option:hover,.context-option:focus{border-color:rgba(238,185,108,.4);background:rgba(238,185,108,.06)}
+.context-option:hover .chev,.context-option:focus .chev{color:var(--candle)}
+.context-option b{display:block;font-size:13px;font-weight:650}
+.context-option span{display:block;font-size:10.5px;color:var(--mut);line-height:1.5;margin-top:3px}
+.context-skip{display:block;margin:18px auto 0;padding:7px 0;color:var(--mut2);font-size:11px;text-align:center}
+.context-skip b{color:var(--mut);font-weight:600}
+
+.act-kicker{font-size:9.5px;letter-spacing:.1em;color:var(--green);margin-bottom:8px}
+.act-title{font-family:var(--serif);font-size:20px;line-height:1.45;font-weight:600;color:#faeeda}
+.act-desc{font-size:11.5px;line-height:1.8;color:var(--mut);margin-top:9px}
+.act-info{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin:15px 0}
+.act-info div{padding:10px;border:1px solid var(--line);border-radius:9px;background:var(--panel)}
+.act-info span{display:block;font-size:9px;color:var(--mut2);margin-bottom:4px}
+.act-info b{font-size:11.5px;font-weight:600}
+.act-privacy{padding:10px 11px;border-radius:9px;background:rgba(127,201,143,.05);border:1px solid rgba(127,201,143,.14);
+  color:var(--mut);font-size:10px;line-height:1.65;margin:12px 0}
+.act-primary{width:100%;padding:11px 14px;border-radius:10px;background:var(--candle);color:#0d1a17;
+  font-size:12.5px;font-weight:700;margin-top:8px}
+.act-secondary{width:100%;padding:10px 14px;color:var(--mut);font-size:11.5px;margin-top:5px}
+.score-card{padding:14px;border:1px solid var(--line);border-radius:12px;background:var(--panel);margin-top:15px}
+.score-card label{font-size:12.5px;line-height:1.65;color:var(--cream)}
+.score-value{text-align:center;font-family:var(--mono);font-size:30px;color:var(--candle);margin:14px 0 7px}
+.score-card input[type=range]{width:100%;accent-color:var(--candle)}
+.score-ends{display:flex;justify-content:space-between;font-size:9.5px;color:var(--mut2);margin-top:4px}
+.exercise-step{margin-top:17px;padding:18px 15px;border:1px solid rgba(238,185,108,.22);border-radius:13px;
+  background:rgba(238,185,108,.055);min-height:164px;display:flex;flex-direction:column;justify-content:center;text-align:center}
+.exercise-step .num{align-self:center;margin-bottom:12px;background:rgba(238,185,108,.1);border-color:rgba(238,185,108,.18);color:var(--candle)}
+.exercise-step h4{font-family:var(--serif);font-size:17px;line-height:1.5;color:#faeeda}
+.exercise-step p{font-size:11.5px;line-height:1.85;color:var(--mut);margin-top:8px}
+.act-progress{display:flex;gap:5px;margin-top:14px}
+.act-progress i{height:3px;flex:1;background:rgba(127,201,143,.12);border-radius:4px}
+.act-progress i.on{background:var(--candle)}
+.rating-row{display:flex;gap:7px;margin-top:13px}
+.rating-row button{flex:1;padding:9px 0;border:1px solid var(--line);border-radius:8px;color:var(--mut);font-size:12px}
+.rating-row button.on{border-color:var(--candle);background:rgba(238,185,108,.12);color:var(--candle);font-weight:700}
+.act-done{margin-top:16px;text-align:center;padding:20px 14px;border:1px solid rgba(127,201,143,.18);
+  border-radius:13px;background:rgba(127,201,143,.055)}
+.act-done h4{font-family:var(--serif);font-size:18px;color:#faeeda}
+.act-done p{font-size:11px;color:var(--mut);line-height:1.75;margin-top:8px}
+.demo-notice{display:flex;gap:8px;margin:14px 0;padding:11px 12px;border-radius:10px;
+  border:1px solid rgba(238,185,108,.42);background:rgba(238,185,108,.09);color:#c7b898;font-size:10.5px;line-height:1.7}
+.demo-notice .notice-icon{flex:none;color:var(--candle);font-size:13px;line-height:1.5}
+.demo-notice b{display:block;color:var(--candle);font-size:11.5px;margin-bottom:2px}
+.breath-demo{text-align:center;padding:8px 0 2px}
+.breath-orb-wrap{height:178px;display:grid;place-items:center}
+.breath-orb{width:112px;height:112px;border-radius:50%;display:grid;place-items:center;
+  background:radial-gradient(circle at 40% 36%,rgba(250,238,218,.42),rgba(127,201,143,.18) 42%,rgba(127,201,143,.06) 72%);
+  border:1px solid rgba(127,201,143,.38);box-shadow:0 0 42px rgba(127,201,143,.12);transform:scale(.76)}
+.breath-orb.inhale{transform:scale(1.28);transition:transform 4s linear}
+.breath-orb.hold{transform:scale(1.28);transition:none}
+.breath-orb.exhale{transform:scale(.76);transition:transform 8s linear}
+.breath-orb.settle{transform:scale(.82);transition:transform 1.5s ease}
+.breath-orb b{font-family:var(--serif);font-size:18px;color:#faeeda;font-weight:600}
+.breath-count{font-family:var(--mono);font-size:11px;color:var(--candle);margin-top:7px}
+.breath-hint{font-size:11px;color:var(--mut);line-height:1.7;min-height:38px}
+.breath-track{height:4px;border-radius:10px;background:rgba(127,201,143,.12);overflow:hidden;margin:15px 5px 5px}
+.breath-track i{height:100%;display:block;width:0;background:var(--candle);transition:width .25s linear}
+.video-demo{margin-top:15px;border-radius:13px;overflow:hidden;border:1px solid rgba(255,255,255,.12);background:#09110f}
+.video-stage{aspect-ratio:16/9;min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:20px;text-align:center;background:radial-gradient(circle at 50% 45%,rgba(127,201,143,.16),transparent 58%),#09110f}
+.video-stage .play-mark{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;padding-left:3px;
+  border:1px solid rgba(238,185,108,.35);background:rgba(238,185,108,.1);color:var(--candle);font-size:19px;margin-bottom:13px}
+.video-stage h4{font-family:var(--serif);font-size:17px;color:#faeeda;font-weight:600}
+.video-stage p{font-size:10.5px;line-height:1.7;color:var(--mut);margin-top:6px;max-width:260px}
+.video-controls{padding:10px 12px 12px;background:#101d1a}
+.video-timeline{height:4px;border-radius:8px;background:rgba(255,255,255,.1);overflow:hidden}
+.video-timeline i{display:block;height:100%;width:0;background:var(--candle);transition:width .2s linear}
+.video-control-row{display:flex;align-items:center;gap:10px;margin-top:9px;color:var(--mut);font-size:10px}
+.video-control-row button{width:27px;height:27px;border-radius:50%;border:1px solid var(--line);color:var(--cream);display:grid;place-items:center}
+.video-time{margin-left:auto;font-family:var(--mono);color:var(--mut2)}
+
+/* HRBP 活动效果 */
+.demo-banner{display:flex;gap:10px;align-items:flex-start;background:#fff8e8;border:1px solid #ecdba9;border-radius:8px;
+  padding:12px 14px;margin-bottom:12px;color:#76571e;font-size:11px;line-height:1.7}
+.demo-banner b{display:block;color:#5f4517;font-size:12px}
+.metric-defs{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:12px 0}
+.metric-def{background:#f7faf8;border:1px solid #e2ece7;border-radius:7px;padding:11px 12px}
+.metric-def b{display:block;color:var(--brand);font-size:11.5px;margin-bottom:4px}
+.metric-def span{font-size:10px;color:var(--mut);line-height:1.55}
+.simtag{display:inline-block;margin-left:5px;padding:2px 6px;border-radius:100px;background:#f7ecd3;color:#8a641b;font-size:8.5px}
+.smallsample{display:inline-block;margin-left:5px;padding:2px 6px;border-radius:100px;background:#eef1f4;color:#6b7075;font-size:8.5px}
+.eff{color:var(--brand);font-weight:600}
+.metric-updated{animation:metricflash 1.7s ease-out}
+@keyframes metricflash{0%{background:#fff3cf}100%{background:transparent}}
+.privacy-rule{font-size:10.5px;color:var(--mut);line-height:1.75;margin-top:11px;padding:10px 12px;background:#f6f9f7;border-radius:7px}
 
 /* ==================== 疗愈师 SKIN B ==================== */
 .skB{--bg:#191c20;--panel:#21252a;--line:#2e333a;--txt:#e2e6ea;--mut:#8b939c;--mut2:#666e77;
@@ -638,8 +761,9 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
 .mdok{background:#c8873a;color:#fff;font-weight:600}
 .mdok:disabled{opacity:.35;cursor:not-allowed}
 /* 配置 */
-.cfghead{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
-.saved{margin-left:auto;font-size:10.5px;color:var(--grn);font-family:var(--mono)}
+.cfghead{display:flex;align-items:center;gap:12px;margin-bottom:3px;position:relative}
+.cfghead h4{margin:0}
+.template-control{position:relative;margin-left:auto}
 .ladder{background:var(--card);border:1px solid var(--line);border-radius:7px;padding:17px 18px;margin-bottom:12px}
 .lsig{display:flex;align-items:center;gap:10px;margin-bottom:15px;padding-bottom:13px;border-bottom:1px solid var(--line)}
 .lsig .lt{font-size:12.5px;font-weight:650}
@@ -673,15 +797,10 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
 .mx td{padding:9px 12px;border-bottom:1px solid #eef1f4;vertical-align:top}
 .mx td.sig{font-size:12px;font-weight:600;white-space:nowrap}
 .mx td.sig .em{font-size:14px;margin-right:5px}
-.mx td.sig .ct{display:block;font-size:9.5px;color:var(--mut2);font-weight:400;
-  font-family:var(--mono);margin-top:3px}
 .mx td.cell{background:#fcfdfd}
 .mx tr:hover td.cell{background:#f6f9f8}
 .mx td.cell.readonly,.mx tr:hover td.cell.readonly{background:#fdf9f8}
-.mx td.readonly .cellwrap{display:block}
-.mx td.readonly .chipC{background:none;border:0;border-radius:0;padding:2px 0;color:#934434;
-  animation:none;font-weight:500;line-height:1.55}
-.mx td.readonly .chipC::before{content:"受限";font-size:9px;margin-right:5px;opacity:.72}
+.mx td.readonly .chipC{cursor:default}
 .cellwrap{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
 .mx .chipC.g{background:#eef5f1;border-color:#d3e6dc;color:#2d6a5a}
 .mx .chipC.y{background:#fbf4e6;border-color:#eddfc2;color:#8a6018}
@@ -698,12 +817,10 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
 .tplbtn{background:#eaf2ee;color:var(--brand);border:1px solid #d4e4dc;font-size:10.5px;
   font-weight:600;padding:6px 10px;border-radius:6px;transition:.2s}
 .tplbtn:hover{background:#dfece6;border-color:#bdd6ca}
-.cfghead{position:relative}
 .tplmenu{position:absolute;right:0;top:calc(100% + 6px);background:#fff;border:1px solid var(--line);
   border-radius:8px;box-shadow:0 12px 34px rgba(20,30,40,.16);padding:6px;z-index:60;
   min-width:230px;display:none}
 .tplmenu.on{display:block;animation:rise .2s both}
-.tplmenu .tt{font-size:10px;color:var(--mut2);padding:7px 10px 6px;letter-spacing:.04em}
 .tplmenu button{display:block;width:100%;text-align:left;font-size:12px;padding:8px 10px;
   border-radius:5px;color:var(--txt);transition:.15s}
 .tplmenu button:hover{background:#f2f7f5;color:var(--brand)}
@@ -932,9 +1049,8 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
   .sla{text-align:left}
   .crow .ck{width:100%}
   .cfghead{gap:8px}
-  .cfghead .saved{order:3;width:100%;margin-left:0;text-align:left;line-height:1.45}
   .tplbtn{width:auto;align-self:flex-start}
-  .tplmenu{left:0;right:auto;width:min(280px,100%);min-width:0}
+  .tplmenu{left:auto;right:0;width:min(280px,calc(100vw - 52px));min-width:0}
   .cardC{padding:14px 12px}
   .mx{min-width:760px}
   .mx th:first-child{width:112px}
@@ -1196,7 +1312,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
         <div class="dtapp-title">MindBridge</div>
         <button class="dtapp-more" id="e-more" aria-label="更多操作">···</button>
         <div class="dtapp-menu hide" id="e-menu">
-          <button data-pane="res">我的资源</button>
+          <button data-pane="res">我的活动</button>
           <button data-pane="wall">匿名广场</button>
         </div>
       </div>
@@ -1208,7 +1324,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
       <div class="segs">
         <button class="seg on" data-pane="chat">倾诉树洞</button>
         <button class="seg" data-pane="wall">匿名广场</button>
-        <button class="seg" data-pane="res">我的资源</button>
+        <button class="seg" data-pane="res">我的活动</button>
       </div>
 
       <!-- 匿名广场 -->
@@ -1238,9 +1354,34 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
         </div>
       </div>
 
-      <!-- 我的资源 -->
+      <!-- 我的活动 -->
       <div class="pane" id="p-res">
         <div class="reslist" id="reslist"></div>
+      </div>
+
+      <!-- 首次进入可选的匿名处境标签 -->
+      <div class="emp-overlay hide" id="context-choice" role="dialog" aria-modal="true" aria-labelledby="context-title">
+        <div class="overlay-body">
+          <div class="context-intro">
+            <h2 id="context-title">哪种状态更接近你？</h2>
+            <p>你的选择只关联这个匿名身份，让聊天和推荐更贴近你；可随时更改或清空。企业仅能查看匿名聚合趋势，看不到你的具体选择。</p>
+          </div>
+          <div class="context-options">
+            <button class="context-option" data-context="transition"><span class="ci">🧭</span>
+              <span class="ct"><b>岗位变化适应期</b><span>正在经历内部转岗、晋升或职责调整</span></span><span class="chev">›</span></button>
+            <button class="context-option" data-context="frontline"><span class="ci">💬</span>
+              <span class="ct"><b>一线服务者</b><span>长期面对客户情绪、投诉和高强度沟通</span></span><span class="chev">›</span></button>
+            <button class="context-option" data-context="maternity"><span class="ci">🌱</span>
+              <span class="ct"><b>孕产与返岗适应期</b><span>正在经历孕期、产后或育儿阶段，并适应工作节奏变化</span></span><span class="chev">›</span></button>
+          </div>
+          <button class="context-skip" id="context-skip"><b>暂不选择</b> · 继续使用通用推荐</button>
+        </div>
+      </div>
+
+      <!-- 通用线上活动体验器／线下报名截止态 -->
+      <div class="emp-overlay hide" id="activity-flow">
+        <div class="overlay-head"><button class="overlay-back" id="activity-close" aria-label="返回">‹</button><h3 id="activity-headline">活动详情</h3></div>
+        <div class="overlay-body" id="activity-body"></div>
       </div>
     </div></div>
     </div>
@@ -1270,19 +1411,19 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
         <div class="who"><div class="ava">张</div>张敏 · HRBP · 星原科技</div></div>
       <div class="navbar">
         <span class="on" data-c="dash">组织看板</span>
+        <span data-c="activities">活动效果</span>
         <span data-c="cfg">干预阶梯配置</span>
         <span data-c="sensing">办公数据感知</span>
-        <!-- 功能尚未接入，实现后移除 hidden -->
-        <span hidden>活动排期</span><span hidden>报表导出</span>
-      </div>
-      <div class="syncbar">
-        <span>演示数据 · 非真实组织统计</span><span>用于展示聚合口径与交互流程</span>
-        <span>统计口径：团队级聚合 · 最小样本 5 人</span>
+        <span hidden>报表导出</span>
       </div>
       <div class="bodyC"><div class="inner">
 
         <!-- 看板 -->
         <div class="paneC on" id="c-dash">
+          <div class="demo-banner">
+            <div><b>⚠ 演示数据说明</b>
+              本页以预置样本为基线，并叠加当前 Demo 产生的活动事件；不代表真实组织数据。真实部署中，不足 10 人的结果不展示。</div>
+          </div>
           <div class="kpis">
             <div class="kp"><div class="v">42<small>%</small></div><div class="l">员工覆盖率</div><div class="t">↑ 较上月 +6pt</div></div>
             <div class="kp"><div class="v">6.4<small>/10</small></div><div class="l">全员情绪温度</div><div class="t">↑ +0.8</div></div>
@@ -1308,7 +1449,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
           </div>
           <div class="cardC table-card">
             <h4>部门概览</h4>
-            <div class="cs">仅显示有效样本 ≥5 人的部门</div>
+            <div class="cs">仅显示有效样本 ≥10 人的部门</div>
             <table>
               <tr><th>部门</th><th>人数</th><th>参与率</th><th>情绪温度</th><th>主导议题</th><th>状态</th></tr>
               <tr><td>研发中心</td><td class="mono">128</td><td class="mono">51%</td><td class="mono">5.8</td>
@@ -1320,7 +1461,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
               <tr><td>制造中心</td><td class="mono">210</td><td class="mono">44%</td><td class="mono">6.2</td>
                 <td>轮班与疲劳</td><td><span class="pill g">良好</span></td></tr>
               <tr class="masked"><td>法务部</td><td class="mono">3</td>
-                <td colspan="4">有效样本 3 人（&lt;5）· 按隐私规则不予展示</td></tr>
+                <td colspan="4">有效样本 3 人（&lt;10）· 按隐私规则不予展示</td></tr>
             </table>
           </div>
           <div class="cardC">
@@ -1339,7 +1480,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
             <div class="rhynote">
               <b>本系统未申请「会话内容存档」权限。</b>
               消息条数、@次数、夜间消息占比这类数据，我们拿不到，也不打算拿。<br>
-              以上指标按 ≥8 人聚合，不落个人档案，不与绩效、晋升、续聘挂钩。
+              以上指标按 ≥10 人聚合，不落个人档案，不与绩效、晋升、续聘挂钩。
             </div>
           </div>
           <div class="blind">
@@ -1349,21 +1490,45 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
               <li>任何一条倾诉或发帖的原文</li>
               <li>任何一条聊天记录、聊天对象、消息条数</li>
               <li>红色个案的详情与处置内容</li>
-              <li>样本不足 5 人的部门数据</li>
+              <li>样本不足 10 人的部门数据</li>
             </ul>
+          </div>
+        </div>
+
+        <!-- 活动效果：预置模拟样本 + 员工端演示事件实时叠加 -->
+        <div class="paneC" id="c-activities">
+          <div class="demo-banner">
+            <div><b>⚠ 演示数据说明</b>
+              本页以预置样本为基线，并叠加当前 Demo 产生的活动事件；不代表真实组织数据。真实部署中，不足 10 人的结果不展示。</div>
+          </div>
+          <div class="kpis">
+            <div class="kp"><div class="v" id="act-kpi-part">--<small>%</small></div><div class="l">综合参与率</div><div class="t">已参与 ÷ 已推荐</div></div>
+            <div class="kp"><div class="v" id="act-kpi-complete">--<small>%</small></div><div class="l">综合完成率</div><div class="t">已完成 ÷ 已参与</div></div>
+            <div class="kp"><div class="v" id="act-kpi-rating">--<small>/5</small></div><div class="l">综合满意度</div><div class="t">评分总和 ÷ 有效反馈数</div></div>
+            <div class="kp"><div class="v" id="act-kpi-feedback">--<small>份</small></div><div class="l">有效反馈</div><div class="t">已提交且评分有效的反馈数</div></div>
+          </div>
+          <div class="cardC table-card">
+            <h4>不同身份标签的活动表现<span class="src">去标识化聚合</span></h4>
+            <div class="cs">只显示群体趋势，HRBP 无法查看任何员工的标签选择或活动记录。</div>
+            <table id="activity-stats-table"></table>
+            <div class="privacy-rule">隐私规则：有效样本 &lt;10 时整行隐藏；标签不可与部门、姓名、工号交叉下钻。孕产与返岗类信息仅用于匿名支持，不得用于绩效、晋升或续聘判断。</div>
+          </div>
+
+          <div class="cardC table-card">
+            <h4>不同线上活动的表现<span class="src">全员 · 不区分身份标签</span></h4>
+            <div class="cs">回答「哪个活动该留、哪个该换」——同一批指标，换一个切面看。线下活动依赖现场签到与满意度回收，不纳入本表。</div>
+            <table id="activity-perf-table"></table>
+            <div class="privacy-rule">隐私规则：有效样本 &lt;10 时整行隐藏，与身份标签相同的口径；本表不按身份、部门二次下钻。</div>
           </div>
         </div>
 
         <!-- 配置 -->
         <div class="paneC" id="c-cfg">
-          <div class="cfghead">
-            <div class="saved" id="savedlb">✓ 已保存 · 由 张敏 于 --:-- 修改</div>
-            <button class="tplbtn" id="tplbtn">套用行业模板 ▾</button>
-            <div class="tplmenu" id="tplmenu"></div>
-          </div>
-
           <div class="cardC">
-            <h4>干预内容矩阵</h4>
+            <div class="cfghead"><h4>干预内容矩阵</h4>
+              <div class="template-control"><button class="tplbtn" id="tplbtn">套用行业模板 ▾</button>
+                <div class="tplmenu" id="tplmenu"></div></div>
+            </div>
             <div class="cs">纵轴决定<b>响应内容</b>，横轴展示<b>三级干预路径</b>。绿色、黄色可配置服务映射；红色由专业流程统一管理，仅作展示。</div>
             <div class="mx-wrap"><table class="mx" id="mx"></table></div>
           </div>
@@ -1421,7 +1586,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
         <!-- 办公数据感知独立于干预阶梯：这是数据授权与隐私配置，不是干预策略。 -->
         <div class="paneC" id="c-sensing">
           <div class="cardC">
-            <h4>办公数据感知能力<span class="src">分两级授权</span></h4>
+            <h4>办公数据感知能力</h4>
             <div class="cs">MindBridge 从钉钉获取的数据分为两级。
               <b>一级为行为元数据，不含任何聊天内容</b>，随应用安装默认开启；
               <b>二级为群聊消息读取，需企业单独审批</b>，默认全部关闭。</div>
@@ -1596,11 +1761,43 @@ const SEED={
      log:['16:20 完成电话确认','已安排「沙盘疗愈·心声共鸣」']},
   ],
   chats:{}, bot:{},
+  profiles:{}, activityJourneys:{},
+  activityStats:{
+    transition:{label:'岗位变化适应期',recommended:63,participated:22,completed:17,feedback:15,ratingTotal:65,effectTotal:29,scoreLabel:'职业可控感',effectDir:'提升',popular:'身份重塑叙事疗愈小组'},
+    frontline:{label:'一线服务者',recommended:124,participated:45,completed:23,feedback:19,ratingTotal:68,effectTotal:21,scoreLabel:'情绪占据感',effectDir:'下降',popular:'三分钟情绪卸载'},
+    maternity:{label:'孕产与返岗适应期',recommended:37,participated:13,completed:11,feedback:10,ratingTotal:46,effectTotal:29,scoreLabel:'返岗可控感',effectDir:'提升',popular:'返岗节奏重建练习'},
+    other:{label:'其他标签',recommended:7,participated:2,completed:1,feedback:1,ratingTotal:4,effectTotal:0,scoreLabel:'',effectDir:'',popular:'—'}
+  },
+  activityPerf:{
+    breathing:{label:'三分钟呼吸着陆法',form:'线上自助 · 3分钟',recommended:172,participated:57,completed:40,feedback:33,ratingTotal:129,effectTotal:59,scoreLabel:'紧张感',effectDir:'下降'},
+    'stretch-video':{label:'工间舒展操引导',form:'线上视频跟练 · 5分钟',recommended:145,participated:58,completed:46,feedback:39,ratingTotal:176,effectTotal:101,scoreLabel:'疲惫感',effectDir:'下降'},
+    'value-anchor':{label:'职业价值锚点练习',form:'线上引导 · 5分钟',recommended:63,participated:22,completed:17,feedback:15,ratingTotal:65,effectTotal:29,scoreLabel:'职业可控感',effectDir:'提升'},
+    'emotion-unload':{label:'三分钟情绪卸载',form:'线上自助 · 3分钟',recommended:124,participated:45,completed:23,feedback:19,ratingTotal:68,effectTotal:21,scoreLabel:'情绪占据感',effectDir:'下降'},
+    'return-rhythm':{label:'返岗节奏重建练习',form:'线上引导 · 5分钟',recommended:37,participated:13,completed:11,feedback:10,ratingTotal:46,effectTotal:29,scoreLabel:'返岗可控感',effectDir:'提升'}
+  },
   topics:{加班强度:86,'晋升与调薪':61,'跨部门协作':44,'客户情绪':37,'工作意义感':23},
 };
 const BOT_INTRO='我是 MindBridge，一个匿名的心理支持助手。\n有什么想说的，随时发给我。';
 const LEGACY_BOT_INTRO='我是 MindBridge，学校员工关爱的助手。\n有什么想说的，随时发给我。';
+const CONTEXTS={
+  none:{label:'未选择标签',welcome:'我在这儿。今天有什么压在心里的话，都可以说给我听。',online:'breathing',offline:'mindfulness-group'},
+  transition:{label:'岗位变化适应期',welcome:'欢迎回来。内部转岗、晋升或职责调整时，熟悉的节奏和价值感都可能变得不确定。不用急着证明什么，我们可以先从今天最压着你的一件事开始。',online:'value-anchor',offline:'identity-group'},
+  frontline:{label:'一线服务者',welcome:'欢迎回来。长时间接住客户的情绪，会比看起来更消耗。在这里不用继续保持专业表情，你可以先说说刚才最难受的部分。',online:'emotion-unload',offline:'art-group'},
+  maternity:{label:'孕产与返岗适应期',welcome:'欢迎回来。重新适应工作节奏时，身体变化、家庭照护和职业角色可能同时挤在一起。你不必马上回到以前的状态，我们可以先从今天最需要被减轻的一件事开始。',online:'return-rhythm',offline:'return-group'}
+};
+const ACTIVITIES={
+  breathing:{id:'breathing',type:'online',title:'三分钟呼吸着陆法',desc:'用简短的呼吸和觉察，让身体从赶进度的紧绷中暂时退下来。',duration:'3 分钟',form:'线上自助',preLabel:'此刻的紧张程度是多少？',low:'很放松',high:'非常紧张',direction:'down',steps:[['找到一个稳定的姿势','让脚接触地面，肩膀尽量放松。'],['把注意力放回呼吸','缓慢吸气，稍作停留，再比吸气更慢地呼出。'],['觉察一个微小变化','不必要求自己立刻平静，只留意哪个部位稍微松了一点。']]},
+  'stretch-video':{id:'stretch-video',type:'online',demoEngine:'video',title:'工间舒展操引导',desc:'跟随屏幕提示完成肩颈、上肢与呼吸收束，让长时间伏案后的身体短暂活动起来。',duration:'5 分钟',form:'线上视频跟练',preLabel:'此刻的身体疲惫程度是多少？',low:'轻松',high:'非常疲惫',direction:'down',steps:[]},
+  'value-anchor':{id:'value-anchor',type:'online',title:'职业价值锚点练习',desc:'把「职位变化」和「你已经拥有的能力」分开来看。',duration:'5 分钟',form:'线上引导',preLabel:'此刻你对职业方向的可控感是多少？',low:'完全不可控',high:'很有把握',direction:'up',steps:[['先写下一个不确定','在心里命名它：我现在最担心的是什么？'],['找回一个已有能力','想一件你曾经处理过的难事，那时你使用了什么能力？'],['选择一个小行动','只定一件本周可以完成的事，让控制感回到手里。']]},
+  'emotion-unload':{id:'emotion-unload',type:'online',title:'三分钟情绪卸载',desc:'把客户的情绪与自己分开，不把工作场景继续带在身上。',duration:'3 分钟',form:'线上自助',preLabel:'刚才的情绪还占据你多少？',low:'已经放下',high:'非常强烈',direction:'down',steps:[['命名刚才的情绪','不评价自己，只选一个词：委屈、愤怒、疲惫或其他。'],['区分对方和自己','对方的话来自那个服务场景，它不定义你。'],['给本次对话一个结束','做一次缓慢呼气，在心里说：这段对话现在结束了。']]},
+  'return-rhythm':{id:'return-rhythm',type:'online',title:'返岗节奏重建练习',desc:'在工作、身体变化和家庭照护之间，找到今天可承受的节奏。',duration:'5 分钟',form:'线上引导',preLabel:'此刻你对返岗节奏的可控感是多少？',low:'完全失控',high:'比较从容',direction:'up',steps:[['找到最消耗的角色','此刻最占据精力的，是工作任务、家庭照护，还是对自己的要求？'],['缩小今天的必做清单','只保留真正必须完成的一两件事，其他允许暂缓。'],['选择一个可表达的需要','例如调整会议时间、确认优先级，或向可信任的人提出具体帮助。']]},
+  'mindfulness-group':{id:'mindfulness-group',type:'offline',title:'情绪红绿灯正念工作坊',desc:'通过匿名情绪投票、呼吸着陆和压力拆解，在团体中练习。',duration:'90 分钟',form:'线下工作坊'},
+  'identity-group':{id:'identity-group',type:'offline',title:'身份重塑叙事疗愈小组',desc:'面向职业瓶颈、被替代焦虑与价值感下降的小组支持。',duration:'2 小时 × 4 次',form:'线下小组'},
+  'art-group':{id:'art-group',type:'offline',title:'「心流插花」艺术疗愈',desc:'通过专注创作和非语言表达，暂时放下持续的情绪劳动。',duration:'2 小时',form:'线下工作坊'},
+  'return-group':{id:'return-group',type:'offline',title:'孕产返岗同伴支持小组',desc:'围绕角色转换、工作边界与支持需求开展的保密小组。',duration:'90 分钟',form:'线下小组'}
+};
 let DB=load();
+if(DB.activityStats&&DB.activityStats.transition)DB.activityStats.transition.label='岗位变化适应期';
 function load(){try{const r=localStorage.getItem(KEY);return r?JSON.parse(r):structuredClone(SEED)}catch(e){return structuredClone(SEED)}}
 function save(){DB.v=(DB.v||0)+1;try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){}bc&&bc.postMessage(DB.v)}
 let bc=null;try{bc=new BroadcastChannel(CH)}catch(e){}
@@ -1623,6 +1820,20 @@ let bc=null;try{bc=new BroadcastChannel(CH)}catch(e){}
     if(DB.chats&&DB.chats[a]){delete DB.chats[a];changed=true}
     if(DB.bot&&DB.bot[a]){delete DB.bot[a];changed=true}
     if(DB.st&&DB.st[a]){delete DB.st[a];changed=true}
+  });
+  if(changed)save();
+})();
+(function ensureActivityDemoData(){
+  let changed=false;
+  if(!DB.profiles){DB.profiles={};changed=true}
+  if(!DB.activityJourneys){DB.activityJourneys={};changed=true}
+  if(!DB.activityStats){DB.activityStats=structuredClone(SEED.activityStats);changed=true}
+  Object.entries(SEED.activityStats).forEach(([k,v])=>{
+    if(!DB.activityStats[k]){DB.activityStats[k]=structuredClone(v);changed=true}
+  });
+  if(!DB.activityPerf){DB.activityPerf=structuredClone(SEED.activityPerf);changed=true}
+  Object.entries(SEED.activityPerf).forEach(([k,v])=>{
+    if(!DB.activityPerf[k]){DB.activityPerf[k]=structuredClone(v);changed=true}
   });
   if(changed)save();
 })();
@@ -1944,7 +2155,7 @@ function enter(r,fast){
 }
 /* 工作台图标 → 打开 MindBridge 应用（网页），首次走匿名化授权 */
 function enterApp(){
-  if(AUTHED[MEID]){bootEmp();go('empApp');return}
+  if(AUTHED[MEID]){bootEmp();go('empApp');setTimeout(maybeAskContext,80);return}
   clearAuthFlow();
   $('#auth-staff').classList.add('hide');$('#auth-emp').classList.remove('hide');
   $('#a-nm').textContent=ME.name;$('#a-dt').textContent=ME.org+' · '+ME.dept+' · 工号 '+ME.emp;
@@ -1955,7 +2166,7 @@ function enterApp(){
   authLater(()=>$('#a1').classList.add('in'),120);
   authLater(()=>{$('#a2').classList.add('in');authLater(()=>$('#a-bar').style.width='100%',60)},900);
   authLater(()=>{$('#a1').classList.add('out');$('#a3').classList.add('in')},2300);
-  authLater(()=>{AUTHED[MEID]=1;bootEmp();go('empApp')},3900);
+  authLater(()=>{AUTHED[MEID]=1;bootEmp();go('empApp');setTimeout(maybeAskContext,80)},3900);
 }
 $('#wc-enter').onclick=enterApp;
 function finishStaff(){
@@ -2110,14 +2321,43 @@ $('#reset').onclick=()=>{if(confirm('重置全部演示数据？')){DB=structure
    各自保存各自的消息记录，共享同一个匿名身份、员工画像与预警状态（DB.st）。 */
 function bootEmp(){
   $('#e-anon').textContent=displayIdentity(ME.anon,ME.alias);
+  const profile=(DB.profiles||{})[ME.anon], context=CONTEXTS[profile&&profile.tag]||CONTEXTS.none;
   DB.bot=DB.bot||{};
   if(!DB.bot[ME.anon])DB.bot[ME.anon]=[
     {w:'work',ts:Date.now()-6e4},
     {w:'ai',t:BOT_INTRO,ts:Date.now()-5.9e4}];
   if(!DB.chats[ME.anon])DB.chats[ME.anon]=[
-    {w:'ai',t:'我在这儿。今天有什么压在心里的话，都可以说给我听。',ts:Date.now()}];
-  renderWall();renderChat();renderBot();renderRes();
+    {w:'ai',t:context.welcome,ts:Date.now()}];
+  renderWall();renderPresets();renderChat();renderBot();renderRes();
 }
+function maybeAskContext(){
+  if(!ME||ME.kind!=='emp')return;
+  const p=DB.profiles&&DB.profiles[ME.anon];
+  $('#context-choice').classList.toggle('hide',!!(p&&p.decided));
+}
+function openContextEditor(){
+  if(!ME||ME.kind!=='emp')return;
+  $('#context-choice').classList.remove('hide');
+}
+function chooseContext(tag){
+  if(!ME||ME.kind!=='emp')return;
+  const safe=CONTEXTS[tag]?tag:'none';
+  DB.profiles=DB.profiles||{};
+  const previous=DB.profiles[ME.anon]||{};
+  const next={...previous,decided:1,tag:safe,ts:Date.now()};
+  if(safe!=='none'&&!previous.recommendationCounted){
+    const stat=DB.activityStats[safe];stat.recommended++;
+    next.recommendationCounted=1;
+  }
+  DB.profiles[ME.anon]=next;
+  const chats=DB.chats[ME.anon]||(DB.chats[ME.anon]=[]);
+  if(chats.length===1&&chats[0].w==='ai')chats[0].t=CONTEXTS[safe].welcome;
+  $('#context-choice').classList.add('hide');
+  save();renderChat();renderRes();
+  toast(safe==='none'?'已跳过 · 继续使用通用推荐':`已选择「${CONTEXTS[safe].label}」 · 仅用于匿名个性化`);
+}
+$$('[data-context]').forEach(b=>b.onclick=()=>chooseContext(b.dataset.context));
+$('#context-skip').onclick=()=>chooseContext('none');
 function openBot(){renderPresets();renderDT();markRead();go('botchat');
   setTimeout(()=>{const s=$('#bot-stream');s.scrollTop=s.scrollHeight},60)}
 $$('.seg').forEach(b=>b.onclick=()=>{
@@ -2125,6 +2365,7 @@ $$('.seg').forEach(b=>b.onclick=()=>{
   $$('.seg').forEach(x=>x.classList.remove('on'));b.classList.add('on');
   $$('#empApp .pane').forEach(p=>p.classList.remove('on'));
   $('#p-'+b.dataset.pane).classList.add('on');
+  if(b.dataset.pane==='chat'){renderPresets();$('#presets').classList.add('show')}
 });
 
 const ago=t=>{const d=Date.now()-t;const m=d/6e4;
@@ -2314,7 +2555,8 @@ function bubble(m){
   }
   if(m.w==='res'){d.className='msg ai';d.style.maxWidth='94%';
     d.innerHTML=`<div class="tm">${hhmm(m.ts)}</div><div class="rescard"><div class="ic">${m.i}</div>
-      <div><div class="system-tag reco">✦ AI 自动推荐</div><div class="rn">${m.n}</div><div class="rd">${m.d}</div></div></div>`;return d}
+      <div style="flex:1"><div class="system-tag reco">✦ AI 自动推荐</div><div class="rn">${m.n}</div><div class="rd">${m.d}</div>
+      <button class="activity-btn secondary" data-resource="${esc(m.n)}" data-resource-desc="${esc(m.d)}">查看活动</button></div></div>`;return d}
   if(m.w==='inv'){d.className='msg ai';d.style.maxWidth='96%';
     const decided=!!m.done;
     d.innerHTML=`<div class="tm">${hhmm(m.ts)}</div><div class="invite">
@@ -2466,7 +2708,7 @@ function armPush(){
 function showPush(msg,real){
   $$('[data-push]').forEach(p=>{
     p.querySelector('.pmsg').textContent=msg;
-    p.querySelector('.pnote').textContent=`（演示：实际为${real}触达。措辞不含任何具体内容——即使被企业看到也无害。）`;
+    p.querySelector('.pnote').textContent=`⚠ 演示时间说明：本 Demo 将触达间隔压缩；真实规则为${real}。`;
     p.classList.add('on');
     p.onclick=()=>{hidePush();bootEmp();openBot()};
   });
@@ -2487,22 +2729,228 @@ function consent(which){
     '生成个案工单 → 推送至疗愈师队列 · SLA 2 小时开始计时。<br>HRBP 侧仅红色计数 +1，<b style="color:#7fc98f">看不到任何详情</b>。');
 }
 
-/* ---------- 我的资源 ---------- */
+/* ---------- 我的活动：推荐、线上完成与线下报名 ---------- */
 function renderRes(){
   if(!ME||ME.kind!=='emp')return;
   const box=$('#reslist');
-  // 两个 session 是独立的，但推给你的资源汇总在一处
-  const got=[...(DB.chats[ME.anon]||[]),...((DB.bot||{})[ME.anon]||[])]
-    .filter(m=>m.w==='res').sort((a,b)=>a.ts-b.ts);
-  if(!got.length){box.innerHTML='<div class="emptyA">还没有收到资源。<br>在「说说话」里聊聊，<br>合适的会自己找上来。</div>';return}
-  box.innerHTML='';
-  got.slice().reverse().forEach(m=>{
-    const d=document.createElement('div');d.className='rescard';
-    d.innerHTML=`<div class="ic">${m.i}</div><div><div class="system-tag reco">✦ AI 自动推荐</div><div class="rn">${m.n}</div>
-      <div class="rd">${m.d} · ${ago(m.ts)}收到</div></div>`;
-    box.appendChild(d);
-  });
+  const profile=(DB.profiles||{})[ME.anon]||{tag:'none'}, context=CONTEXTS[profile.tag]||CONTEXTS.none;
+  const online=ACTIVITIES[context.online], offline=ACTIVITIES[context.offline];
+  const tagLabel=profile.tag&&profile.tag!=='none'?context.label:'未选择';
+  box.innerHTML=`<div class="activity-context"><div class="activity-context-main">
+    <span class="activity-context-label">当前标签</span><span class="context-pill">${esc(tagLabel)}</span>
+    </div><button class="context-edit" id="context-edit">修改</button></div>`;
+  box.insertAdjacentHTML('beforeend',activityCard(online,true,profile.tag==='none'?'适合快速缓解当下的紧绷':'结合你选择的「'+context.label+'」推荐'));
+  box.insertAdjacentHTML('beforeend',activityCard(offline,true,'如果你更希望在真实的团体中获得支持'));
 }
+function currentContextTag(){
+  const p=ME&&DB.profiles&&DB.profiles[ME.anon];return p&&p.tag||'none';
+}
+function activityForResource(name,desc){
+  const direct={'三分钟呼吸着陆法':'breathing','工间舒展操引导':'stretch-video','正念工间操':'stretch-video','情绪暂停提醒卡片':'emotion-unload','情绪书写练习':'emotion-unload','跨团队疗愈小组':'identity-group'}[name];
+  if(direct)return ACTIVITIES[direct];
+  const offline=/小组|工作坊|嘉年华|疗愈/.test(name);
+  const base=ACTIVITIES[offline?(CONTEXTS[currentContextTag()]||CONTEXTS.none).offline:'breathing'];
+  return {...base,id:'resource-'+name,title:name,desc:desc||base.desc};
+}
+function activityCard(a,recommended,reason){
+  const j=ME&&DB.activityJourneys&&DB.activityJourneys[ME.anon]&&DB.activityJourneys[ME.anon][a.id];
+  const state=j&&j.feedback?'已完成':j&&j.completed?'待反馈':j&&j.started?'进行中':j&&j.registered?'已报名':'';
+  const action=a.type==='offline'?(j&&j.registered?'查看报名结果':'查看并报名'):(j&&j.feedback?'查看完成结果':j&&j.started?'继续活动':'开始体验');
+  return `<div class="activity-card${recommended?' recommended':''}">
+    <div class="activity-top"><span class="activity-type${a.type==='offline'?' offline':''}">${a.type==='offline'?'线下活动':'线上活动'}</span>
+      <span class="activity-state">${state}</span></div>
+    <div class="activity-title">${esc(a.title)}</div><div class="activity-reason">${esc(reason||a.desc)}</div>
+    <div class="activity-meta"><span>${esc(a.duration)}</span><span>${esc(a.form)}</span><span>${a.type==='online'?'匿名完成':'匿名报名'}</span></div>
+    <button class="activity-btn${a.type==='offline'?' secondary':''}" data-activity="${esc(a.id)}" data-resource-title="${esc(a.title)}">${action}</button></div>`;
+}
+
+let CURRENT_ACTIVITY=null, ACT_TEMP={pre:7,post:4,rating:4}, BREATH_TIMER=null;
+let VIDEO_TIMER=null,VIDEO_ELAPSED=0,VIDEO_STARTED_AT=0,VIDEO_PLAYING=false;
+function getActivityById(id,title){
+  if(ACTIVITIES[id])return ACTIVITIES[id];
+  if(id&&id.startsWith('resource-'))return activityForResource(title||id.slice(9),'');
+  return ACTIVITIES.breathing;
+}
+function journeyFor(a){
+  DB.activityJourneys=DB.activityJourneys||{};
+  const all=DB.activityJourneys[ME.anon]||(DB.activityJourneys[ME.anon]={});
+  return all[a.id]||(all[a.id]={id:a.id,title:a.title,type:a.type});
+}
+function openActivity(id,title){
+  if(!ME||ME.kind!=='emp')return;
+  CURRENT_ACTIVITY=getActivityById(id,title);ACT_TEMP={pre:7,post:4,rating:4};
+  $('#activity-flow').classList.remove('hide');renderActivityStage('detail');
+}
+function recordActivityMetric(kind,value){
+  const tag=currentContextTag(), a=CURRENT_ACTIVITY;
+  const s=tag!=='none'&&DB.activityStats[tag]?DB.activityStats[tag]:null;
+  DB.activityPerf=DB.activityPerf||{};
+  const p=a&&(DB.activityPerf[a.id]||(SEED.activityPerf[a.id]?(DB.activityPerf[a.id]=structuredClone(SEED.activityPerf[a.id])):null));
+  if(kind==='participated'){if(s)s.participated++;if(p)p.participated++}
+  if(kind==='completed'){if(s)s.completed++;if(p)p.completed++}
+  if(kind==='feedback'){
+    if(s){s.feedback++;s.ratingTotal+=value.rating;s.effectTotal=(s.effectTotal||0)+value.delta}
+    if(p){p.feedback++;p.ratingTotal+=value.rating;p.effectTotal=(p.effectTotal||0)+value.delta}
+  }
+  if(s){s.activities=s.activities||{};
+    const by=s.activities[a.id]||(s.activities[a.id]={title:a.title,participated:0,completed:0,feedback:0,ratingTotal:0,effectTotal:0});
+    if(kind==='participated')by.participated++;
+    if(kind==='completed')by.completed++;
+    if(kind==='feedback'){by.feedback++;by.ratingTotal+=value.rating;by.effectTotal=(by.effectTotal||0)+value.delta}
+    s.lastUpdated=Date.now();
+  }
+  if(p)p.lastUpdated=Date.now();
+  DB.lastActivityTag=tag;DB.lastActivityId=a&&a.id;
+}
+function clearBreathDemo(){if(BREATH_TIMER){clearInterval(BREATH_TIMER);BREATH_TIMER=null}}
+function clearVideoDemo(reset=true){
+  if(VIDEO_TIMER){clearInterval(VIDEO_TIMER);VIDEO_TIMER=null}
+  VIDEO_PLAYING=false;if(reset)VIDEO_ELAPSED=0;
+}
+function breathPhase(elapsed){
+  if(elapsed<3)return {name:'prepare',label:'准备',hint:'找到一个稳定的姿势，让双脚接触地面。'};
+  if(elapsed<7)return {name:'inhale',label:'吸气',hint:'跟着圆形扩展，用鼻子缓慢吸气。'};
+  if(elapsed<14)return {name:'hold',label:'停留',hint:'轻轻停留；如果不舒服，保持自然呼吸即可。'};
+  if(elapsed<22)return {name:'exhale',label:'呼气',hint:'跟着圆形收缩，慢慢把气呼出。'};
+  return {name:'settle',label:'觉察',hint:'恢复自然呼吸，留意身体哪里有了一点变化。'};
+}
+function startBreathDemo(){
+  clearBreathDemo();const total=30,start=Date.now();
+  const update=()=>{
+    const elapsed=Math.min(total,(Date.now()-start)/1000),remaining=Math.max(0,Math.ceil(total-elapsed)),phase=breathPhase(elapsed);
+    const orb=$('#breath-orb'),label=$('#breath-label'),hint=$('#breath-hint'),count=$('#breath-count'),bar=$('#breath-progress');
+    if(!orb){clearBreathDemo();return}
+    orb.className='breath-orb '+phase.name;label.textContent=phase.label;hint.textContent=phase.hint;count.textContent=remaining+'秒';bar.style.width=(elapsed/total*100)+'%';
+    if(elapsed>=total){clearBreathDemo();label.textContent='本轮完成';count.textContent='30秒';$('#act-breath-complete').classList.remove('hide')}
+  };
+  update();BREATH_TIMER=setInterval(update,200);
+}
+function videoPhase(elapsed){
+  if(elapsed<10)return {title:'肩颈热身',hint:'坐稳，轻轻收下巴，让肩膀缓慢向后绕圈。'};
+  if(elapsed<20)return {title:'上肢舒展',hint:'双手向上延伸，保持自然呼吸，不需要追求幅度。'};
+  return {title:'呼吸收束',hint:'放下双手，慢慢呼气，觉察肩颈是否有一点松动。'};
+}
+function updateVideoDemo(){
+  const total=30;VIDEO_ELAPSED=Math.min(total,(Date.now()-VIDEO_STARTED_AT)/1000);const phase=videoPhase(VIDEO_ELAPSED);
+  const title=$('#video-stage-title'),hint=$('#video-stage-hint'),bar=$('#video-progress'),time=$('#video-time');
+  if(!title){clearVideoDemo(false);return}
+  title.textContent=phase.title;hint.textContent=phase.hint;bar.style.width=(VIDEO_ELAPSED/total*100)+'%';time.textContent=Math.floor(VIDEO_ELAPSED)+' / 30秒';
+  if(VIDEO_ELAPSED>=total){clearVideoDemo(false);$('#video-toggle').textContent='✓';$('#act-video-complete').classList.remove('hide')}
+}
+function toggleVideoDemo(){
+  const btn=$('#video-toggle');if(VIDEO_PLAYING){VIDEO_ELAPSED=(Date.now()-VIDEO_STARTED_AT)/1000;clearVideoDemo(false);btn.textContent='▶';return}
+  VIDEO_PLAYING=true;VIDEO_STARTED_AT=Date.now()-VIDEO_ELAPSED*1000;btn.textContent='Ⅱ';updateVideoDemo();VIDEO_TIMER=setInterval(updateVideoDemo,200);
+}
+function finishOnlineDemo(){
+  clearBreathDemo();clearVideoDemo();const a=CURRENT_ACTIVITY,j=journeyFor(a);
+  if(!j.completed){j.completed=1;j.completedAt=Date.now();recordActivityMetric('completed')}
+  ACT_TEMP.post=a.direction==='up'?Math.min(10,(j.pre||7)+3):Math.max(0,(j.pre||7)-3);
+  save();renderRes();renderActivityStage('feedback');
+}
+function renderActivityStage(stage){
+  const a=CURRENT_ACTIVITY,j=journeyFor(a),body=$('#activity-body');
+  clearBreathDemo();clearVideoDemo();
+  body.onclick=null;
+  $('#activity-headline').textContent=a.type==='offline'?'活动报名':'线上活动';
+  if(a.type==='offline'){
+    if(j.registered){
+      body.innerHTML=`<div class="act-kicker">报名申请已提交</div><div class="act-done"><h4>${esc(a.title)}</h4>
+        <p>系统将通过钉钉发送名额确认与活动提醒。HRBP 无法查看你的报名身份。</p></div>
+        <div class="demo-notice"><span class="notice-icon">⚠</span><div><b>演示流程说明</b>本 Demo 展示到报名成功为止；真实部署后，活动方确认名额并完成线下签到，到场后才计入参与率。</div></div>
+        <button class="act-primary" id="act-finish">返回我的活动</button>`;
+      return;
+    }
+    body.innerHTML=`<div class="act-kicker">线下活动</div><div class="act-title">${esc(a.title)}</div><div class="act-desc">${esc(a.desc)}</div>
+      <div class="act-info"><div><span>活动时间</span><b>本周五 18:30</b></div><div><span>活动地点</span><b>星原科技 · 心灵驿站</b></div>
+      <div><span>活动时长</span><b>${esc(a.duration)}</b></div><div><span>报名身份</span><b>${displayIdentity(ME.anon,ME.alias)}</b></div></div>
+      <div class="act-privacy">报名信息只提供给活动服务方确认名额；企业端只看到样本充足后的聚合统计。</div>
+      <button class="act-primary" id="act-register">提交报名申请</button><button class="act-secondary" id="act-cancel">暂不报名</button>`;
+    return;
+  }
+  if(j.feedback)stage='done';else if(j.completed&&stage==='detail')stage='feedback';
+  if(stage==='detail'){
+    const demoNote=a.demoEngine==='video'?'本 Demo 用空白视频容器演示「播放 → 分段跟练 → 完成反馈」流程；正式产品接入实际跟练视频。':a.id==='breathing'?'这里将完整练习压缩为 30 秒可跟练版本。':'你进入的仍是「'+esc(a.title)+'」，参与和完成也会记在该活动下。为了在评审现场展示完整线上闭环，本 Demo 暂用「三分钟呼吸着陆法」的 30 秒交互作为体验样例。';
+    body.innerHTML=`<div class="act-kicker">线上活动</div><div class="act-title">${esc(a.title)}</div><div class="act-desc">${esc(a.desc)}</div>
+      <div class="act-info"><div><span>正式活动时长</span><b>${esc(a.duration)}</b></div><div><span>形式</span><b>${esc(a.form)}</b></div></div>
+      <div class="demo-notice"><span class="notice-icon">⚠</span><div><b>演示体验说明</b>${demoNote}</div></div>
+      <div class="act-privacy">活动过程不向 HR 展示。只有去标识化后的参与、完成和满意度进入聚合统计。</div>
+      <button class="act-primary" id="act-start">${j.started?'继续活动':'开始活动'}</button>`;
+    return;
+  }
+  if(stage==='pre'){
+    body.innerHTML=`<div class="act-kicker">活动前 · 快速读数</div><div class="act-title">先看看此刻的自己</div>
+      <div class="score-card"><label>${esc(a.preLabel)}</label><div class="score-value" id="pre-value">${ACT_TEMP.pre}</div>
+      <input id="pre-score" type="range" min="0" max="10" value="${ACT_TEMP.pre}"><div class="score-ends"><span>${esc(a.low)}</span><span>${esc(a.high)}</span></div></div>
+      <button class="act-primary" id="act-pre-next">继续</button>`;
+    return;
+  }
+  if(stage==='exercise'){
+    if(a.demoEngine==='video'){
+      body.innerHTML=`<div class="act-kicker">视频跟练 · 30 秒</div><div class="act-title">工间舒展操引导</div>
+        <div class="video-demo"><div class="video-stage"><div class="play-mark">▶</div><h4 id="video-stage-title">准备开始</h4>
+        <p id="video-stage-hint">请在座位周围留出可以轻松抬手的空间。</p></div>
+        <div class="video-controls"><div class="video-timeline"><i id="video-progress"></i></div><div class="video-control-row">
+        <button id="video-toggle" aria-label="播放或暂停">▶</button><span>无声演示视频</span><span class="video-time" id="video-time">0 / 30秒</span></div></div></div>
+        <button class="act-primary hide" id="act-video-complete">继续记录感受</button>
+        <button class="act-secondary" id="act-video-skip">跳过并完成</button>`;
+      return;
+    }
+    body.innerHTML=`<div class="act-kicker">呼吸练习 · 30 秒</div><div class="act-title">跟着呼吸着陆</div>
+      <div class="breath-demo"><div class="breath-orb-wrap"><div class="breath-orb prepare" id="breath-orb"><b id="breath-label">准备</b></div></div>
+      <div class="breath-count" id="breath-count">30秒</div><div class="breath-hint" id="breath-hint">找到一个稳定的姿势，让双脚接触地面。</div>
+      <div class="breath-track"><i id="breath-progress"></i></div></div>
+      <button class="act-primary hide" id="act-breath-complete">继续记录感受</button>
+      <button class="act-secondary" id="act-breath-skip">跳过并完成</button>`;
+    requestAnimationFrame(startBreathDemo);
+    return;
+  }
+  if(stage==='feedback'){
+    body.innerHTML=`<div class="act-kicker">活动后 · 30 秒反馈</div><div class="act-title">记录这次变化</div>
+      <div class="score-card"><label>${esc(a.preLabel)}</label><div class="score-value" id="post-value">${ACT_TEMP.post}</div>
+      <input id="post-score" type="range" min="0" max="10" value="${ACT_TEMP.post}"><div class="score-ends"><span>${esc(a.low)}</span><span>${esc(a.high)}</span></div></div>
+      <div class="score-card"><label>这次活动对你有帮助吗？</label><div class="rating-row">${[1,2,3,4,5].map(n=>`<button data-rating="${n}" class="${n===ACT_TEMP.rating?'on':''}">${n}</button>`).join('')}</div></div>
+      <button class="act-primary" id="act-submit">提交反馈</button><button class="act-secondary" id="act-skip-feedback">暂不反馈</button>`;
+    return;
+  }
+  const before=j.pre==null?'—':j.pre,after=j.post==null?'—':j.post;
+  body.innerHTML=`<div class="act-kicker">活动已完成</div><div class="act-done"><h4>${esc(a.title)}</h4>
+    <p>你的活动前后读数从 <b>${before}</b> 变为 <b>${after}</b>，并给出了 <b>${j.rating||'—'} / 5</b> 的帮助度反馈。</p></div>
+    <div class="act-privacy">这些读数不向 HRBP 展示个人结果。企业端只会看到样本充足后的参与率、完成率和满意度。</div>
+    <button class="act-primary" id="act-finish">返回我的活动</button>`;
+}
+function closeActivity(){clearBreathDemo();clearVideoDemo();$('#activity-flow').classList.add('hide');CURRENT_ACTIVITY=null;renderRes()}
+function advanceActivityStep(){
+  if(!CURRENT_ACTIVITY)return;
+  const a=CURRENT_ACTIVITY,j=journeyFor(a),i=Math.min(j.step||0,a.steps.length-1);
+  if(i<a.steps.length-1){j.step=i+1;save();renderActivityStage('exercise');return}
+  if(!j.completed){j.completed=1;j.completedAt=Date.now();recordActivityMetric('completed')}
+  ACT_TEMP.post=a.direction==='up'?Math.min(10,(j.pre||7)+3):Math.max(0,(j.pre||7)-3);
+  save();renderRes();renderActivityStage('feedback');
+}
+$('#activity-close').onclick=closeActivity;
+document.addEventListener('click',e=>{
+  if(e.target.closest('#context-edit')){openContextEditor();return}
+  if(e.target.closest('#act-finish')||e.target.closest('#act-cancel')){closeActivity();return}
+  if(e.target.closest('#act-register')){const j=journeyFor(CURRENT_ACTIVITY);j.registered=1;j.registeredAt=Date.now();save();renderRes();renderActivityStage('detail');return}
+  if(e.target.closest('#act-start')){const j=journeyFor(CURRENT_ACTIVITY);if(!j.started){j.started=1;j.startedAt=Date.now();recordActivityMetric('participated')}
+    save();renderRes();renderActivityStage(j.completed?'feedback':'pre');return}
+  if(e.target.closest('#act-pre-next')){const j=journeyFor(CURRENT_ACTIVITY);j.pre=ACT_TEMP.pre;j.step=0;save();renderActivityStage('exercise');return}
+  if(e.target.closest('#act-breath-complete')||e.target.closest('#act-breath-skip')){finishOnlineDemo();return}
+  if(e.target.closest('#video-toggle')){toggleVideoDemo();return}
+  if(e.target.closest('#act-video-complete')||e.target.closest('#act-video-skip')){finishOnlineDemo();return}
+  if(e.target.closest('#act-skip-feedback')){const j=journeyFor(CURRENT_ACTIVITY);j.skippedFeedback=1;j.skippedFeedbackAt=Date.now();save();closeActivity();return}
+  if(e.target.closest('#act-step-next')){advanceActivityStep();return}
+  const rating=e.target.closest('[data-rating]');if(rating){ACT_TEMP.rating=+rating.dataset.rating;$$('#activity-body [data-rating]').forEach(x=>x.classList.toggle('on',x===rating));return}
+  if(e.target.closest('#act-submit')){const a=CURRENT_ACTIVITY,j=journeyFor(a);j.post=ACT_TEMP.post;j.rating=ACT_TEMP.rating;j.feedback=1;j.feedbackAt=Date.now();
+    const delta=a.direction==='up'?(ACT_TEMP.post-(j.pre||0)):((j.pre||0)-ACT_TEMP.post);
+    recordActivityMetric('feedback',{rating:ACT_TEMP.rating,delta});save();renderRes();renderActivityStage('done');return}
+  const b=e.target.closest('[data-activity]');if(b){openActivity(b.dataset.activity,b.dataset.resourceTitle);return}
+  const r=e.target.closest('[data-resource]');if(r){const a=activityForResource(r.dataset.resource,'');CURRENT_ACTIVITY=a;$('#activity-flow').classList.remove('hide');renderActivityStage('detail')}
+});
+document.addEventListener('input',e=>{
+  if(e.target.id==='pre-score'){ACT_TEMP.pre=+e.target.value;$('#pre-value').textContent=e.target.value}
+  if(e.target.id==='post-score'){ACT_TEMP.post=+e.target.value;$('#post-value').textContent=e.target.value}
+});
 
 /* ==========================================================================
    疗愈师
@@ -2578,7 +3026,6 @@ $$('.navbar span[data-c]').forEach(s=>s.onclick=()=>{
 });
 function renderHR(){
   if(MEID!=='hr')return;
-  $('#savedlb').textContent='✓ 已保存 · 由 张敏 于 '+hhmm(Date.now())+' 修改';
   // 议题热度：种子 + 广场实时叠加
   const tp={...DB.topics};
   DB.posts.forEach(p=>{const a=analyze(p.text);
@@ -2600,7 +3047,47 @@ function renderHR(){
     `<div class="dr"><span class="sq" style="background:${c}"></span>${n}<span class="dv">${v}%</span></div>`).join('');
   $('#k-green').innerHTML=g+'<small>%</small>';
   $('#d-red').textContent=red;
+  renderActivityStats();renderActivityPerf();
   renderGroups();
+}
+function renderActivityStats(){
+  const stats=DB.activityStats||SEED.activityStats, keys=['transition','frontline','maternity','other'];
+  const visible=keys.filter(k=>stats[k]&&stats[k].recommended>=10).map(k=>stats[k]);
+  const total=visible.reduce((o,s)=>({recommended:o.recommended+s.recommended,participated:o.participated+s.participated,
+    completed:o.completed+s.completed,feedback:o.feedback+s.feedback,ratingTotal:o.ratingTotal+s.ratingTotal}),
+    {recommended:0,participated:0,completed:0,feedback:0,ratingTotal:0});
+  const pct=(a,b)=>b?Math.round(a/b*100):0;
+  $('#act-kpi-part').innerHTML=pct(total.participated,total.recommended)+'<small>%</small>';
+  $('#act-kpi-complete').innerHTML=pct(total.completed,total.participated)+'<small>%</small>';
+  $('#act-kpi-rating').innerHTML=(total.feedback?total.ratingTotal/total.feedback:0).toFixed(1)+'<small>/5</small>';
+  $('#act-kpi-feedback').innerHTML=total.feedback+'<small>份</small>';
+  const table=$('#activity-stats-table');if(!table)return;
+  table.innerHTML=`<tr><th>身份标签</th><th>有效样本</th><th>参与率</th><th>完成率</th><th>满意度</th><th>最受欢迎活动</th></tr>`+
+    keys.map(k=>{
+      const s=stats[k];if(!s)return'';
+      if(s.recommended<10)return `<tr class="masked"><td>${esc(s.label)}</td><td class="mono">${s.recommended}</td><td colspan="4">样本不足 10 人 · 按隐私规则不予展示</td></tr>`;
+      const updated=DB.lastActivityTag===k&&s.lastUpdated, thin=s.feedback<15;
+      return `<tr class="${updated?'metric-updated':''}"><td>${esc(s.label)}</td>
+        <td class="mono">${s.recommended}</td><td class="mono">${pct(s.participated,s.recommended)}%</td>
+        <td class="mono">${pct(s.completed,s.participated)}%</td><td class="mono">${(s.ratingTotal/s.feedback).toFixed(1)} / 5 <small>(${s.feedback}份)</small>${thin?'<span class="smallsample">样本较小</span>':''}</td>
+        <td>${esc(s.popular)}${updated?'<span class="pill g" style="margin-left:7px">刚刚更新</span>':''}</td></tr>`;
+    }).join('');
+}
+function renderActivityPerf(){
+  const perf=DB.activityPerf||SEED.activityPerf, ids=Object.keys(SEED.activityPerf);
+  const pct=(a,b)=>b?Math.round(a/b*100):0;
+  const table=$('#activity-perf-table');if(!table)return;
+  table.innerHTML=`<tr><th>活动</th><th>形式</th><th>有效样本</th><th>参与率</th><th>完成率</th><th>满意度</th></tr>`+
+    ids.map(id=>{
+      const p=perf[id];if(!p)return'';
+      if(p.recommended<10)return `<tr class="masked"><td>${esc(p.label)}</td><td colspan="5">样本不足 10 人 · 按隐私规则不予展示</td></tr>`;
+      const updated=DB.lastActivityId===id&&p.lastUpdated, thin=p.feedback<15;
+      return `<tr class="${updated?'metric-updated':''}"><td>${esc(p.label)}</td>
+        <td style="color:var(--mut)">${esc(p.form)}</td>
+        <td class="mono">${p.recommended}</td><td class="mono">${pct(p.participated,p.recommended)}%</td>
+        <td class="mono">${pct(p.completed,p.participated)}%</td>
+        <td class="mono">${(p.ratingTotal/p.feedback).toFixed(1)} / 5 <small>(${p.feedback}份)</small>${thin?'<span class="smallsample">样本较小</span>':''}${updated?'<span class="pill g" style="margin-left:7px">刚刚更新</span>':''}</td></tr>`;
+    }).join('');
 }
 
 /* ==========================================================================
@@ -2759,9 +3246,7 @@ const SERVICE_CFG={
   refer:['市三院心理科绿色通道'],
 };
 
-function markSaved(){
-  $('#savedlb').textContent='✓ 已保存 · 由 张敏 于 '+hhmm(Date.now())+' 修改';
-}
+function markSaved(){}
 function applyTpl(name){
   curTpl=name; dirty=0; CFG=structuredClone(BASE);
   const t=TPL[name]||{};
@@ -2771,7 +3256,7 @@ function applyTpl(name){
 }
 const LEVELS=['L1','L2','L3'], EDITABLE_LEVELS=['L1','L2'];
 const LVMETA={L1:{c:'g',n:'绿色 · 自助资源',s:'自动推送，无需人工'},
-              L2:{c:'y',n:'黄色 · 团体活动',s:'人工复核后推荐'},
+              L2:{c:'y',n:'黄色 · 团体活动',s:'自动推送，人工跟进'},
               L3:{c:'r',n:'红色 · 专业介入',s:'统一流程，不可修改'}};
 function renderMx(){
   $('#mx').innerHTML=
@@ -2780,10 +3265,9 @@ function renderMx(){
        return `<th class="${m.c}"><span class="lvhd"><i class="dotL ${m.c}"></i>${m.n}</span>
          <span class="lvsub">${m.s}</span></th>`}).join('')}</tr>`
    +CFG.map((r,ri)=>`<tr>
-      <td class="sig"><span class="em">${r.em}</span>${r.sig}
-        <span class="ct">本周 ${r.hit} 次</span></td>
+      <td class="sig"><span class="em">${r.em}</span>${r.sig}</td>
       ${LEVELS.map(L=>`<td class="cell${L==='L3'?' readonly':''}"><div class="cellwrap">
-        ${r[L].map((s,si)=>`<span class="chipC ${LVMETA[L].c}">${L==='L3'?privacyIcon:''}${s}
+        ${r[L].map((s,si)=>`<span class="chipC ${LVMETA[L].c}">${s}
           ${L==='L3'?'':`<button class="x" data-r="${ri}" data-l="${L}" data-i="${si}">✕</button>`}</span>`).join('')}
         ${L==='L3'?'':`<button class="addc" data-add="${L}" data-r="${ri}">＋</button>`}
       </div></td>`).join('')}
@@ -2844,8 +3328,7 @@ $$('.service-editor').forEach(el=>el.onclick=e=>{
 /* ---------- 行业模板菜单 ---------- */
 (function(){
   const m=$('#tplmenu');
-  m.innerHTML='<div class="tt">套用行业预设，之后仍可自由编辑</div>'+
-    Object.keys(TPL).map(k=>`<button data-t="${k}">${k}
+  m.innerHTML=Object.keys(TPL).map(k=>`<button data-t="${k}">${k}
       <small>覆盖 ${Object.keys(TPL[k]).length} 类情绪的默认配置</small></button>`).join('');
   $('#tplbtn').onclick=e=>{e.stopPropagation();m.classList.toggle('on')};
   document.addEventListener('click',()=>m.classList.remove('on'));
