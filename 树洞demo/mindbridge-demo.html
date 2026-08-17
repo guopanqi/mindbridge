@@ -17,6 +17,7 @@ html,body{height:100%}
 body{font-family:var(--sans);background:#0a0d0c;overflow:hidden}
 button{font-family:inherit;border:none;background:none;cursor:pointer;color:inherit}
 input,textarea{font-family:inherit;outline:none;border:none;background:none;color:inherit}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid #d89b45;outline-offset:2px}
 ::-webkit-scrollbar{width:5px;height:5px}
 ::-webkit-scrollbar-thumb{background:rgba(140,150,145,.28);border-radius:10px}
 .hide{display:none!important}
@@ -159,9 +160,9 @@ input,textarea{font-family:inherit;outline:none;border:none;background:none;colo
 
 /* 长按操作条 */
 .sheet{position:absolute;left:0;right:0;bottom:0;z-index:30;background:#fff;border-top:1px solid #e6e8ea;
-  transform:translateY(101%);transition:.28s cubic-bezier(.2,.8,.2,1);border-radius:14px 14px 0 0;
+  transform:translateY(101%);visibility:hidden;transition:transform .28s cubic-bezier(.2,.8,.2,1),visibility 0s linear .28s;border-radius:14px 14px 0 0;
   box-shadow:0 -8px 30px rgba(0,0,0,.12)}
-.sheet.on{transform:none}
+.sheet.on{transform:none;visibility:visible;transition-delay:0s}
 .sheet .sb{display:grid;grid-template-columns:repeat(4,1fr);gap:10px 6px;padding:18px 10px 8px}
 .sheet .sb button{text-align:center;font-size:11px;color:#3d4348}
 .sheet .sb button .si{display:block;width:42px;height:42px;margin:0 auto 6px;border-radius:11px;
@@ -195,6 +196,7 @@ input,textarea{font-family:inherit;outline:none;border:none;background:none;colo
 .fwd .ft{font-size:13px;font-weight:600;padding:0 18px 12px;color:#191919}
 .fwd .frow{display:flex;align-items:center;gap:11px;padding:11px 18px;width:100%;text-align:left}
 .fwd .frow:hover{background:#f7f8fa}
+.fwd .frow:disabled{opacity:.45;cursor:not-allowed}
 .fwd .frow .fav{width:36px;height:36px;border-radius:8px;background:#eef0f2;display:grid;
   place-items:center;font-size:17px;flex:none}
 .fwd .frow.pri .fav{background:linear-gradient(140deg,#1d6b52,#2d8f6a)}
@@ -604,8 +606,8 @@ input,textarea{font-family:inherit;outline:none;border:none;background:none;colo
 .skB .hd .cnt .v{font-size:21px;font-weight:650;font-family:var(--mono);color:var(--red);line-height:1}
 .skB .hd .cnt .l{font-size:10px;color:var(--mut);margin-top:4px}
 .qbar{display:flex;border-bottom:1px solid var(--line);background:#1d2126;padding:0 26px;flex:none}
-.qbar span{padding:11px 0;margin-right:26px;font-size:12px;color:var(--mut);border-bottom:2px solid transparent}
-.qbar span.on{color:var(--txt);border-bottom-color:var(--red);font-weight:600}
+.qbar button{padding:11px 0;margin-right:26px;font-size:12px;color:var(--mut);border-bottom:2px solid transparent}
+.qbar button.on{color:var(--txt);border-bottom-color:var(--red);font-weight:600}
 .cases{flex:1;overflow-y:auto;padding:18px 26px;display:flex;flex-direction:column;gap:11px;
   max-width:1080px;width:100%;margin:0 auto}
 .case{background:var(--panel);border:1px solid var(--line);border-radius:9px;padding:15px 17px;
@@ -623,7 +625,8 @@ input,textarea{font-family:inherit;outline:none;border:none;background:none;colo
 .tagrow{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
 .tg{font-size:10.5px;padding:3px 9px;border-radius:5px;background:#2a2f35;color:var(--mut);border:1px solid var(--line)}
 .locked{margin-top:10px;font-size:10.5px;color:var(--mut2);background:#1b1e22;border:1px dashed var(--line);
-  border-radius:6px;padding:8px 11px;display:flex;align-items:center;gap:7px}
+  border-radius:6px;padding:8px 11px;display:flex;align-items:flex-start;gap:7px;line-height:1.6}
+.locked.granted{color:var(--grn);border:1px solid rgba(79,168,122,.4);background:rgba(79,168,122,.08)}
 .sla{text-align:right;flex:none}
 .sla .lb{font-size:9.5px;color:var(--mut2);letter-spacing:.08em;margin-bottom:5px}
 .sla .tm{font-family:var(--mono);font-size:22px;font-weight:650;color:var(--red);letter-spacing:-.01em}
@@ -637,6 +640,8 @@ input,textarea{font-family:inherit;outline:none;border:none;background:none;colo
 .bt:hover{border-color:var(--mut);color:var(--txt)}
 .bt.pri{background:var(--red);border-color:var(--red);color:#fff;font-weight:600}
 .bt.pri:hover{background:#ef7259}
+.bt:disabled{opacity:.5;cursor:default}
+.bt:disabled:hover{border-color:var(--line);color:var(--mut)}
 .logtxt{margin-left:auto;font-size:10.5px;color:var(--mut2);font-family:var(--mono)}
 .emptyB{text-align:center;color:var(--mut2);padding:70px 20px;font-size:13px;line-height:2}
 
@@ -654,9 +659,9 @@ input,textarea{font-family:inherit;outline:none;border:none;background:none;colo
 .skC .hd .who .ava{width:25px;height:25px;border-radius:50%;background:#d8dee4;display:grid;
   place-items:center;font-size:10.5px;color:#5c666f}
 .navbar{background:var(--card);border-bottom:1px solid var(--line);padding:0 26px;display:flex;gap:27px;flex:none}
-.navbar span{padding:10px 0;font-size:12.5px;color:var(--mut);border-bottom:2px solid transparent}
-.navbar span[hidden]{display:none}
-.navbar span.on{color:var(--brand);border-bottom-color:var(--brand);font-weight:600}
+.navbar button{padding:10px 0;font-size:12.5px;color:var(--mut);border-bottom:2px solid transparent;white-space:nowrap}
+.navbar button[hidden]{display:none}
+.navbar button.on{color:var(--brand);border-bottom-color:var(--brand);font-weight:600}
 .syncbar{padding:8px 26px;font-size:10.5px;color:var(--mut2);font-family:var(--mono);
   background:#eef1f4;border-bottom:1px solid var(--line);display:flex;gap:20px;flex:none;flex-wrap:wrap}
 .bodyC{flex:1;overflow-y:auto;padding:18px 26px 40px}
@@ -1067,6 +1072,11 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
   .policy-source{justify-self:start}
   .rule-row{grid-template-columns:1fr;gap:4px}
   .rule-arrow{text-align:left}
+  .seg,.context-edit,.activity-btn,.rating-row button,.followup-options button,
+  .act-secondary,.qbar button,.navbar button,.bt,.dtapp-more,.overlay-back,
+  .context-skip,.like,.rbtn,.more,.tplbtn,.addc,.pcx,.fwd button{min-height:44px}
+  .context-edit,.addc{min-width:44px}
+  .chipC .x{min-width:32px;min-height:32px}
   .locked-panel{padding:12px 42px 12px 12px}
   .panel-lock::after{max-width:min(220px,72vw)}
   #picker{padding:10px}
@@ -1172,7 +1182,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
     <div class="phone"><div class="screen skD">
       <div class="notch"><span>21:40</span><span>●●● ⌁ ▮</span></div>
       <div class="dthead">
-        <button class="bk" id="im-back">‹</button>
+        <button class="bk" id="im-back" aria-label="返回消息列表">‹</button>
         <div class="ht" id="im-t">群聊</div>
         <div class="hs" id="im-n"></div>
       </div>
@@ -1180,36 +1190,36 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
       <div class="dtbar" id="im-bar">
         <span class="dbi">😊</span><span class="dbi">＋</span>
         <div class="dbin">发消息…</div>
-        <button class="dbdemo" id="im-demo">长按消息进行转发<em>消息历史纯属虚构，供 Demo 演示使用</em></button>
+        <button class="dbdemo" id="im-demo">点击消息进行转发<em>消息历史纯属虚构，供 Demo 演示使用</em></button>
       </div>
 
-      <div class="sheet" id="im-sheet">
+      <div class="sheet" id="im-sheet" role="dialog" aria-modal="true" aria-label="消息操作" aria-hidden="true" inert>
         <div class="sb">
-          <button data-a="copy" class="off"><span class="si">📄</span>复制</button>
+          <button data-a="copy" class="off" disabled><span class="si">📄</span>复制</button>
           <button data-a="fwd"><span class="si">↪️</span>转发</button>
-          <button data-a="fav" class="off"><span class="si">⭐</span>收藏</button>
-          <button data-a="quote" class="off"><span class="si">💬</span>引用</button>
+          <button data-a="fav" class="off" disabled><span class="si">⭐</span>收藏</button>
+          <button data-a="quote" class="off" disabled><span class="si">💬</span>引用</button>
           <button data-a="multi"><span class="si">☑️</span>多选</button>
-          <button data-a="todo" class="off"><span class="si">✅</span>待办</button>
-          <button data-a="ding" class="off"><span class="si">📌</span>DING</button>
-          <button data-a="more" class="off"><span class="si">⋯</span>更多</button>
+          <button data-a="todo" class="off" disabled><span class="si">✅</span>待办</button>
+          <button data-a="ding" class="off" disabled><span class="si">📌</span>DING</button>
+          <button data-a="more" class="off" disabled><span class="si">⋯</span>更多</button>
         </div>
         <div class="shf" id="im-sh">仅「转发」「多选」在本演示中可用</div>
       </div>
 
       <div class="pickbar" id="im-pick">
-        <span class="pcx" id="pk-cancel">取消</span>
+        <button class="pcx" id="pk-cancel">取消</button>
         <div class="pc">已选 <b id="pk-n">0</b> 条</div>
         <button class="pgo" id="pk-go">转发</button>
       </div>
 
-      <div class="fwd" id="im-fwd"><div class="fbox">
+      <div class="fwd" id="im-fwd" role="dialog" aria-modal="true" aria-label="选择转发对象" aria-hidden="true" inert><div class="fbox">
         <div class="ft">转发给</div>
         <button class="frow pri" id="fwd-mb"><div class="fav">🕯</div>
           <div><div class="fnm">MindBridge</div><div class="fd">员工关爱 · 只有你能看到</div></div></button>
-        <button class="frow"><div class="fav">👤</div>
+        <button class="frow" disabled><div class="fav">👤</div>
           <div><div class="fnm">刘总</div><div class="fd">研发中心</div></div></button>
-        <button class="frow"><div class="fav">👥</div>
+        <button class="frow" disabled><div class="fav">👥</div>
           <div><div class="fnm">研发中心通知</div><div class="fd">128人</div></div></button>
         <button class="fx" id="fwd-x">取消</button>
       </div></div>
@@ -1329,10 +1339,10 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
         <div><div class="id" id="e-anon">小芳-7F3A</div>
           <div class="tip">当前身份已去标识化，系统仅展示匿名编号</div></div>
       </div>
-      <div class="segs">
-        <button class="seg on" data-pane="chat">倾诉树洞</button>
-        <button class="seg" data-pane="wall">匿名广场</button>
-        <button class="seg" data-pane="res">我的活动</button>
+      <div class="segs" role="tablist" aria-label="MindBridge 功能">
+        <button class="seg on" data-pane="chat" role="tab" aria-selected="true">倾诉树洞</button>
+        <button class="seg" data-pane="wall" role="tab" aria-selected="false">匿名广场</button>
+        <button class="seg" data-pane="res" role="tab" aria-selected="false">我的活动</button>
       </div>
 
       <!-- 匿名广场 -->
@@ -1358,7 +1368,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
           </button>
         </div>
         <div class="footA">
-          <span class="clr" id="clrbtn">🗑 清空我的记录</span>
+          <button class="clr" id="clrbtn">🗑 清空我的记录</button>
         </div>
       </div>
 
@@ -1403,10 +1413,10 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
         <div><div class="nm">李佳</div><div class="qz">UNIHEAL 国际疗愈师 · UH-2024-0871</div></div>
         <div class="cnt"><div class="v" id="h-cnt">0</div><div class="l">待响应个案</div></div>
       </div>
-      <div class="qbar">
-        <span class="on" data-f="pending">待响应 <b id="h-p">0</b></span>
-        <span data-f="active">处理中 <b id="h-a">0</b></span>
-        <span data-f="done">已闭环 <b id="h-d">0</b></span>
+      <div class="qbar" role="tablist" aria-label="个案状态">
+        <button class="on" data-f="pending" role="tab" aria-selected="true">待响应 <b id="h-p">0</b></button>
+        <button data-f="active" role="tab" aria-selected="false">处理中 <b id="h-a">0</b></button>
+        <button data-f="done" role="tab" aria-selected="false">已闭环 <b id="h-d">0</b></button>
       </div>
       <div class="cases" id="cases"></div>
     </div>
@@ -1417,12 +1427,12 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
     <div class="skC pad">
       <div class="hd"><div class="lg2">M</div><h3>MindBridge · 员工关爱后台</h3>
         <div class="who"><div class="ava">张</div>张敏 · HRBP · 星原科技</div></div>
-      <div class="navbar">
-        <span class="on" data-c="dash">组织看板</span>
-        <span data-c="activities">活动效果</span>
-        <span data-c="cfg">干预阶梯配置</span>
-        <span data-c="sensing">办公数据感知</span>
-        <span hidden>报表导出</span>
+      <div class="navbar" role="tablist" aria-label="HRBP 工作台">
+        <button class="on" data-c="dash" role="tab" aria-selected="true">组织看板</button>
+        <button data-c="activities" role="tab" aria-selected="false">活动效果</button>
+        <button data-c="cfg" role="tab" aria-selected="false">干预阶梯配置</button>
+        <button data-c="sensing" role="tab" aria-selected="false">办公数据感知</button>
+        <button hidden>报表导出</button>
       </div>
       <div class="bodyC"><div class="inner">
 
@@ -1435,7 +1445,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
           <div class="kpis">
             <div class="kp"><div class="v">42<small>%</small></div><div class="l">员工覆盖率</div><div class="t">↑ 较上月 +6pt</div></div>
             <div class="kp"><div class="v">6.4<small>/10</small></div><div class="l">全员情绪温度</div><div class="t">↑ +0.8</div></div>
-            <div class="kp"><div class="v" id="k-green">92<small>%</small></div><div class="l">绿色 · 日常占比</div>
+            <div class="kp"><div class="v" id="k-green">93<small>%</small></div><div class="l">绿色 · 日常占比</div>
               <div class="t" style="color:var(--mut)">多为轻量情绪</div></div>
             <div class="kp"><div class="v">100<small>%</small></div><div class="l">红色个案疗愈师接管率</div><div class="t">零漏接</div></div>
           </div>
@@ -1576,7 +1586,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
             <h4><svg class="privacy-shield" aria-hidden="true"><use href="#icon-privacy-shield"/></svg>隐私与伦理规则</h4>
             <div class="cs">以下规则为系统隐私基线，HRBP 可查看，不可单方修改。</div>
             <div class="locked-panel">
-              <div class="trow" style="margin-bottom:16px">看板最小样本量 <span class="num">5</span> 人
+              <div class="trow" style="margin-bottom:16px">看板最小样本量 <span class="num">10</span> 人
                 <span class="out">低于此值的部门不出数</span></div>
               <div style="font-size:11.5px;font-weight:600;margin-bottom:10px">匿名广场出现危机信号时——</div>
               <div class="radio on"><div class="rb"></div><div class="rt">
@@ -1606,7 +1616,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
                 <span class="lvs">随应用安装授权 · 默认开启 · 不含任何聊天内容</span>
               </div>
               <div class="grp" id="lv1-list"></div>
-              <div class="lvnote">以上均为钉钉标准开放接口。团队级聚合，最小样本 8 人，
+              <div class="lvnote">以上均为钉钉标准开放接口。团队级聚合，最小样本 10 人，
                 不落个人档案，不与绩效、晋升、续聘挂钩。员工可自行退出统计。</div>
             </div>
 
@@ -1660,7 +1670,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
     <button data-r="healer">李佳 · 疗愈师<small>服务商：UNIHEAL</small></button>
   </div>
   <div class="rt">
-    <div class="tg"><span>演示模式</span><button class="tgb" id="xtgl"></button></div>
+    <div class="tg" style="display:none"><span>演示模式</span><button class="tgb" id="xtgl" aria-label="切换演示模式" aria-pressed="false"></button></div>
     <button class="mini" id="reset">↺ 重置数据</button>
   </div>
 </div>
@@ -1668,10 +1678,10 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
 <button id="ctlfab" aria-label="演示控制">✕</button>
 
 <!-- ============ 服务库选择器 ============ -->
-<div id="picker"><div class="pk">
+<div id="picker" role="dialog" aria-modal="true" aria-labelledby="pk-t"><div class="pk">
   <div class="pkh">
     <div><div class="pt" id="pk-t">选择服务</div><div class="ps" id="pk-s"></div></div>
-    <button class="close" id="pk-x">✕</button>
+    <button class="close" id="pk-x" aria-label="关闭服务选择器">✕</button>
   </div>
   <div class="pkb" id="pk-b"></div>
 </div></div>
@@ -2178,7 +2188,8 @@ function enterApp(){
 }
 $('#wc-enter').onclick=enterApp;
 function finishStaff(){
-  if(MEID==='hr'){renderHR();go('hrApp')}else{renderHealer();go('healerApp')}
+  if(MEID==='hr'){renderHR();go('hrApp');requestAnimationFrame(()=>$('#hrApp .bodyC').scrollTop=0)}
+  else{renderHealer();go('healerApp');requestAnimationFrame(()=>$('#healerApp .cases').scrollTop=0)}
 }
 $('#e-back').onclick=()=>{renderDT();go('wecom')};
 $('#e-more').onclick=()=>$('#e-menu').classList.toggle('hide');
@@ -2190,7 +2201,6 @@ $$('#e-menu button').forEach(b=>b.onclick=()=>{
 /* ==========================================================================
    钉钉外壳：消息页 / 工作台
    ========================================================================== */
-let UNREAD=0;
 function showWork(){
   $$('#wc-tab button').forEach(b=>b.classList.toggle('on',b.dataset.t==='work'));
   $('#wc-msgs').classList.add('hide');
@@ -2211,8 +2221,10 @@ function renderDT(){
   // MindBridge 机器人会话置顶
   const bot=document.createElement('button');bot.className='mrow';
   const messages=(DB.bot||{})[ME.anon]||[],last=messages.slice(-1)[0];
-  const botUnread=UNREAD||messages.some(m=>m.w==='followup'&&!m.done);
-  bot.innerHTML=`<div class="mav mb">🕯${botUnread?`<span class="dot">${UNREAD||1}</span>`:''}</div>
+  const seen=(DB.botSeen||{})[ME.anon]||0;
+  const unreadCount=Math.max(0,messages.length-seen);
+  const botUnread=unreadCount>0;
+  bot.innerHTML=`<div class="mav mb">🕯${botUnread?`<span class="dot">${unreadCount}</span>`:''}</div>
     <div class="mbody"><div class="mtop"><span class="mnm">MindBridge<span class="botTag">机器人</span></span>
       <span class="mtm">${last?hhmm(last.ts):'21:41'}</span></div>
       <div class="mpv">${botUnread?'<b>[有新消息]</b> ':''}${esc(botPreview(last))}</div></div>`;
@@ -2231,11 +2243,19 @@ function botPreview(m){
   if(m.w==='res')return '[疗愈资源] '+m.n;
   if(m.w==='inv')return '[转接邀请]';
   if(m.w==='healer')return '[疗愈师已接入]';
+  if(m.w==='textreq')return '[查看原文授权请求]';
   if(m.w==='quote')return '[聊天记录]';
   if(m.w==='work')return ME.work?ME.work.line:'我在这儿。';
   return (m.t||'').slice(0,24);
 }
-function markRead(){UNREAD=0;renderDT()}
+function markRead(){
+  if(ME&&ME.kind==='emp'){
+    DB.botSeen=DB.botSeen||{};
+    const n=((DB.bot||{})[ME.anon]||[]).length;
+    if(DB.botSeen[ME.anon]!==n){DB.botSeen[ME.anon]=n;save()}
+  }
+  renderDT();
+}
 
 /* ---------- 群聊会话 ---------- */
 let CURG=null, PICKING=false, PICKED=[];
@@ -2255,14 +2275,15 @@ function renderGroup(){
     d.innerHTML=`<button type="button" class="gsel" aria-label="${selected?'取消选择':'选择消息'}" aria-pressed="${selected}">✓</button>
       ${m.me?'':`<div class="gav">${m.av||'👤'}</div>`}
       <div class="gbd">${m.me?'':`<div class="gnm">${esc(m.f)}</div>`}
-        <div class="gbb">${esc(m.t)}</div><div class="gtm">${m.tm}</div></div>`;
+        <button type="button" class="gbb" aria-label="操作这条消息">${esc(m.t)}</button><div class="gtm">${m.tm}</div></div>`;
     d.querySelector('.gsel').onclick=e=>{
       e.stopPropagation();
       togglePick(i);
     };
     d.querySelector('.gbb').onclick=()=>{
       if(PICKING){togglePick(i);return}
-      SHEETI=i;$('#im-sheet').classList.add('on');
+      SHEETI=i;$('#im-sheet').classList.add('on');$('#im-sheet').removeAttribute('inert');$('#im-sheet').setAttribute('aria-hidden','false');
+      requestAnimationFrame(()=>$('#im-sheet [data-a="fwd"]')?.focus());
     };
     s.appendChild(d);
   });
@@ -2277,7 +2298,7 @@ function togglePick(i){
 }
 let SHEETI=null;
 $$('#im-sheet .sb button').forEach(b=>b.onclick=()=>{
-  const a=b.dataset.a;$('#im-sheet').classList.remove('on');
+  const a=b.dataset.a;$('#im-sheet').classList.remove('on');$('#im-sheet').setAttribute('aria-hidden','true');$('#im-sheet').setAttribute('inert','');
   if(a==='fwd'){PICKED=[SHEETI];openFwd()}
   else if(a==='multi'){PICKING=true;PICKED=[SHEETI];renderGroup()}
 });
@@ -2285,17 +2306,19 @@ $('#im-demo').onclick=()=>{
   const s=$('#im-stream'),bbs=s.querySelectorAll('.gbb');
   if(bbs.length)bbs[bbs.length-1].click();
 };
-$('#im-sheet').addEventListener('click',e=>{if(e.target.id==='im-sheet')$('#im-sheet').classList.remove('on')});
+$('#im-sheet').addEventListener('click',e=>{if(e.target.id==='im-sheet'){$('#im-sheet').classList.remove('on');$('#im-sheet').setAttribute('aria-hidden','true');$('#im-sheet').setAttribute('inert','')}});
 $('#pk-cancel').onclick=()=>{PICKING=false;PICKED=[];renderGroup()};
 $('#pk-go').onclick=()=>{if(PICKED.length)openFwd()};
-function openFwd(){$('#im-fwd').classList.add('on')}
-$('#fwd-x').onclick=()=>$('#im-fwd').classList.remove('on');
-$('#im-fwd').addEventListener('click',e=>{if(e.target.id==='im-fwd')$('#im-fwd').classList.remove('on')});
+function openFwd(){$('#im-fwd').classList.add('on');$('#im-fwd').removeAttribute('inert');$('#im-fwd').setAttribute('aria-hidden','false');requestAnimationFrame(()=>$('#fwd-mb')?.focus())}
+$('#fwd-x').onclick=()=>{$('#im-fwd').classList.remove('on');$('#im-fwd').setAttribute('aria-hidden','true');$('#im-fwd').setAttribute('inert','')};
+$('#im-fwd').addEventListener('click',e=>{if(e.target.id==='im-fwd'){$('#im-fwd').classList.remove('on');$('#im-fwd').setAttribute('aria-hidden','true');$('#im-fwd').setAttribute('inert','')}});
 $('#im-back').onclick=()=>{PICKING=false;PICKED=[];go('wecom')};
 
 /* 转发给 MindBridge → 进机器人会话，直接脱敏落地 */
 $('#fwd-mb').onclick=()=>{
   $('#im-fwd').classList.remove('on');
+  $('#im-fwd').setAttribute('aria-hidden','true');
+  $('#im-fwd').setAttribute('inert','');
   const picked=PICKED.slice().sort((a,b)=>a-b).map(i=>CURG.msgs[i]);
   const masked=maskAll(picked,CURG.nm);
   PICKING=false;PICKED=[];
@@ -2306,7 +2329,7 @@ $('#fwd-mb').onclick=()=>{
 $('#demo-home').onclick=()=>{
   clearAuthFlow();ME=null;MEID=null;
   $$('#swrole button').forEach(b=>b.classList.remove('on'));
-  $('#xray').classList.remove('on');xrayOn=false;$('#xtgl').classList.remove('on');
+  $('#xray').classList.remove('on');xrayOn=false;$('#xtgl').classList.remove('on');$('#xtgl').setAttribute('aria-pressed','false');
   $('#ctl').classList.remove('open');
   $('#ctlfab').classList.remove('on');$('#ctlfab').textContent='⚙';
   go('gate');
@@ -2342,11 +2365,13 @@ function bootEmp(){
 function maybeAskContext(){
   if(!ME||ME.kind!=='emp')return;
   const p=DB.profiles&&DB.profiles[ME.anon];
-  $('#context-choice').classList.toggle('hide',!!(p&&p.decided));
+  const open=!(p&&p.decided);$('#context-choice').classList.toggle('hide',!open);
+  if(open)requestAnimationFrame(()=>$('#context-choice [data-context]')?.focus());
 }
 function openContextEditor(){
   if(!ME||ME.kind!=='emp')return;
   $('#context-choice').classList.remove('hide');
+  requestAnimationFrame(()=>$('#context-choice [data-context]')?.focus());
 }
 function chooseContext(tag){
   if(!ME||ME.kind!=='emp')return;
@@ -2371,7 +2396,7 @@ function openBot(){renderPresets();renderBot();renderDT();markRead();go('botchat
   setTimeout(()=>{const s=$('#bot-stream');s.scrollTop=s.scrollHeight},60)}
 function showEmpPane(pane){
   $('#e-menu').classList.add('hide');
-  $$('.seg').forEach(x=>x.classList.toggle('on',x.dataset.pane===pane));
+  $$('.seg').forEach(x=>{const on=x.dataset.pane===pane;x.classList.toggle('on',on);x.setAttribute('aria-selected',on)});
   $$('#empApp .pane').forEach(p=>p.classList.remove('on'));
   $('#p-'+pane).classList.add('on');
 }
@@ -2537,6 +2562,7 @@ function renderBot(){
   const b=$('#bot-stream');b.innerHTML='';
   ((DB.bot||{})[ME.anon]||[]).forEach(m=>b.appendChild(bubble(m,'bot')));
   b.scrollTop=b.scrollHeight;
+  if($('#botchat').classList.contains('on'))markRead();          // 正在看这个会话时，新消息视为已读
 }
 const FOLLOWUP_BY_ACTIVITY={
   breathing:'上次做完呼吸练习后，今天有没有感觉稍微松一点？',
@@ -2574,10 +2600,7 @@ function schedulePendingFollowup(){
   if(!j.followupEligibleAt){j.followupEligibleAt=(j.completedAt||Date.now())+12000;save()}
   const delay=Math.max(0,j.followupEligibleAt-Date.now());
   followupTimer=setTimeout(()=>{
-    if(queuePendingFollowup()){
-      if(!$('#botchat').classList.contains('on'))UNREAD=1;
-      renderBot();renderDT();
-    }
+    if(queuePendingFollowup()){renderBot();renderDT()}
   },delay);
 }
 /* Demo 到达回访时间后投递；真实产品应改为次日工作时段等可配置时间窗。 */
@@ -2653,6 +2676,20 @@ function bubble(m,source){
       d.querySelector('.b1').onclick=()=>{if(m.done)return;m.done='好，帮我联系';consent(wh())};
       d.querySelector('.b2').onclick=()=>{if(m.done)return;m.done='我再想想';
         push({w:'ai',t:'好，我不催你。我一直都在这儿。',ts:Date.now()},wh())};
+    }
+    return d}
+  if(m.w==='textreq'){d.className='msg ai';d.style.maxWidth='96%';
+    const decided=!!m.done;
+    d.innerHTML=`<div class="tm">${hhmm(m.ts)}</div><div class="invite">
+      <div class="system-tag alert">🔒 查看原文授权请求</div>
+      <div class="it">疗愈师${esc(m.healerName||'李佳')}想看看你当时说的原话，这样能更准确地帮到你。<br>这不是必须的——不同意也不影响她继续联系你、跟进你。</div>
+      ${decided?`<div class="onlyyou" style="margin-top:12px">— 你已选择「${m.done}」—</div>`:
+      `<div class="btns"><button class="b1">同意，给她看</button><button class="b2">不同意</button></div>
+       <div class="onlyyou">你选"不同意"，原文仍然不会给任何人看</div>`}</div>`;
+    if(!decided){
+      const wh=()=>d.closest('#bot-stream')?'bot':'chat';
+      d.querySelector('.b1').onclick=()=>{if(m.done)return;m.done='同意，给她看';answerTextReq(m,true,wh())};
+      d.querySelector('.b2').onclick=()=>{if(m.done)return;m.done='不同意';answerTextReq(m,false,wh())};
     }
     return d}
   if(m.w==='healer'){d.className='msg ai';d.style.maxWidth='96%';
@@ -2782,7 +2819,7 @@ function armPush(){
   pushTimer=setTimeout(()=>{
     if(!ME||ME.kind!=='emp')return;
     if($('#botchat').classList.contains('on'))return;     // 人已经回来了，不再推
-    st.pushed=1;UNREAD=1;
+    st.pushed=1;
     push({w:'ai',t:rule.msg,ts:Date.now()},'bot');
     renderDT();showPush(rule.msg,rule.real);
   },rule.delay);
@@ -2804,11 +2841,25 @@ function consent(which){
   setTimeout(()=>push({w:'healer',ts:Date.now()},which),700);
   DB.cases.push({id:'c'+Date.now(),anon:ME.anon,dept:ME.dept,level:'r',
     tags:['危机信号','待专业评估'],
-    t:Date.now(),sla:Date.now()+2*3600*1000,status:'pending',log:[]});
+    t:Date.now(),sla:Date.now()+2*3600*1000,status:'pending',log:[],
+    src:which,textReq:'none'});
   save();
   toast('已转接 · 疗愈师工作台已实时收到个案');
   xray('（员工点击「好，帮我联系」）',{emo:['危机'],lv:'red',hits:[],rule:'员工授权'},
     '生成个案工单 → 推送至疗愈师队列 · SLA 2 小时开始计时。<br>HRBP 侧仅红色计数 +1，<b style="color:#7fc98f">看不到任何详情</b>。');
+}
+
+/* ---------- 查看原文二次授权：员工的回应 ---------- */
+function answerTextReq(m,approved,which){
+  const c=DB.cases.find(x=>x.id===m.caseId);if(!c)return;
+  c.textReq=approved?'granted':'denied';
+  if(approved){
+    const msgs=store(which);
+    c.textSnippets=msgs.filter(x=>x.w==='me').slice(-4).map(x=>x.t);
+  }
+  c.log.push(hhmm(Date.now())+(approved?' 员工已同意查看原文':' 员工拒绝查看原文请求'));
+  save();
+  push({w:'ai',t:approved?'谢谢你愿意让她看到完整的话，这会帮她更懂你。':'好，我尊重你的决定，原文不会给任何人看。',ts:Date.now()},which);
 }
 
 /* ---------- 我的活动：推荐、线上完成与线下报名 ---------- */
@@ -3019,7 +3070,8 @@ function advanceActivityStep(){
 $('#activity-close').onclick=closeActivity;
 document.addEventListener('click',e=>{
   if(e.target.closest('#context-edit')){openContextEditor();return}
-  if(e.target.closest('#act-finish')||e.target.closest('#act-cancel')){closeActivity();return}
+  if(e.target.closest('#act-finish')){closeActivity();showEmpPane('res');return}
+  if(e.target.closest('#act-cancel')){closeActivity();return}
   if(e.target.closest('#act-register')){const j=journeyFor(CURRENT_ACTIVITY);j.registered=1;j.registeredAt=Date.now();save();refreshActivityViews();renderActivityStage('detail');return}
   if(e.target.closest('#act-start')){const j=journeyFor(CURRENT_ACTIVITY);if(!j.started){j.started=1;j.startedAt=Date.now();recordActivityMetric('participated')}
     save();refreshActivityViews();renderActivityStage(j.completed?'feedback':'exercise');return}
@@ -3038,8 +3090,8 @@ document.addEventListener('click',e=>{
    疗愈师
    ========================================================================== */
 let hFilter='pending';
-$$('.qbar span').forEach(s=>s.onclick=()=>{
-  $$('.qbar span').forEach(x=>x.classList.remove('on'));s.classList.add('on');
+$$('.qbar button').forEach(s=>s.onclick=()=>{
+  $$('.qbar button').forEach(x=>{const on=x===s;x.classList.toggle('on',on);x.setAttribute('aria-selected',on)});
   hFilter=s.dataset.f;renderHealer();
 });
 function renderHealer(){
@@ -3056,11 +3108,22 @@ function renderHealer(){
     d.className='case '+(c.status==='done'?'done':c.level);
     const lv=c.level==='r'?'<span class="lvl r">红色 · 危机信号</span>':'<span class="lvl y">黄色 · 信号累积</span>';
     const done=c.status==='done';
+    const textReq=c.textReq||'none';
+    const textBanner=textReq==='granted'
+      ? `<div class="locked granted">${privacyIcon}员工已同意查看原文${c.textSnippets&&c.textSnippets.length?'：<br>'+c.textSnippets.map(t=>'「'+esc(t)+'」').join('<br>'):''}</div>`
+      : textReq==='pending'
+      ? `<div class="locked">${privacyIcon}已发送查看原文授权请求 · 等待员工确认</div>`
+      : textReq==='denied'
+      ? `<div class="locked">${privacyIcon}员工已拒绝查看原文请求 · 原文仍不可见</div>`
+      : `<div class="locked">${privacyIcon}访问受限 · 倾诉原文默认不可见，需员工二次授权后方可查看</div>`;
+    const askBtn=textReq==='granted'?''
+      :textReq==='pending'?`<button class="bt" disabled>等待员工确认…</button>`
+      :`<button class="bt" data-act="ask" data-id="${c.id}">${textReq==='denied'?'重新申请查看原文':'申请查看原文'}</button>`;
     d.innerHTML=`<div>
         <div class="cid">${displayIdentity(c.anon)} ${done?'<span class="lvl g">已闭环</span>':lv}</div>
         <div class="meta">${c.dept} · 触发 ${hhmm(c.t)} · ${done?'已完成处置':'员工已授权转接'}</div>
         ${c.tags.length?`<div class="tagrow">${c.tags.map(t=>`<span class="tg">${t}</span>`).join('')}</div>`:''}
-        ${done?'':`<div class="locked">${privacyIcon}访问受限 · 倾诉原文默认不可见，需员工二次授权后方可查看</div>`}
+        ${done?'':textBanner}
         ${c.log.length?`<div class="meta" style="margin-top:9px">${c.log.map(l=>'· '+l).join('<br>')}</div>`:''}
       </div>
       <div class="sla"><div class="lb">${done?'响应用时':'SLA 剩余'}</div>
@@ -3068,19 +3131,32 @@ function renderHealer(){
       ${done?'':`<div class="acts">
         ${c.status==='pending'?`<button class="bt pri" data-act="start" data-id="${c.id}">开始联系</button>`:
           `<button class="bt pri" data-act="close" data-id="${c.id}">标记已闭环</button>`}
-        <button class="bt" data-act="ask" data-id="${c.id}">申请查看原文</button>
-        <button class="bt">转介外部机构</button>
+        ${askBtn}
+        <button class="bt" data-act="refer" data-id="${c.id}">转介外部机构</button>
         <span class="logtxt">处置记录将写入审计日志</span></div>`}`;
     box.appendChild(d);
   });
   box.querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>{
     const c=DB.cases.find(x=>x.id===b.dataset.id);
     if(b.dataset.act==='start'){c.status='active';c.log.push(hhmm(Date.now())+' 疗愈师已开始联系');
-      save();hFilter='active';$$('.qbar span').forEach(x=>x.classList.toggle('on',x.dataset.f==='active'));
+      save();hFilter='active';$$('.qbar button').forEach(x=>{const on=x.dataset.f==='active';x.classList.toggle('on',on);x.setAttribute('aria-selected',on)});
       renderHealer();toast('已开始联系 · 记录写入审计日志')}
     if(b.dataset.act==='close'){c.status='done';c.resp=Math.max(1,Math.round((Date.now()-c.t)/6e4));
       c.log.push(hhmm(Date.now())+' 完成首次会谈 · 已安排后续疗愈');save();renderHealer();toast('个案已闭环')}
-    if(b.dataset.act==='ask'){toast('已向员工发出查看原文的授权请求 —— 未经同意，原文始终不可见')}
+    if(b.dataset.act==='ask'){
+      c.textReq='pending';
+      c.log.push(hhmm(Date.now())+' 已发送查看原文授权请求');
+      const which=c.src||'bot';
+      DB.bot=DB.bot||{};DB.chats=DB.chats||{};
+      const stream=which==='bot'?(DB.bot[c.anon]||(DB.bot[c.anon]=[])):(DB.chats[c.anon]||(DB.chats[c.anon]=[]));
+      stream.push({w:'textreq',caseId:c.id,healerName:'李佳',ts:Date.now()});
+      save();renderHealer();
+      toast('已向员工发出查看原文的授权请求 —— 未经同意，原文始终不可见')
+    }
+    if(b.dataset.act==='refer'){
+      c.log.push(hhmm(Date.now())+' 已发起外部转介评估');save();renderHealer();
+      toast('已发起外部转介评估 · 记录写入审计日志')
+    }
   });
   tickSLA();
 }
@@ -3102,9 +3178,10 @@ setInterval(tickSLA,1000);
 /* ==========================================================================
    HRBP
    ========================================================================== */
-$$('.navbar span[data-c]').forEach(s=>s.onclick=()=>{
-  $$('.navbar span').forEach(x=>x.classList.remove('on'));s.classList.add('on');
+$$('.navbar button[data-c]').forEach(s=>s.onclick=()=>{
+  $$('.navbar button').forEach(x=>{const on=x===s;x.classList.toggle('on',on);x.setAttribute('aria-selected',on)});
   $$('.paneC').forEach(p=>p.classList.remove('on'));$('#c-'+s.dataset.c).classList.add('on');
+  $('.bodyC').scrollTop=0;
 });
 function renderHR(){
   if(MEID!=='hr')return;
@@ -3121,10 +3198,9 @@ function renderHR(){
   setTimeout(()=>$$('#topics i').forEach(i=>i.style.width=i.dataset.w+'%'),60);
   // 情绪分布
   const red=DB.cases.filter(c=>c.level==='r').length, yel=DB.cases.filter(c=>c.level==='y').length;
-  const tot=Math.max(100,80+red+yel);
-  const g=Math.max(60,100-Math.round((red*1+yel*7)));
-  const D=[['绿色 · 日常',g,'#3d8b64'],['黄色 · 需关注',Math.min(20,7+yel),'#c08424'],
-           ['红色 · 已转疗愈师',Math.max(1,red),'#c9503a']];
+  const redPct=Math.min(20,red),yellowPct=Math.min(20,7+yel),g=Math.max(0,100-yellowPct-redPct);
+  const D=[['绿色 · 日常',g,'#3d8b64'],['黄色 · 需关注',yellowPct,'#c08424'],
+           ['红色 · 已转疗愈师',redPct,'#c9503a']];
   $('#dist').innerHTML=D.map(([n,v,c])=>
     `<div class="dr"><span class="sq" style="background:${c}"></span>${n}<span class="dv">${v}%</span></div>`).join('');
   $('#k-green').innerHTML=g+'<small>%</small>';
@@ -3232,8 +3308,9 @@ function renderGroups(){
 /* 含外部人员的群：不禁止，但把后果摊开、要求担责、并留痕 */
 function askExternal(g){
   const m=$('#modal');
+  const opener=document.activeElement;
   m.innerHTML=`<div class="mdbox">
-    <div class="mdh">⚠ 该群含非本企业人员</div>
+    <div class="mdh" id="external-modal-title">⚠ 该群含非本企业人员</div>
     <div class="mdb">
       <div class="mdg"><b>${esc(g.nm)}</b>　${g.n} 人，其中 <b>${g.out} 名为非本企业人员</b></div>
       <p>开启后，这 ${g.out} 人的发言也会被系统读取用于情绪聚合。
@@ -3247,14 +3324,15 @@ function askExternal(g){
       <button class="mdc">取消</button>
       <button class="mdok" disabled>确认开启</button>
     </div></div>`;
-  m.classList.add('on');
+  m.setAttribute('role','dialog');m.setAttribute('aria-modal','true');m.setAttribute('aria-labelledby','external-modal-title');m.classList.add('on');
   const ok=m.querySelector('.mdok');
   m.querySelector('#md-ack').onchange=e=>ok.disabled=!e.target.checked;
-  const close=()=>{m.classList.remove('on');m.innerHTML=''};
+  const close=()=>{m.classList.remove('on');m.innerHTML='';m.removeAttribute('role');m.removeAttribute('aria-modal');m.removeAttribute('aria-labelledby');opener?.focus()};
   m.querySelector('.mdc').onclick=close;
   m.onclick=e=>{if(e.target===m)close()};
   ok.onclick=()=>{GRPON[g.id]=true;close();renderGroups();
     toast('已开启 · 操作人与时间已留痕')};
+  m.querySelector('#md-ack').focus();
 }
 
 /* ---------- 干预阶梯配置 ---------- */
@@ -3288,7 +3366,7 @@ const LIB={
   ],
   healer:[
     {n:'李佳 · UH-2024-0871',d:'职业焦虑 · 存在性议题',i:'🌿',v:'在岗'},
-    {n:'王岚 · UH-2023-0442',d:'women议题 · 家庭系统',i:'🌸',v:'在岗'},
+    {n:'王岚 · UH-2023-0442',d:'女性议题 · 家庭系统',i:'🌸',v:'在岗'},
     {n:'陈默 · UH-2024-0113',d:'危机干预 · 哀伤辅导',i:'🕊',v:'备班'},
   ],
   refer:[
@@ -3350,8 +3428,8 @@ function renderMx(){
       <td class="sig"><span class="em">${r.em}</span>${r.sig}</td>
       ${LEVELS.map(L=>`<td class="cell${L==='L3'?' readonly':''}"><div class="cellwrap">
         ${r[L].map((s,si)=>`<span class="chipC ${LVMETA[L].c}">${s}
-          ${L==='L3'?'':`<button class="x" data-r="${ri}" data-l="${L}" data-i="${si}">✕</button>`}</span>`).join('')}
-        ${L==='L3'?'':`<button class="addc" data-add="${L}" data-r="${ri}">＋</button>`}
+          ${L==='L3'?'':`<button class="x" data-r="${ri}" data-l="${L}" data-i="${si}" aria-label="移除${esc(r.sig)}的${esc(s)}">✕</button>`}</span>`).join('')}
+        ${L==='L3'?'':`<button class="addc" data-add="${L}" data-r="${ri}" aria-label="为${esc(r.sig)}添加${esc(LVMETA[L].n)}">＋</button>`}
       </div></td>`).join('')}
     </tr>`).join('');
   $$('#mx .x').forEach(b=>b.onclick=()=>{
@@ -3394,6 +3472,7 @@ function openPicker(kind,ri){
     closePicker();
   });
   $('#picker').classList.add('on');
+  requestAnimationFrame(()=>( $('#pk-b .pkitem:not(.has)')||$('#pk-x') )?.focus());
 }
 function closePicker(){$('#picker').classList.remove('on')}
 $('#pk-x').onclick=closePicker;
@@ -3423,7 +3502,7 @@ renderMx();
    X光层
    ========================================================================== */
 let xrayOn=false;
-$('#xtgl').onclick=()=>{xrayOn=!xrayOn;$('#xtgl').classList.toggle('on',xrayOn);
+$('#xtgl').onclick=()=>{xrayOn=!xrayOn;$('#xtgl').classList.toggle('on',xrayOn);$('#xtgl').setAttribute('aria-pressed',xrayOn);
   $('#xray').classList.toggle('on',xrayOn);
   toast(xrayOn?'演示模式已开启 —— 右侧为系统内部读数，员工本人不可见':'演示模式已关闭')};
 const LVM={green:['🟢 绿色 · 日常','#7fc98f'],yellow:['🟡 黄色 · 需关注','#eeb96c'],red:['🔴 红色 · 危机','#e88b78']};
