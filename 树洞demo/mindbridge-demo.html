@@ -415,6 +415,9 @@ input,textarea{font-family:inherit;outline:none;border:none;background:none;colo
   padding:12px 13px;display:flex;gap:11px;align-items:center;animation:rise .5s both}
 .rescard .ic{width:32px;height:32px;border-radius:9px;background:rgba(238,185,108,.14);
   display:grid;place-items:center;font-size:15px;flex:none}
+.res-top{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+.res-top .system-tag{margin-bottom:0}
+.res-state{margin-left:auto;color:var(--green);font-size:9.5px;white-space:nowrap}
 .rescard .rn{font-size:12.5px;font-weight:600;color:#faeeda}
 .rescard .rd{font-size:10.5px;color:var(--mut);margin-top:3px}
 .system-tag{display:inline-flex;align-items:center;gap:4px;margin-bottom:6px;padding:2px 6px;border-radius:100px;
@@ -531,6 +534,11 @@ input,textarea{font-family:inherit;outline:none;border:none;background:none;colo
 .rating-row{display:flex;gap:7px;margin-top:13px}
 .rating-row button{flex:1;padding:9px 0;border:1px solid var(--line);border-radius:8px;color:var(--mut);font-size:12px}
 .rating-row button.on{border-color:var(--candle);background:rgba(238,185,108,.12);color:var(--candle);font-weight:700}
+.followup-options{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.followup-options button{padding:6px 9px;border:1px solid rgba(127,201,143,.22);border-radius:999px;color:var(--green);font-size:10.5px;background:rgba(127,201,143,.05)}
+.followup-options button:last-child{color:var(--mut);border-color:var(--line);background:transparent}
+.demo-followup-tag{display:inline-flex;margin:0 0 5px;padding:2px 6px;border:1px solid rgba(238,185,108,.34);border-radius:999px;
+  color:var(--candle);background:rgba(238,185,108,.08);font-size:8.5px;letter-spacing:.04em}
 .act-done{margin-top:16px;text-align:center;padding:20px 14px;border:1px solid rgba(127,201,143,.18);
   border-radius:13px;background:rgba(127,201,143,.055)}
 .act-done h4{font-family:var(--serif);font-size:18px;color:#faeeda}
@@ -557,7 +565,7 @@ input,textarea{font-family:inherit;outline:none;border:none;background:none;colo
 .video-stage{aspect-ratio:16/9;min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;
   padding:20px;text-align:center;background:radial-gradient(circle at 50% 45%,rgba(127,201,143,.16),transparent 58%),#09110f}
 .video-stage .play-mark{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;padding-left:3px;
-  border:1px solid rgba(238,185,108,.35);background:rgba(238,185,108,.1);color:var(--candle);font-size:19px;margin-bottom:13px}
+  border:1px solid rgba(238,185,108,.35);background:rgba(238,185,108,.1);color:var(--candle);font-size:19px;margin-bottom:13px;cursor:pointer}
 .video-stage h4{font-family:var(--serif);font-size:17px;color:#faeeda;font-weight:600}
 .video-stage p{font-size:10.5px;line-height:1.7;color:var(--mut);margin-top:6px;max-width:260px}
 .video-controls{padding:10px 12px 12px;background:#101d1a}
@@ -1851,13 +1859,13 @@ function pull(){
    AI 引擎
    ========================================================================== */
 const EMO={
-  焦虑:{em:'😰',res:{n:'三分钟呼吸着陆法',d:'即时可用 · 快速平复急性焦虑',i:'🌬️'}},
-  疲惫:{em:'😮‍💨',res:{n:'工间身体扫描音频',d:'5分钟 · 唤醒被耗尽的能量',i:'🔋'}},
-  低落:{em:'😔',res:{n:'每日三件好事打卡',d:'重建对生活的掌控感与意义',i:'✨'}},
-  烦躁:{em:'😤',res:{n:'情绪暂停提醒卡片',d:'3秒暂停法 · 给情绪一个缓冲',i:'🛑'}},
-  孤独:{em:'🫥',res:{n:'跨团队疗愈小组',d:'打破孤岛 · 被看见、被接住',i:'🤝'}},
-  紧张:{em:'😬',res:{n:'渐进式肌肉放松音频',d:'身心整合 · 卸下紧绷',i:'🧘'}},
-  委屈:{em:'😞',res:{n:'情绪书写练习',d:'15分钟表达性写作 · 把咽下去的写出来',i:'✍️'}},
+  焦虑:{em:'😰',res:{n:'三分钟呼吸着陆法',d:'即时可用 · 快速平复急性焦虑',i:'🌬️'},yellow:{n:'情绪红绿灯正念工作坊',d:'团体活动邀请 · 帮你拆解持续的赶工焦虑',i:'🟡'}},
+  疲惫:{em:'😮‍💨',res:{n:'工间舒展操引导',d:'5 分钟 · 让被耗尽的身体重新活动起来',i:'🔋'},yellow:{n:'能量唤醒工作坊',d:'团体活动邀请 · 为持续耗竭补充支持',i:'🟡'}},
+  低落:{em:'😔',res:{n:'每日三件好事打卡',d:'每日 3 分钟 · 重建对生活的掌控感与意义',i:'✨'},yellow:{n:'身份重塑叙事疗愈小组',d:'团体活动邀请 · 支持价值感与方向感重建',i:'🟡'}},
+  烦躁:{em:'😤',res:{n:'情绪暂停提醒卡片',d:'3 秒暂停法 · 给情绪一个缓冲',i:'🛑'},yellow:{n:'「心流插花」艺术疗愈',d:'团体活动邀请 · 为持续的情绪劳动留出出口',i:'🟡'}},
+  孤独:{em:'🫥',res:{n:'正念音频',d:'即时可用 · 给独自硬扛的时刻一点陪伴',i:'🎧'},yellow:{n:'跨团队疗愈小组',d:'团体活动邀请 · 在真实的团体中获得支持',i:'🤝'}},
+  紧张:{em:'😬',res:{n:'渐进式肌肉放松音频',d:'5 分钟 · 卸下身体的持续紧绷',i:'🧘'},yellow:{n:'身体觉知与释放工作坊',d:'团体活动邀请 · 面向持续失眠与高压紧绷',i:'🟡'}},
+  委屈:{em:'😞',res:{n:'情绪书写练习',d:'15 分钟表达性写作 · 把咽下去的写出来',i:'✍️'},yellow:{n:'ABC 情绪理论工作坊',d:'团体活动邀请 · 梳理反复触发的委屈与自责',i:'🟡'}},
 };
 /* ---------- 词典 ---------- */
 const KW=[
@@ -2111,11 +2119,11 @@ function genReply(a,st,text){
 function pickRes(a,st){
   if(a.lv==='red'||a.intent)return null;
   if(!a.n)return null;
-  if(st.lastRes!=null&&st.turn-st.lastRes<3)return null;   // 冷却：至少隔 3 轮，避免刷屏
-  const r=EMO[a.top]&&EMO[a.top].res; if(!r)return null;
+  if(st.lastResTop===a.top&&st.lastRes!=null&&st.turn-st.lastRes<3)return null; // 同类资源至少间隔 3 轮，避免刷屏
+  const item=EMO[a.top],r=item&&(a.lv==='yellow'&&item.yellow||item.res);if(!r)return null;
   if(st.given.includes(r.n))return null;
   if(a.inten<1.2&&st.turn<2)return null;   // 只有"有点累"这类弱信号才等一轮
-  st.given.push(r.n); st.lastRes=st.turn; return r;
+  st.given.push(r.n); st.lastRes=st.turn;st.lastResTop=a.top; return r;
 }
 
 /* ==========================================================================
@@ -2172,7 +2180,7 @@ $('#wc-enter').onclick=enterApp;
 function finishStaff(){
   if(MEID==='hr'){renderHR();go('hrApp')}else{renderHealer();go('healerApp')}
 }
-$('#e-back').onclick=()=>go('wecom');
+$('#e-back').onclick=()=>{renderDT();go('wecom')};
 $('#e-more').onclick=()=>$('#e-menu').classList.toggle('hide');
 $$('#e-menu button').forEach(b=>b.onclick=()=>{
   $('#e-menu').classList.add('hide');
@@ -2202,11 +2210,12 @@ function renderDT(){
   const box=$('#wc-msgs');box.innerHTML='';
   // MindBridge 机器人会话置顶
   const bot=document.createElement('button');bot.className='mrow';
-  const last=((DB.bot||{})[ME.anon]||[]).slice(-1)[0];
-  bot.innerHTML=`<div class="mav mb">🕯${UNREAD?`<span class="dot">${UNREAD}</span>`:''}</div>
+  const messages=(DB.bot||{})[ME.anon]||[],last=messages.slice(-1)[0];
+  const botUnread=UNREAD||messages.some(m=>m.w==='followup'&&!m.done);
+  bot.innerHTML=`<div class="mav mb">🕯${botUnread?`<span class="dot">${UNREAD||1}</span>`:''}</div>
     <div class="mbody"><div class="mtop"><span class="mnm">MindBridge<span class="botTag">机器人</span></span>
       <span class="mtm">${last?hhmm(last.ts):'21:41'}</span></div>
-      <div class="mpv">${UNREAD?'<b>[有新消息]</b> ':''}${esc(botPreview(last))}</div></div>`;
+      <div class="mpv">${botUnread?'<b>[有新消息]</b> ':''}${esc(botPreview(last))}</div></div>`;
   bot.onclick=()=>{bootEmp();openBot()};box.appendChild(bot);
   // 群聊
   (ME.convs||[]).forEach(c=>{
@@ -2328,7 +2337,7 @@ function bootEmp(){
     {w:'ai',t:BOT_INTRO,ts:Date.now()-5.9e4}];
   if(!DB.chats[ME.anon])DB.chats[ME.anon]=[
     {w:'ai',t:context.welcome,ts:Date.now()}];
-  renderWall();renderPresets();renderChat();renderBot();renderRes();
+  renderWall();renderPresets();renderChat();renderBot();renderRes();schedulePendingFollowup();
 }
 function maybeAskContext(){
   if(!ME||ME.kind!=='emp')return;
@@ -2358,13 +2367,16 @@ function chooseContext(tag){
 }
 $$('[data-context]').forEach(b=>b.onclick=()=>chooseContext(b.dataset.context));
 $('#context-skip').onclick=()=>chooseContext('none');
-function openBot(){renderPresets();renderDT();markRead();go('botchat');
+function openBot(){renderPresets();renderBot();renderDT();markRead();go('botchat');
   setTimeout(()=>{const s=$('#bot-stream');s.scrollTop=s.scrollHeight},60)}
-$$('.seg').forEach(b=>b.onclick=()=>{
+function showEmpPane(pane){
   $('#e-menu').classList.add('hide');
-  $$('.seg').forEach(x=>x.classList.remove('on'));b.classList.add('on');
+  $$('.seg').forEach(x=>x.classList.toggle('on',x.dataset.pane===pane));
   $$('#empApp .pane').forEach(p=>p.classList.remove('on'));
-  $('#p-'+b.dataset.pane).classList.add('on');
+  $('#p-'+pane).classList.add('on');
+}
+$$('.seg').forEach(b=>b.onclick=()=>{
+  showEmpPane(b.dataset.pane);
   if(b.dataset.pane==='chat'){renderPresets();$('#presets').classList.add('show')}
 });
 
@@ -2485,13 +2497,13 @@ $('#postbtn').onclick=()=>{
 /* ---------- 私密对话 ---------- */
 const PRESETS={
   emp1:[
-    {t:'💻 加班焦虑',s:'项目赶不上了，又要通宵。真怕这次做不完会被裁。'},
-    {t:'😮‍💨 情绪耗竭',s:'太累了，看不到头，感觉整个人都被掏空了。'},
-    {t:'🫥 被替代恐慌',s:'三十五了，天天怕被优化掉，房贷还有二十年。'},
+    {t:'💻 轻度加班焦虑',s:'项目有点赶不上，心里一直悬着，担心做不好。'},
+    {t:'😮‍💨 情绪耗竭',s:'已经连续加班两周，太累了，感觉整个人都被掏空了。'},
+    {t:'🌙 持续失眠',s:'我已经天天失眠，半夜醒好几次，白天也绷得很紧。'},
     {t:'🔴 危机信号',s:'我真的撑不下去了，觉得活着没有意义。'},
   ],
   emp2:[
-    {t:'😤 客户情绪',s:'被骂了四十分钟，最后还要说很抱歉给您带来不便。'},
+    {t:'😤 客户冲突',s:'客户一直无理取闹，我真的快烦炸了，已经忍了很久。'},
     {t:'😞 被质检批评',s:'明明不是我的错，投诉了就说是我的问题，好委屈。'},
     {t:'🫥 无人可说',s:'连着上了六天班，回家谁也不想说话。'},
     {t:'🔴 危机信号',s:'我真的撑不下去了，觉得活着没有意义。'},
@@ -2517,16 +2529,81 @@ function renderChat(){
   const privacy=document.createElement('div');privacy.className='privacy-note';
   privacy.innerHTML='<div class="dot"></div><div class="t">你在这里说的每一句话，都属于隐私。<span>不记录真实身份，你可以随时清空本次对话。</span></div>';
   s.appendChild(privacy);
-  (DB.chats[ME.anon]||[]).forEach(m=>s.appendChild(bubble(m)));
+  (DB.chats[ME.anon]||[]).forEach(m=>s.appendChild(bubble(m,'chat')));
   s.scrollTop=s.scrollHeight;
 }
 function renderBot(){
   if(!ME||ME.kind!=='emp')return;
   const b=$('#bot-stream');b.innerHTML='';
-  ((DB.bot||{})[ME.anon]||[]).forEach(m=>b.appendChild(bubble(m)));
+  ((DB.bot||{})[ME.anon]||[]).forEach(m=>b.appendChild(bubble(m,'bot')));
   b.scrollTop=b.scrollHeight;
 }
-function bubble(m){
+const FOLLOWUP_BY_ACTIVITY={
+  breathing:'上次做完呼吸练习后，今天有没有感觉稍微松一点？',
+  'stretch-video':'上次做完工间舒展操后，今天肩颈有没有松一点？',
+  'value-anchor':'上次做完职业价值锚点练习后，今天面对手头的事，有没有多一点方向感？',
+  'emotion-unload':'上次做完情绪卸载练习后，刚才那件事在心里有没有少占一点地方？',
+  'return-rhythm':'上次做完返岗节奏练习后，今天的安排有没有更好承受一点？'
+};
+const FOLLOWUP_BY_TITLE={
+  '三分钟呼吸着陆法':'上次做完呼吸练习后，今天有没有感觉稍微松一点？',
+  '工间舒展操引导':'上次做完工间舒展操后，今天肩颈有没有松一点？',
+  '职业价值锚点练习':'上次做完职业价值锚点练习后，今天面对手头的事，有没有多一点方向感？',
+  '三分钟情绪卸载':'上次做完情绪卸载练习后，刚才那件事在心里有没有少占一点地方？',
+  '返岗节奏重建练习':'上次做完返岗节奏练习后，今天的安排有没有更好承受一点？',
+  '渐进式肌肉放松音频':'上次做完肌肉放松练习后，今天身体有没有松一点？',
+  '正念音频':'上次听完正念音频后，今天有没有给自己留出一点安静的时间？',
+  '每日三件好事打卡':'上次做完三件好事打卡后，今天有没有注意到一件还不错的小事？',
+  '情绪暂停提醒卡片':'上次试过暂停提醒后，今天遇到烦躁时，有没有多一点缓冲？',
+  '情绪书写练习':'上次写下那些感受后，今天心里有没有轻一点？'
+};
+function followupQuestion(j){
+  return FOLLOWUP_BY_ACTIVITY[j.id]||FOLLOWUP_BY_TITLE[j.title]||`上次做完「${j.title}」后，今天有没有一点不一样的感受？`;
+}
+let followupTimer=null;
+function pendingFollowupJourney(){
+  if(!ME||ME.kind!=='emp')return null;
+  return Object.values((DB.activityJourneys||{})[ME.anon]||{})
+    .filter(j=>j.type==='online'&&j.completed&&!j.followupAsked&&!j.skippedFeedback)
+    .sort((a,b)=>(b.completedAt||0)-(a.completedAt||0))[0]||null;
+}
+/* Demo 以 12 秒代替真实的次日回访；重新登录时按已记录的剩余时间继续。 */
+function schedulePendingFollowup(){
+  clearTimeout(followupTimer);followupTimer=null;
+  const j=pendingFollowupJourney();if(!j)return;
+  if(!j.followupEligibleAt){j.followupEligibleAt=(j.completedAt||Date.now())+12000;save()}
+  const delay=Math.max(0,j.followupEligibleAt-Date.now());
+  followupTimer=setTimeout(()=>{
+    if(queuePendingFollowup()){
+      if(!$('#botchat').classList.contains('on'))UNREAD=1;
+      renderBot();renderDT();
+    }
+  },delay);
+}
+/* Demo 到达回访时间后投递；真实产品应改为次日工作时段等可配置时间窗。 */
+function queuePendingFollowup(){
+  if(!ME||ME.kind!=='emp')return false;
+  const messages=store('bot');
+  if(messages.some(m=>m.w==='followup'&&!m.done))return false;
+  const j=pendingFollowupJourney();if(!j||(j.followupEligibleAt&&Date.now()<j.followupEligibleAt))return false;
+  j.followupAsked=1;j.followupAskedAt=Date.now();
+  messages.push({w:'followup',activityId:j.id,title:j.title,t:followupQuestion(j),ts:Date.now()});
+  save();return true;
+}
+function answerFollowup(m,answer){
+  if(!ME||m.done)return;
+  m.done=answer;m.answeredAt=Date.now();
+  const journey=DB.activityJourneys&&DB.activityJourneys[ME.anon]&&DB.activityJourneys[ME.anon][m.activityId];
+  if(journey)journey.followup={answer,at:Date.now()};
+  save();push({w:'me',t:answer,ts:Date.now()},'bot');
+  const reply=answer==='有一点'
+    ?'听到这点变化真好。之后如果又紧起来，也可以随时回来做一轮。'
+    :answer==='没有明显变化'
+      ?'知道了。变化不一定立刻出现，不需要强迫自己；想再做一轮时随时可以回来。'
+      :'没关系，先照顾好当下就好。';
+  setTimeout(()=>push({w:'ai',t:reply,ts:Date.now()},'bot'),420);
+}
+function bubble(m,source){
   const d=document.createElement('div');
   /* L1 元数据开场：只有统计，没有内容 */
   if(m.w==='work'){
@@ -2554,9 +2631,14 @@ function bubble(m){
     return d;
   }
   if(m.w==='res'){d.className='msg ai';d.style.maxWidth='94%';
+    const state=resourceStatus(m.n,m.d);
     d.innerHTML=`<div class="tm">${hhmm(m.ts)}</div><div class="rescard"><div class="ic">${m.i}</div>
-      <div style="flex:1"><div class="system-tag reco">✦ AI 自动推荐</div><div class="rn">${m.n}</div><div class="rd">${m.d}</div>
-      <button class="activity-btn secondary" data-resource="${esc(m.n)}" data-resource-desc="${esc(m.d)}">查看活动</button></div></div>`;return d}
+      <div style="flex:1"><div class="res-top"><div class="system-tag reco">✦ AI 自动推荐</div>${state?`<span class="res-state">${esc(state)}</span>`:''}</div><div class="rn">${m.n}</div><div class="rd">${m.d}</div>
+      <button class="activity-btn secondary" data-resource="${esc(m.n)}" data-resource-desc="${esc(m.d)}" data-resource-source="${source||'chat'}">${source==='bot'?'在 MindBridge 中查看':'查看活动'}</button></div></div>`;return d}
+  if(m.w==='followup'){d.className='msg ai';d.style.maxWidth='94%';
+    d.innerHTML=`<div class="tm">${hhmm(m.ts)}</div><div class="demo-followup-tag">演示回访：在 Demo 中完成活动一段时间后回访效果，正式版中一般在 1～7 天后回访</div><div class="bb">${esc(m.t)}</div>${m.done?'':`<div class="followup-options"><button data-followup-answer="有一点">有一点</button><button data-followup-answer="没有明显变化">没有明显变化</button><button data-followup-answer="暂不回答">暂不回答</button></div>`}`;
+    if(!m.done)d.querySelectorAll('[data-followup-answer]').forEach(b=>b.onclick=()=>answerFollowup(m,b.dataset.followupAnswer));
+    return d}
   if(m.w==='inv'){d.className='msg ai';d.style.maxWidth='96%';
     const decided=!!m.done;
     d.innerHTML=`<div class="tm">${hhmm(m.ts)}</div><div class="invite">
@@ -2647,7 +2729,7 @@ function send(inpSel,which){
       push({w:'ai',t:genReply(a,st,v),ts:Date.now()},which);
       const r=pickRes(a,st);
       if(r)setTimeout(()=>push({w:'res',n:r.n,d:r.d,i:r.i,ts:Date.now()},which),900);
-      xray(v,a,r?`推送绿色自助资源「${r.n}」· 以邀请口吻呈现，不显示预警等级`
+      xray(v,a,r?(a.lv==='yellow'?`推送黄色团体活动邀请「${r.n}」· 自动触达，后续人工跟进`:`推送绿色自助资源「${r.n}」· 以邀请口吻呈现，不显示预警等级`)
         :(a.intent?`识别为「${a.intent.id}」类提问 · 走专项应答，不推资源`
         :'仅共情承接 —— 未到推送时机，避免打扰'));
     }
@@ -2752,6 +2834,15 @@ function activityForResource(name,desc){
   const base=ACTIVITIES[offline?(CONTEXTS[currentContextTag()]||CONTEXTS.none).offline:'breathing'];
   return {...base,id:'resource-'+name,title:name,desc:desc||base.desc};
 }
+function resourceStatus(name,desc){
+  if(!ME||!DB.activityJourneys||!DB.activityJourneys[ME.anon])return '';
+  const a=activityForResource(name,desc),j=DB.activityJourneys[ME.anon][a.id];
+  if(!j)return '';
+  if(j.feedback||j.completed)return '已完成';
+  if(j.started)return '进行中';
+  if(j.registered)return '已报名';
+  return '';
+}
 function activityCard(a,recommended,reason){
   const j=ME&&DB.activityJourneys&&DB.activityJourneys[ME.anon]&&DB.activityJourneys[ME.anon][a.id];
   const state=j&&j.feedback?'已完成':j&&j.completed?'待反馈':j&&j.started?'进行中':j&&j.registered?'已报名':'';
@@ -2764,7 +2855,7 @@ function activityCard(a,recommended,reason){
     <button class="activity-btn${a.type==='offline'?' secondary':''}" data-activity="${esc(a.id)}" data-resource-title="${esc(a.title)}">${action}</button></div>`;
 }
 
-let CURRENT_ACTIVITY=null, ACT_TEMP={pre:7,post:4,rating:4}, BREATH_TIMER=null;
+let CURRENT_ACTIVITY=null, ACT_TEMP={rating:4}, BREATH_TIMER=null;
 let VIDEO_TIMER=null,VIDEO_ELAPSED=0,VIDEO_STARTED_AT=0,VIDEO_PLAYING=false;
 function getActivityById(id,title){
   if(ACTIVITIES[id])return ACTIVITIES[id];
@@ -2778,7 +2869,12 @@ function journeyFor(a){
 }
 function openActivity(id,title){
   if(!ME||ME.kind!=='emp')return;
-  CURRENT_ACTIVITY=getActivityById(id,title);ACT_TEMP={pre:7,post:4,rating:4};
+  CURRENT_ACTIVITY=getActivityById(id,title);ACT_TEMP={rating:4};
+  $('#activity-flow').classList.remove('hide');renderActivityStage('detail');
+}
+function openResourceActivity(name,desc,source){
+  if(source==='bot'){go('empApp');showEmpPane('chat')}
+  CURRENT_ACTIVITY=activityForResource(name,desc);
   $('#activity-flow').classList.remove('hide');renderActivityStage('detail');
 }
 function recordActivityMetric(kind,value){
@@ -2835,17 +2931,17 @@ function updateVideoDemo(){
   const title=$('#video-stage-title'),hint=$('#video-stage-hint'),bar=$('#video-progress'),time=$('#video-time');
   if(!title){clearVideoDemo(false);return}
   title.textContent=phase.title;hint.textContent=phase.hint;bar.style.width=(VIDEO_ELAPSED/total*100)+'%';time.textContent=Math.floor(VIDEO_ELAPSED)+' / 30秒';
-  if(VIDEO_ELAPSED>=total){clearVideoDemo(false);$('#video-toggle').textContent='✓';$('#act-video-complete').classList.remove('hide')}
+  if(VIDEO_ELAPSED>=total){clearVideoDemo(false);$('#video-toggle').textContent='✓';$('#video-stage-toggle').textContent='✓';$('#act-video-complete').classList.remove('hide')}
 }
 function toggleVideoDemo(){
-  const btn=$('#video-toggle');if(VIDEO_PLAYING){VIDEO_ELAPSED=(Date.now()-VIDEO_STARTED_AT)/1000;clearVideoDemo(false);btn.textContent='▶';return}
-  VIDEO_PLAYING=true;VIDEO_STARTED_AT=Date.now()-VIDEO_ELAPSED*1000;btn.textContent='Ⅱ';updateVideoDemo();VIDEO_TIMER=setInterval(updateVideoDemo,200);
+  const btn=$('#video-toggle'),stageBtn=$('#video-stage-toggle');if(VIDEO_PLAYING){VIDEO_ELAPSED=(Date.now()-VIDEO_STARTED_AT)/1000;clearVideoDemo(false);btn.textContent='▶';stageBtn.textContent='▶';return}
+  VIDEO_PLAYING=true;VIDEO_STARTED_AT=Date.now()-VIDEO_ELAPSED*1000;btn.textContent='Ⅱ';stageBtn.textContent='Ⅱ';updateVideoDemo();VIDEO_TIMER=setInterval(updateVideoDemo,200);
 }
 function finishOnlineDemo(){
   clearBreathDemo();clearVideoDemo();const a=CURRENT_ACTIVITY,j=journeyFor(a);
-  if(!j.completed){j.completed=1;j.completedAt=Date.now();recordActivityMetric('completed')}
-  ACT_TEMP.post=a.direction==='up'?Math.min(10,(j.pre||7)+3):Math.max(0,(j.pre||7)-3);
-  save();renderRes();renderActivityStage('feedback');
+  const justCompleted=!j.completed;
+  if(justCompleted){j.completed=1;j.completedAt=Date.now();j.followupEligibleAt=Date.now()+12000;recordActivityMetric('completed');schedulePendingFollowup()}
+  save();refreshActivityViews();renderActivityStage('feedback');
 }
 function renderActivityStage(stage){
   const a=CURRENT_ACTIVITY,j=journeyFor(a),body=$('#activity-body');
@@ -2877,17 +2973,10 @@ function renderActivityStage(stage){
       <button class="act-primary" id="act-start">${j.started?'继续活动':'开始活动'}</button>`;
     return;
   }
-  if(stage==='pre'){
-    body.innerHTML=`<div class="act-kicker">活动前 · 快速读数</div><div class="act-title">先看看此刻的自己</div>
-      <div class="score-card"><label>${esc(a.preLabel)}</label><div class="score-value" id="pre-value">${ACT_TEMP.pre}</div>
-      <input id="pre-score" type="range" min="0" max="10" value="${ACT_TEMP.pre}"><div class="score-ends"><span>${esc(a.low)}</span><span>${esc(a.high)}</span></div></div>
-      <button class="act-primary" id="act-pre-next">继续</button>`;
-    return;
-  }
   if(stage==='exercise'){
     if(a.demoEngine==='video'){
       body.innerHTML=`<div class="act-kicker">视频跟练 · 30 秒</div><div class="act-title">工间舒展操引导</div>
-        <div class="video-demo"><div class="video-stage"><div class="play-mark">▶</div><h4 id="video-stage-title">准备开始</h4>
+        <div class="video-demo"><div class="video-stage"><button class="play-mark" id="video-stage-toggle" aria-label="播放或暂停视频">▶</button><h4 id="video-stage-title">准备开始</h4>
         <p id="video-stage-hint">请在座位周围留出可以轻松抬手的空间。</p></div>
         <div class="video-controls"><div class="video-timeline"><i id="video-progress"></i></div><div class="video-control-row">
         <button id="video-toggle" aria-label="播放或暂停">▶</button><span>无声演示视频</span><span class="video-time" id="video-time">0 / 30秒</span></div></div></div>
@@ -2905,51 +2994,44 @@ function renderActivityStage(stage){
     return;
   }
   if(stage==='feedback'){
-    body.innerHTML=`<div class="act-kicker">活动后 · 30 秒反馈</div><div class="act-title">记录这次变化</div>
-      <div class="score-card"><label>${esc(a.preLabel)}</label><div class="score-value" id="post-value">${ACT_TEMP.post}</div>
-      <input id="post-score" type="range" min="0" max="10" value="${ACT_TEMP.post}"><div class="score-ends"><span>${esc(a.low)}</span><span>${esc(a.high)}</span></div></div>
-      <div class="score-card"><label>这次活动对你有帮助吗？</label><div class="rating-row">${[1,2,3,4,5].map(n=>`<button data-rating="${n}" class="${n===ACT_TEMP.rating?'on':''}">${n}</button>`).join('')}</div></div>
-      <button class="act-primary" id="act-submit">提交反馈</button><button class="act-secondary" id="act-skip-feedback">暂不反馈</button>`;
+    body.innerHTML=`<div class="act-kicker">活动已完成</div><div class="act-title">这几分钟对你有帮助吗？</div>
+      <div class="act-desc">如果愿意，用一次点击留下感受；不反馈也完全没关系。</div>
+      <div class="rating-row feedback-row"><button data-feedback-rating="5">很有帮助</button><button data-feedback-rating="4">有一点帮助</button><button data-feedback-rating="2">没什么帮助</button></div>
+      <button class="act-secondary" id="act-skip-feedback">暂不反馈</button>`;
     return;
   }
-  const before=j.pre==null?'—':j.pre,after=j.post==null?'—':j.post;
+  const feedbackText={5:'很有帮助',4:'有一点帮助',2:'没什么帮助'}[j.rating];
   body.innerHTML=`<div class="act-kicker">活动已完成</div><div class="act-done"><h4>${esc(a.title)}</h4>
-    <p>你的活动前后读数从 <b>${before}</b> 变为 <b>${after}</b>，并给出了 <b>${j.rating||'—'} / 5</b> 的帮助度反馈。</p></div>
-    <div class="act-privacy">这些读数不向 HRBP 展示个人结果。企业端只会看到样本充足后的参与率、完成率和满意度。</div>
+    <p>${feedbackText?`你选择了「${feedbackText}」。`:'谢谢你完成这次活动。'}</p></div>
+    <div class="act-privacy">你的反馈不向 HRBP 展示个人结果。企业端只会看到样本充足后的参与率、完成率和满意度。</div>
     <button class="act-primary" id="act-finish">返回我的活动</button>`;
 }
-function closeActivity(){clearBreathDemo();clearVideoDemo();$('#activity-flow').classList.add('hide');CURRENT_ACTIVITY=null;renderRes()}
+function refreshActivityViews(){renderRes();renderChat();renderBot()}
+function closeActivity(){clearBreathDemo();clearVideoDemo();$('#activity-flow').classList.add('hide');CURRENT_ACTIVITY=null;refreshActivityViews()}
 function advanceActivityStep(){
   if(!CURRENT_ACTIVITY)return;
   const a=CURRENT_ACTIVITY,j=journeyFor(a),i=Math.min(j.step||0,a.steps.length-1);
   if(i<a.steps.length-1){j.step=i+1;save();renderActivityStage('exercise');return}
-  if(!j.completed){j.completed=1;j.completedAt=Date.now();recordActivityMetric('completed')}
-  ACT_TEMP.post=a.direction==='up'?Math.min(10,(j.pre||7)+3):Math.max(0,(j.pre||7)-3);
-  save();renderRes();renderActivityStage('feedback');
+  const justCompleted=!j.completed;
+  if(justCompleted){j.completed=1;j.completedAt=Date.now();j.followupEligibleAt=Date.now()+12000;recordActivityMetric('completed');schedulePendingFollowup()}
+  save();refreshActivityViews();renderActivityStage('feedback');
 }
 $('#activity-close').onclick=closeActivity;
 document.addEventListener('click',e=>{
   if(e.target.closest('#context-edit')){openContextEditor();return}
   if(e.target.closest('#act-finish')||e.target.closest('#act-cancel')){closeActivity();return}
-  if(e.target.closest('#act-register')){const j=journeyFor(CURRENT_ACTIVITY);j.registered=1;j.registeredAt=Date.now();save();renderRes();renderActivityStage('detail');return}
+  if(e.target.closest('#act-register')){const j=journeyFor(CURRENT_ACTIVITY);j.registered=1;j.registeredAt=Date.now();save();refreshActivityViews();renderActivityStage('detail');return}
   if(e.target.closest('#act-start')){const j=journeyFor(CURRENT_ACTIVITY);if(!j.started){j.started=1;j.startedAt=Date.now();recordActivityMetric('participated')}
-    save();renderRes();renderActivityStage(j.completed?'feedback':'pre');return}
-  if(e.target.closest('#act-pre-next')){const j=journeyFor(CURRENT_ACTIVITY);j.pre=ACT_TEMP.pre;j.step=0;save();renderActivityStage('exercise');return}
+    save();refreshActivityViews();renderActivityStage(j.completed?'feedback':'exercise');return}
   if(e.target.closest('#act-breath-complete')||e.target.closest('#act-breath-skip')){finishOnlineDemo();return}
-  if(e.target.closest('#video-toggle')){toggleVideoDemo();return}
+  if(e.target.closest('#video-toggle')||e.target.closest('#video-stage-toggle')){toggleVideoDemo();return}
   if(e.target.closest('#act-video-complete')||e.target.closest('#act-video-skip')){finishOnlineDemo();return}
   if(e.target.closest('#act-skip-feedback')){const j=journeyFor(CURRENT_ACTIVITY);j.skippedFeedback=1;j.skippedFeedbackAt=Date.now();save();closeActivity();return}
   if(e.target.closest('#act-step-next')){advanceActivityStep();return}
-  const rating=e.target.closest('[data-rating]');if(rating){ACT_TEMP.rating=+rating.dataset.rating;$$('#activity-body [data-rating]').forEach(x=>x.classList.toggle('on',x===rating));return}
-  if(e.target.closest('#act-submit')){const a=CURRENT_ACTIVITY,j=journeyFor(a);j.post=ACT_TEMP.post;j.rating=ACT_TEMP.rating;j.feedback=1;j.feedbackAt=Date.now();
-    const delta=a.direction==='up'?(ACT_TEMP.post-(j.pre||0)):((j.pre||0)-ACT_TEMP.post);
-    recordActivityMetric('feedback',{rating:ACT_TEMP.rating,delta});save();renderRes();renderActivityStage('done');return}
+  const feedback=e.target.closest('[data-feedback-rating]');if(feedback){const j=journeyFor(CURRENT_ACTIVITY),rating=+feedback.dataset.feedbackRating;
+    j.rating=rating;j.feedback=1;j.feedbackAt=Date.now();recordActivityMetric('feedback',{rating,delta:0});save();refreshActivityViews();renderActivityStage('done');return}
   const b=e.target.closest('[data-activity]');if(b){openActivity(b.dataset.activity,b.dataset.resourceTitle);return}
-  const r=e.target.closest('[data-resource]');if(r){const a=activityForResource(r.dataset.resource,'');CURRENT_ACTIVITY=a;$('#activity-flow').classList.remove('hide');renderActivityStage('detail')}
-});
-document.addEventListener('input',e=>{
-  if(e.target.id==='pre-score'){ACT_TEMP.pre=+e.target.value;$('#pre-value').textContent=e.target.value}
-  if(e.target.id==='post-score'){ACT_TEMP.post=+e.target.value;$('#post-value').textContent=e.target.value}
+  const r=e.target.closest('[data-resource]');if(r){openResourceActivity(r.dataset.resource,r.dataset.resourceDesc,r.dataset.resourceSource)}
 });
 
 /* ==========================================================================
