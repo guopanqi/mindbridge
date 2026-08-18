@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MindBridge AI · 企业员工心理安全与成长共生系统</title>
-<link rel="icon" type="image/png" href="icon-dog.png">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjggMTI4Ij4KPGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agc3RvcC1jb2xvcj0iIzBiOWE3MCIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzAwNjQ0YyIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPgo8cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgcng9IjMwIiBmaWxsPSJ1cmwoI2cpIi8+CjxnIGZpbGw9IiNmZmYiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KPHBhdGggZD0iTTQzIDQ4Yy05LTctMTctMS0xNSA5IDEgNyA3IDEzIDE1IDEyIiBzdHJva2Utd2lkdGg9IjgiLz4KPHBhdGggZD0iTTg1IDQ4YzktNyAxNy0xIDE1IDktMSA3LTcgMTMtMTUgMTIiIHN0cm9rZS13aWR0aD0iOCIvPgo8ZWxsaXBzZSBjeD0iNjQiIGN5PSI2MSIgcng9IjI3IiByeT0iMjUiLz4KPGVsbGlwc2UgY3g9IjY0IiBjeT0iOTIiIHJ4PSIyMiIgcnk9IjI2Ii8+CjxjaXJjbGUgY3g9IjQ4IiBjeT0iMTA4IiByPSI4Ii8+PGNpcmNsZSBjeD0iODAiIGN5PSIxMDgiIHI9IjgiLz4KPHBhdGggZD0iTTg0IDk1YzEzIDAgMTctMTEgMTUtMTggOCA5IDcgMjQtNyAyOSIgZmlsbD0ibm9uZSIgc3Ryb2tlLXdpZHRoPSI4Ii8+CjwvZz4KPGcgZmlsbD0iIzE3MzgyZiI+PGNpcmNsZSBjeD0iNTUiIGN5PSI1OSIgcj0iMi44Ii8+PGNpcmNsZSBjeD0iNzMiIGN5PSI1OSIgcj0iMi44Ii8+PGVsbGlwc2UgY3g9IjY0IiBjeT0iNjgiIHJ4PSI0LjUiIHJ5PSIzLjYiLz48cGF0aCBkPSJNNTggNzNjMyA1IDkgNSAxMiAwIiBmaWxsPSJub25lIiBzdHJva2U9IiMxNzM4MmYiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L2c+Cjwvc3ZnPg==">
 <style>
 :root{
   --sans:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",-apple-system,sans-serif;
@@ -33,15 +33,16 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px soli
 #gate{background:radial-gradient(900px 600px at 50% -10%,rgba(238,185,108,.1),transparent 60%),
   linear-gradient(168deg,#0f1c19,#0a1512);color:#f2ebe0;overflow-y:auto}
 #gate.on{display:grid;place-items:center}
-.gwrap{width:min(880px,92vw);padding:40px 0;text-align:center}
+.gwrap{width:min(1040px,94vw);padding:40px 0;text-align:center}
 .glogo{width:76px;height:76px;margin:0 auto 20px}
-.glogo img{width:100%;height:100%;display:block;border-radius:22%;filter:drop-shadow(0 6px 18px rgba(0,0,0,.35))}
-.brand-ico{width:100%;height:100%;display:block;object-fit:cover}
+.glogo .brand-ico{width:100%;height:100%;display:block;border-radius:22%;filter:drop-shadow(0 6px 18px rgba(0,0,0,.35))}
+.brand-ico{width:100%;height:100%;display:block;border-radius:inherit;background-color:#08785b;
+  background-image:url("data:image/webp;base64,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"),url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMjggMTI4Ij4KPGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJnIiB4MT0iMCIgeTE9IjAiIHgyPSIxIiB5Mj0iMSI+PHN0b3Agc3RvcC1jb2xvcj0iIzBiOWE3MCIvPjxzdG9wIG9mZnNldD0iMSIgc3RvcC1jb2xvcj0iIzAwNjQ0YyIvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPgo8cmVjdCB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgcng9IjMwIiBmaWxsPSJ1cmwoI2cpIi8+CjxnIGZpbGw9IiNmZmYiIHN0cm9rZT0iI2ZmZiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj4KPHBhdGggZD0iTTQzIDQ4Yy05LTctMTctMS0xNSA5IDEgNyA3IDEzIDE1IDEyIiBzdHJva2Utd2lkdGg9IjgiLz4KPHBhdGggZD0iTTg1IDQ4YzktNyAxNy0xIDE1IDktMSA3LTcgMTMtMTUgMTIiIHN0cm9rZS13aWR0aD0iOCIvPgo8ZWxsaXBzZSBjeD0iNjQiIGN5PSI2MSIgcng9IjI3IiByeT0iMjUiLz4KPGVsbGlwc2UgY3g9IjY0IiBjeT0iOTIiIHJ4PSIyMiIgcnk9IjI2Ii8+CjxjaXJjbGUgY3g9IjQ4IiBjeT0iMTA4IiByPSI4Ii8+PGNpcmNsZSBjeD0iODAiIGN5PSIxMDgiIHI9IjgiLz4KPHBhdGggZD0iTTg0IDk1YzEzIDAgMTctMTEgMTUtMTggOCA5IDcgMjQtNyAyOSIgZmlsbD0ibm9uZSIgc3Ryb2tlLXdpZHRoPSI4Ii8+CjwvZz4KPGcgZmlsbD0iIzE3MzgyZiI+PGNpcmNsZSBjeD0iNTUiIGN5PSI1OSIgcj0iMi44Ii8+PGNpcmNsZSBjeD0iNzMiIGN5PSI1OSIgcj0iMi44Ii8+PGVsbGlwc2UgY3g9IjY0IiBjeT0iNjgiIHJ4PSI0LjUiIHJ5PSIzLjYiLz48cGF0aCBkPSJNNTggNzNjMyA1IDkgNSAxMiAwIiBmaWxsPSJub25lIiBzdHJva2U9IiMxNzM4MmYiIHN0cm9rZS13aWR0aD0iMi41IiBzdHJva2UtbGluZWNhcD0icm91bmQiLz48L2c+Cjwvc3ZnPg==");background-position:center;background-repeat:no-repeat;background-size:cover}
 .gt{font-family:var(--serif);font-size:27px;font-weight:600;letter-spacing:.03em}
 .gt .en{display:block;font-family:var(--sans);font-size:10.5px;letter-spacing:.3em;color:#7d9289;margin-top:9px;font-weight:500}
 .gq{font-size:14px;color:#a5bab0;margin:30px 0 8px}
 .gs{font-size:12px;color:#6c827a;margin-bottom:26px}
-.roles{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.roles{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
 .role{background:rgba(22,44,38,.55);border:1px solid rgba(127,201,143,.14);border-radius:14px;
   padding:22px 15px;transition:.3s cubic-bezier(.2,.8,.2,1);text-align:center}
 .role:hover{transform:translateY(-4px);border-color:rgba(238,185,108,.45);background:rgba(238,185,108,.09);
@@ -252,6 +253,15 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px soli
 .wkcard .wi .wl{font-size:10px;color:#6e8579;margin-top:3px}
 .wkcard .wsrc{font-size:9.5px;color:#7d9488;margin-top:10px;line-height:1.6;
   padding-top:9px;border-top:1px solid rgba(120,160,140,.22)}
+.profile-strip{margin-bottom:11px;padding-bottom:10px;border-bottom:1px solid rgba(120,160,140,.22)}
+.profile-strip .pt{font-size:10px;color:#4a7a63;font-weight:700;margin-bottom:7px;letter-spacing:.03em}
+.profile-strip .pp{display:flex;gap:6px;flex-wrap:wrap}
+.profile-strip .pp span{font-size:9.5px;color:#356451;background:rgba(255,255,255,.78);border:1px solid rgba(120,160,140,.22);border-radius:999px;padding:3px 7px}
+.profile-strip .pn{font-size:9px;color:#789185;margin-top:7px;line-height:1.5}
+.ops-filter select{min-width:260px;border:1px solid var(--line);background:#fff;color:var(--txt);padding:9px 12px;border-radius:7px;font-family:inherit;font-size:12px}
+.ops-live{display:flex;align-items:center;gap:7px;margin-top:10px;font-size:10.5px;color:var(--mut);line-height:1.5}
+.ops-live .pulse{width:7px;height:7px;border-radius:50%;background:#2e8b57;box-shadow:0 0 0 4px rgba(46,139,87,.10);flex:none}
+.live-chip{display:inline-block;margin-left:5px;padding:2px 6px;border-radius:99px;background:#e5f4eb;color:#25734a;font-size:8.5px;font-weight:600}
 
 /* ---- 转发的聊天记录卡（钉钉合并转发样式） ---- */
 .qcard{background:#fff;border:1px solid #e6e8ea;border-radius:9px;padding:11px 12px;
@@ -739,7 +749,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
 .grow .gs{font-size:10.5px;flex:none;padding:3px 9px;border-radius:100px;
   background:#eef5f1;color:var(--brand)}
 .grow.warn .gs{background:#fbf0da;color:#a8761d}
-/* ---- 两级授权分组 ---- */
+/* ---- 数据授权分组 ---- */
 .lvl{margin-bottom:18px}
 .lvl:last-child{margin-bottom:0}
 .lvhd{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
@@ -1105,7 +1115,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
   <section class="scr on" id="gate">
     <div class="gwrap">
       <div class="glogo">
-        <img src="icon-dog.png" alt="MindBridge">
+        <span class="brand-ico" role="img" aria-label="MindBridge"></span>
       </div>
       <div class="gt">MindBridge AI<span class="en">企业员工心理安全与成长共生系统</span></div>
       <div class="gq">请选择演示身份</div>
@@ -1123,6 +1133,9 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
         <button class="role" data-role="healer">
           <div class="ri">🌿</div><div class="rn">李佳</div>
           <div class="rd">UNIHEAL 持证疗愈师</div><div class="rt">实名 · 个案工作台</div></button>
+        <button class="role" data-role="ops">
+          <div class="ri">◫</div><div class="rn">MindBridge 运营</div>
+          <div class="rd">平台数据与效果中心</div><div class="rt">实名 · 行业基准</div></button>
       </div>
     </div>
   </section>
@@ -1156,7 +1169,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
           <div class="st">员工关爱</div>
           <div class="apps">
             <button class="app live" id="wc-enter">
-              <div class="ai"><img class="brand-ico" src="icon-dog.png" alt=""></div><div class="an">MindBridge<span class="badge">1</span></div>
+              <div class="ai"><span class="brand-ico" aria-hidden="true"></span></div><div class="an">MindBridge<span class="badge">1</span></div>
             </button>
             <div class="app"><div class="ai">🏥</div><div class="an">体检</div></div>
             <div class="app"><div class="ai">🎁</div><div class="an">福利</div></div>
@@ -1168,7 +1181,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
         <button class="on" data-t="msgs"><span class="ti">💬</span>消息</button>
         <button data-t="work"><span class="ti">🔳</span>工作台</button>
       </div>
-      <div class="pushbar" data-push><div class="ph"><div class="pi"><img class="brand-ico" src="icon-dog.png" alt=""></div>
+      <div class="pushbar" data-push><div class="ph"><div class="pi"><span class="brand-ico" aria-hidden="true"></span></div>
         <div class="pn">MindBridge</div><div class="pt">现在</div></div>
         <div class="pmsg"></div><div class="pnote"></div></div>
     </div></div>
@@ -1212,7 +1225,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
 
       <div class="fwd" id="im-fwd" role="dialog" aria-modal="true" aria-label="选择转发对象" aria-hidden="true" inert><div class="fbox">
         <div class="ft">转发给</div>
-        <button class="frow pri" id="fwd-mb"><div class="fav"><img class="brand-ico" src="icon-dog.png" alt=""></div>
+        <button class="frow pri" id="fwd-mb"><div class="fav"><span class="brand-ico" aria-hidden="true"></span></div>
           <div><div class="fnm">MindBridge</div><div class="fd">员工关爱 · 只有你能看到</div></div></button>
         <button class="frow" disabled><div class="fav">👤</div>
           <div><div class="fnm">刘总</div><div class="fd">研发中心</div></div></button>
@@ -1221,7 +1234,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
         <button class="fx" id="fwd-x">取消</button>
       </div></div>
 
-      <div class="pushbar" data-push><div class="ph"><div class="pi"><img class="brand-ico" src="icon-dog.png" alt=""></div>
+      <div class="pushbar" data-push><div class="ph"><div class="pi"><span class="brand-ico" aria-hidden="true"></span></div>
         <div class="pn">MindBridge</div><div class="pt">现在</div></div>
         <div class="pmsg"></div><div class="pnote"></div></div>
     </div></div>
@@ -1275,7 +1288,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
             <div class="v" id="a-id">小芳-7F3A</div>
           </div>
           <div class="adesc">
-            您的姓名与工号已被隐藏，数据完全匿名。
+            您的姓名与工号已被隔离，后续服务以匿名 ID 运行；企业无法反查你的心理服务内容。
           </div>
         </div>
       </div>
@@ -1382,12 +1395,18 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
             <p>你的选择只关联这个匿名身份，让聊天和推荐更贴近你；可随时更改或清空。企业仅能查看匿名聚合趋势，看不到你的具体选择。</p>
           </div>
           <div class="context-options">
-            <button class="context-option" data-context="transition"><span class="ci">🧭</span>
-              <span class="ct"><b>岗位变化适应期</b><span>正在经历内部转岗、晋升或职责调整</span></span><span class="chev">›</span></button>
-            <button class="context-option" data-context="frontline"><span class="ci">💬</span>
-              <span class="ct"><b>一线服务者</b><span>长期面对客户情绪、投诉和高强度沟通</span></span><span class="chev">›</span></button>
-            <button class="context-option" data-context="maternity"><span class="ci">🌱</span>
-              <span class="ct"><b>孕产与返岗适应期</b><span>正在经历孕期、产后或育儿阶段，并适应工作节奏变化</span></span><span class="chev">›</span></button>
+            <button class="context-option" data-context="highIntensity"><span class="ci">⚡</span>
+              <span class="ct"><b>高强度岗位员工</b><span>研发、客服、产线、医护等持续高负荷岗位</span></span><span class="chev">›</span></button>
+            <button class="context-option" data-context="manager"><span class="ci">🧩</span>
+              <span class="ct"><b>中基层管理者</b><span>承担目标、决策与上下协同压力</span></span><span class="chev">›</span></button>
+            <button class="context-option" data-context="newcomer"><span class="ci">🌱</span>
+              <span class="ct"><b>新入职员工</b><span>正在适应新团队、新角色与试用期节奏</span></span><span class="chev">›</span></button>
+            <button class="context-option" data-context="returner"><span class="ci">↻</span>
+              <span class="ct"><b>女性返岗员工</b><span>经历返岗、家庭照护与工作角色重新切换</span></span><span class="chev">›</span></button>
+            <button class="context-option" data-context="techTransition"><span class="ci">⌁</span>
+              <span class="ct"><b>面临技术焦虑/转型员工</b><span>面对技能迭代、被替代焦虑或职业方向变化</span></span><span class="chev">›</span></button>
+            <button class="context-option" data-context="crossCulture"><span class="ci">🌍</span>
+              <span class="ct"><b>跨文化/国际员工</b><span>面临语言、文化适应、远程协作或社交隔离</span></span><span class="chev">›</span></button>
           </div>
           <button class="context-skip" id="context-skip"><b>暂不选择</b> · 继续使用通用推荐</button>
         </div>
@@ -1422,7 +1441,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
   <!-- ============ HRBP ============ -->
   <section class="scr" id="hrApp">
     <div class="skC pad">
-      <div class="hd"><div class="lg2"><img class="brand-ico" src="icon-dog.png" alt=""></div><h3>MindBridge · 员工关爱后台</h3>
+      <div class="hd"><div class="lg2"><span class="brand-ico" aria-hidden="true"></span></div><h3>MindBridge · 员工关爱后台</h3>
         <div class="who"><div class="ava">张</div>张敏 · HRBP · 星原科技</div></div>
       <div class="navbar" role="tablist" aria-label="HRBP 工作台">
         <button class="on" data-c="dash" role="tab" aria-selected="true">组织看板</button>
@@ -1523,6 +1542,13 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
             <div class="kp"><div class="v" id="act-kpi-feedback">--<small>份</small></div><div class="l">有效反馈</div><div class="t">已提交且评分有效的反馈数</div></div>
           </div>
           <div class="cardC table-card">
+            <h4>行业 Benchmark · <span id="hr-bench-industry">互联网/IT</span><span class="src">MindBridge 跨企业匿名基准</span></h4>
+            <div class="cs">企业只看到自己的数据与行业基准，不可查看其他企业明细。</div>
+            <table id="hr-benchmark-table"></table>
+            <div class="privacy-rule">行业基准仅在满足最小企业数与最小样本量后展示；平台不向客户披露其他企业名称或单家企业明细。</div>
+          </div>
+
+          <div class="cardC table-card">
             <h4>不同身份标签的活动表现<span class="src">去标识化聚合</span></h4>
             <div class="cs">只显示群体趋势，HRBP 无法查看任何员工的标签选择或活动记录。</div>
             <table id="activity-stats-table"></table>
@@ -1544,7 +1570,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
               <div class="template-control"><button class="tplbtn" id="tplbtn">套用行业模板 ▾</button>
                 <div class="tplmenu" id="tplmenu"></div></div>
             </div>
-            <div class="cs">纵轴决定<b>响应内容</b>，横轴展示<b>三级干预路径</b>。绿色、黄色可配置服务映射；红色由专业流程统一管理，仅作展示。</div>
+            <div class="cs">纵轴决定<b>响应内容</b>，横轴展示<b>三级干预路径</b>。绿色、黄色可配置资源与支持映射；红色由专业流程统一管理，仅作展示。</div>
             <div class="mx-wrap"><table class="mx" id="mx"></table></div>
           </div>
 
@@ -1560,8 +1586,9 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
                 <span class="policy-source">服务协议</span></div>
               <div class="policy-row service-row"><span class="policy-label">值班疗愈师</span>
                 <div class="service-editor" id="healer-services" data-kind="healer"></div></div>
-              <div class="policy-row service-row"><span class="policy-label">外部转介通道</span>
-                <div class="service-editor" id="refer-services" data-kind="refer"></div></div>
+              <div class="policy-row"><span class="policy-label">必要时专业医疗转介</span>
+                <span class="policy-value">由 MindBridge 专业团队按危机流程评估决定，企业侧不可配置具体机构</span>
+                <span class="policy-source">专业流程</span></div>
             </div>
           </div>
 
@@ -1570,9 +1597,9 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
             <div class="cs">规则由专业团队制定并经伦理审查，系统自动执行，HRBP 不可单方调整。</div>
             <div class="locked-panel">
               <div class="trow">连续 <span class="num">3</span> 天出现「累 / 撑不住」
-                <span class="arw">→</span><span class="out">推送能量唤醒工作坊 + 提醒 HRBP 关注团队</span></div>
+                <span class="arw">→</span><span class="out">升级黄色 · 推送匹配资源并建议连接人工支持</span></div>
               <div class="trow"><span class="num">7</span> 天内倾诉 ≥ <span class="num">5</span> 次
-                <span class="arw">→</span><span class="out">升级黄色 · 自动预约疗愈师评估</span></div>
+                <span class="arw">→</span><span class="out">保持黄色关注 · 加强主动支持与后续回访</span></div>
               <div class="trow">命中危机词库
                 <span class="arw">→</span><span class="out">立即征求员工同意 · 同意后方可转接疗愈师</span></div>
               <span class="panel-lock" role="note" tabindex="0" aria-label="由伦理委员会审定，HRBP 不可修改"
@@ -1598,36 +1625,64 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
           </div>
         </div>
 
-        <!-- 办公数据感知独立于干预阶梯：这是数据授权与隐私配置，不是干预策略。 -->
+        <!-- 办公数据感知独立于干预阶梯：只使用非内容型工作节奏元数据。 -->
         <div class="paneC" id="c-sensing">
           <div class="cardC">
             <h4>办公数据感知能力</h4>
-            <div class="cs">MindBridge 从钉钉获取的数据分为两级。
-              <b>一级为行为元数据，不含任何聊天内容</b>，随应用安装默认开启；
-              <b>二级为群聊消息读取，需企业单独审批</b>，默认全部关闭。</div>
+            <div class="cs">MindBridge 仅使用经授权的<b>非内容型工作节奏元数据</b>，例如考勤、审批、日程密度和待办数量。
+              系统不在后台读取员工群聊或私人通讯内容；如某段工作消息与压力有关，由员工本人主动转发给 MindBridge。</div>
 
             <div class="lvl">
               <div class="lvhd">
-                <span class="lvtag one">一级</span>
+                <span class="lvtag one">授权数据</span>
                 <span class="lvt">行为元数据</span>
-                <span class="lvs">随应用安装授权 · 默认开启 · 不含任何聊天内容</span>
+                <span class="lvs">默认开启 · 不含任何聊天内容</span>
               </div>
               <div class="grp" id="lv1-list"></div>
-              <div class="lvnote">以上均为钉钉标准开放接口。团队级聚合，最小样本 10 人，
-                不落个人档案，不与绩效、晋升、续聘挂钩。员工可自行退出统计。</div>
+              <div class="lvnote">以上均为非内容型工作节奏指标。团队级聚合，最小样本 10 人，
+                不落个人心理档案，不与绩效、晋升、续聘挂钩。员工可自行退出统计。</div>
             </div>
 
-            <div class="lvl">
-              <div class="lvhd">
-                <span class="lvtag two">二级</span>
-                <span class="lvt">群聊消息读取</span>
-                <span class="lvs">需企业单独审批 · 默认全部关闭</span>
-              </div>
-              <div class="grp" id="grp-list"></div>
+            <div class="rhynote" style="margin-top:16px">
+              <b>工作消息只通过员工主动转发进入个人支持空间。</b>
+              HR 无法开启群聊内容读取，也不能查看员工主动转发给 MindBridge 的具体消息。
             </div>
           </div>
         </div>
 
+      </div></div>
+    </div>
+  </section>
+
+  <!-- ============ MindBridge 平台运营后台 ============ -->
+  <section class="scr" id="opsApp">
+    <div class="skC pad">
+      <div class="hd"><div class="lg2">MB</div><h3>MindBridge · 平台运营后台</h3>
+        <div class="who"><div class="ava">M</div>平台数据与效果中心</div></div>
+      <div class="navbar"><button class="on">行业基准总览</button></div>
+      <div class="bodyC"><div class="inner">
+        <div class="demo-banner"><div><b>⚠ 演示数据说明</b>本页以跨企业历史匿名样本为 Benchmark 基线，并实时叠加当前 Demo 企业产生的去标识化活动统计。真实部署中，只有达到最小企业数与最小样本量后才形成行业基准。</div></div>
+        <div class="cardC ops-filter"><h4>行业筛选<span class="src">平台内部</span></h4>
+          <div class="cs">平台可以查看企业级脱敏统计并做聚合，但不读取员工个人心理档案。</div>
+          <select id="ops-industry"></select>
+          <div class="ops-live" id="ops-live"><span class="pulse"></span><span>当前 Demo 企业已接入匿名统计；员工参与、完成或反馈活动后，本页会自动更新。</span></div></div>
+        <div class="kpis">
+          <div class="kp"><div class="v" id="ops-company">--<small>家</small></div><div class="l">有效企业样本</div><div class="t">已通过最小企业数阈值</div></div>
+          <div class="kp"><div class="v" id="ops-employee">--<small>人</small></div><div class="l">去标识化员工样本</div><div class="t">仅用于聚合统计</div></div>
+          <div class="kp"><div class="v" id="ops-use">--<small>%</small></div><div class="l">AI 月活使用率</div><div class="t">行业均值</div></div>
+          <div class="kp"><div class="v" id="ops-complete">--<small>%</small></div><div class="l">活动完成率</div><div class="t">行业均值</div></div>
+        </div>
+        <div class="grid2">
+          <div class="cardC table-card"><h4>行业活动效果<span class="src">匿名聚合</span></h4>
+            <div class="cs">回答“这个行业什么活动更容易被使用、完成并认可”。</div>
+            <table id="ops-effect-table"></table></div>
+          <div class="cardC table-card"><h4>去标识化企业样本<span class="src">仅平台内部</span></h4>
+            <div class="cs">企业名称已替换为随机客户编码，不能从本页反查具体员工。</div>
+            <table id="ops-company-table"></table></div>
+        </div>
+        <div class="cardC table-card"><h4>八行业 Benchmark 总览</h4><div class="cs">用于校准行业模板与企业 HR 侧的参照基准。</div><table id="ops-industry-table"></table></div>
+        <div class="blind"><h5><svg class="privacy-shield" aria-hidden="true"><use href="#icon-privacy-shield"/></svg>跨企业数据边界</h5>
+          <ul><li>不向客户披露其他企业名称与单家企业明细</li><li>不汇总任何员工姓名、工号或倾诉原文</li><li>企业数或样本量不足时不生成 Benchmark</li><li>行业数据仅用于效果比较、资源配置与推荐模型校准</li></ul></div>
       </div></div>
     </div>
   </section>
@@ -1665,6 +1720,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
     <button data-r="emp2">陈雨 · 客服<small>星原科技</small></button>
     <button data-r="hr">张敏 · HRBP<small>星原科技</small></button>
     <button data-r="healer">李佳 · 疗愈师<small>服务商：UNIHEAL</small></button>
+    <button data-r="ops">MindBridge 运营<small>行业 Benchmark</small></button>
   </div>
   <div class="rt">
     <div class="tg" style="display:none"><span>演示模式</span><button class="tgb" id="xtgl" aria-label="切换演示模式" aria-pressed="false"></button></div>
@@ -1691,7 +1747,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
    MindBridge AI Demo
    存储：localStorage + BroadcastChannel + 轮询兜底（保证 file:// 下也能跨窗口同步）
    ========================================================================== */
-const KEY='mb_demo_v1', CH='mb_demo_ch';
+const KEY='mb_demo_v2', CH='mb_demo_ch_v2';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 
 /* 控制条在中等桌面宽度下可能换行，按实际高度为主舞台留位 */
@@ -1708,6 +1764,7 @@ addEventListener('resize',syncCtlHeight);syncCtlHeight();
 const ROLES={
   emp1:{kind:'emp',name:'王磊',dept:'研发中心',org:'星原科技',emp:'E20481',
     anon:'7F3A',alias:'小芳',icon:'👤',
+    profile:{job:'技术研发类',deptType:'研发型组织',level:'中高级专业岗位',workType:'项目交付型工作'},
     work:{title:'本周工作节奏',
       items:[['20',':38','下班打卡中位'],['4','天','晚间下班打卡'],['3','项','加班·调休审批'],['12','项','未完成待办']],
       line:'这周你有四天在晚上八点半以后打的下班卡。'},
@@ -1726,6 +1783,7 @@ const ROLES={
     ]},
   emp2:{kind:'emp',name:'陈雨',dept:'客服中心',org:'星原科技',emp:'E20977',
     anon:'A91C',alias:'小华',icon:'👤',
+    profile:{job:'客户服务类',deptType:'一线服务组织',level:'专业执行岗位',workType:'高情绪劳动型工作'},
     work:{title:'本周工作节奏',
       items:[['21',':14','最晚下班打卡'],['6','天','连续出勤'],['2','项','排班调整审批'],['8','项','未完成待办']],
       line:'这周你连着上了六天，没有一个完整的休息日。'},
@@ -1743,6 +1801,7 @@ const ROLES={
     ]},
   hr:{kind:'hr',name:'张敏',dept:'人力资源部 · HRBP',icon:'📊'},
   healer:{kind:'healer',name:'李佳',dept:'UNIHEAL 国际疗愈师 · UH-2024-0871',icon:'🌿'},
+  ops:{kind:'ops',name:'MindBridge 运营',dept:'平台数据与效果中心',icon:'◫'},
 };
 let ME=null, MEID=null;
 let staffEnterTimer=null;
@@ -1778,10 +1837,13 @@ const SEED={
   chats:{}, bot:{},
   profiles:{}, activityJourneys:{},
   activityStats:{
-    transition:{label:'岗位变化适应期',recommended:63,participated:22,completed:17,feedback:15,ratingTotal:65,effectTotal:29,scoreLabel:'职业可控感',effectDir:'提升',popular:'身份重塑叙事疗愈小组'},
-    frontline:{label:'一线服务者',recommended:124,participated:45,completed:23,feedback:19,ratingTotal:68,effectTotal:21,scoreLabel:'情绪占据感',effectDir:'下降',popular:'三分钟情绪卸载'},
-    maternity:{label:'孕产与返岗适应期',recommended:37,participated:13,completed:11,feedback:10,ratingTotal:46,effectTotal:29,scoreLabel:'返岗可控感',effectDir:'提升',popular:'返岗节奏重建练习'},
-    other:{label:'其他标签',recommended:7,participated:2,completed:1,feedback:1,ratingTotal:4,effectTotal:0,scoreLabel:'',effectDir:'',popular:'—'}
+    highIntensity:{label:'高强度岗位员工',recommended:186,participated:74,completed:53,feedback:45,ratingTotal:198,effectTotal:78,scoreLabel:'压力负荷',effectDir:'下降',popular:'情绪红绿灯正念工作坊'},
+    manager:{label:'中基层管理者',recommended:81,participated:29,completed:22,feedback:19,ratingTotal:83,effectTotal:31,scoreLabel:'决策可控感',effectDir:'提升',popular:'积极心理与管理提升培训'},
+    newcomer:{label:'新入职员工',recommended:96,participated:41,completed:31,feedback:25,ratingTotal:110,effectTotal:39,scoreLabel:'融入感',effectDir:'提升',popular:'心理嘉年华游园会'},
+    returner:{label:'女性返岗员工',recommended:37,participated:13,completed:11,feedback:10,ratingTotal:46,effectTotal:29,scoreLabel:'返岗可控感',effectDir:'提升',popular:'返岗节奏重建练习'},
+    techTransition:{label:'技术焦虑/转型员工',recommended:63,participated:22,completed:17,feedback:15,ratingTotal:65,effectTotal:29,scoreLabel:'职业可控感',effectDir:'提升',popular:'身份重塑叙事疗愈小组'},
+    crossCulture:{label:'跨文化/国际员工',recommended:44,participated:16,completed:12,feedback:11,ratingTotal:48,effectTotal:18,scoreLabel:'连接感',effectDir:'提升',popular:'跨团队疗愈小组'},
+    other:{label:'未选择标签',recommended:18,participated:6,completed:4,feedback:3,ratingTotal:13,effectTotal:4,scoreLabel:'',effectDir:'',popular:'—'}
   },
   activityPerf:{
     breathing:{label:'三分钟呼吸着陆法',form:'线上自助 · 3分钟',recommended:172,participated:57,completed:40,feedback:33,ratingTotal:129,effectTotal:59,scoreLabel:'紧张感',effectDir:'下降'},
@@ -1796,9 +1858,12 @@ const BOT_INTRO='我是 MindBridge，一个匿名的心理支持助手。\n有�
 const LEGACY_BOT_INTRO='我是 MindBridge，学校员工关爱的助手。\n有什么想说的，随时发给我。';
 const CONTEXTS={
   none:{label:'未选择标签',welcome:'我在这儿。今天有什么压在心里的话，都可以说给我听。',online:'breathing',offline:'mindfulness-group'},
-  transition:{label:'岗位变化适应期',welcome:'欢迎回来。内部转岗、晋升或职责调整时，熟悉的节奏和价值感都可能变得不确定。不用急着证明什么，我们可以先从今天最压着你的一件事开始。',online:'value-anchor',offline:'identity-group'},
-  frontline:{label:'一线服务者',welcome:'欢迎回来。长时间接住客户的情绪，会比看起来更消耗。在这里不用继续保持专业表情，你可以先说说刚才最难受的部分。',online:'emotion-unload',offline:'art-group'},
-  maternity:{label:'孕产与返岗适应期',welcome:'欢迎回来。重新适应工作节奏时，身体变化、家庭照护和职业角色可能同时挤在一起。你不必马上回到以前的状态，我们可以先从今天最需要被减轻的一件事开始。',online:'return-rhythm',offline:'return-group'}
+  highIntensity:{label:'高强度岗位员工',welcome:'欢迎回来。高负荷岗位最容易把紧绷感一直带到下班以后。你不用先把事情讲完整，我们可以从现在最压着你的那一件开始。',online:'breathing',offline:'mindfulness-group'},
+  manager:{label:'中基层管理者',welcome:'欢迎回来。夹在目标、团队和上级之间时，很多压力很难在工作场合说出口。这里不用先扮演“负责人”，可以从你最近最难做的一个决定说起。',online:'breathing',offline:'mindfulness-group'},
+  newcomer:{label:'新入职员工',welcome:'欢迎回来。刚进入一个新团队时，不熟悉规则、怕做错和不敢求助会一起出现。你可以先说说最近哪一件事最让你觉得自己还没站稳。',online:'breathing',offline:'mindfulness-group'},
+  returner:{label:'女性返岗员工',welcome:'欢迎回来。重新适应工作节奏时，家庭照护、身体状态和职业角色可能同时挤在一起。你不必马上回到以前的状态，我们可以先从今天最需要被减轻的一件事开始。',online:'return-rhythm',offline:'return-group'},
+  techTransition:{label:'面临技术焦虑/转型员工',welcome:'欢迎回来。技术快速变化时，“我会不会被落下”很容易变成持续的背景噪音。我们可以先把岗位变化和你已经拥有的能力分开来看。',online:'value-anchor',offline:'identity-group'},
+  crossCulture:{label:'跨文化/国际员工',welcome:'欢迎回来。语言、文化和远程协作带来的隔离感，常常不是一句“适应一下”能解决的。你可以从最近一次让你感觉很难融入的场景说起。',online:'breathing',offline:'mindfulness-group'}
 };
 const ACTIVITIES={
   breathing:{id:'breathing',type:'online',title:'三分钟呼吸着陆法',desc:'用简短的呼吸和觉察，让身体从赶进度的紧绷中暂时退下来。',duration:'3 分钟',form:'线上自助',preLabel:'此刻的紧张程度是多少？',low:'很放松',high:'非常紧张',direction:'down',steps:[['找到一个稳定的姿势','让脚接触地面，肩膀尽量放松。'],['把注意力放回呼吸','缓慢吸气，稍作停留，再比吸气更慢地呼出。'],['觉察一个微小变化','不必要求自己立刻平静，只留意哪个部位稍微松了一点。']]},
@@ -1812,7 +1877,6 @@ const ACTIVITIES={
   'return-group':{id:'return-group',type:'offline',title:'孕产返岗同伴支持小组',desc:'围绕角色转换、工作边界与支持需求开展的保密小组。',duration:'90 分钟',form:'线下小组'}
 };
 let DB=load();
-if(DB.activityStats&&DB.activityStats.transition)DB.activityStats.transition.label='岗位变化适应期';
 function load(){try{const r=localStorage.getItem(KEY);return r?JSON.parse(r):structuredClone(SEED)}catch(e){return structuredClone(SEED)}}
 function save(){DB.v=(DB.v||0)+1;try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){}bc&&bc.postMessage(DB.v)}
 let bc=null;try{bc=new BroadcastChannel(CH)}catch(e){}
@@ -1847,6 +1911,7 @@ let bc=null;try{bc=new BroadcastChannel(CH)}catch(e){}
     if(!DB.activityStats[k]){DB.activityStats[k]=structuredClone(v);changed=true}
   });
   if(!DB.activityPerf){DB.activityPerf=structuredClone(SEED.activityPerf);changed=true}
+  ['manager-reset','newcomer-map','culture-anchor'].forEach(k=>{if(DB.activityPerf&&DB.activityPerf[k]){delete DB.activityPerf[k];changed=true}});
   Object.entries(SEED.activityPerf).forEach(([k,v])=>{
     if(!DB.activityPerf[k]){DB.activityPerf[k]=structuredClone(v);changed=true}
   });
@@ -1867,12 +1932,14 @@ function pull(){
    ========================================================================== */
 const EMO={
   焦虑:{em:'😰',res:{n:'三分钟呼吸着陆法',d:'即时可用 · 快速平复急性焦虑',i:'🌬️'},yellow:{n:'情绪红绿灯正念工作坊',d:'团体活动邀请 · 帮你拆解持续的赶工焦虑',i:'🟡'}},
-  疲惫:{em:'😮‍💨',res:{n:'工间舒展操引导',d:'5 分钟 · 让被耗尽的身体重新活动起来',i:'🔋'},yellow:{n:'能量唤醒工作坊',d:'团体活动邀请 · 为持续耗竭补充支持',i:'🟡'}},
+  疲惫:{em:'😮‍💨',res:{n:'工间身体扫描音频',d:'5 分钟 · 从身体觉察开始缓解持续耗竭',i:'🔋'},yellow:{n:'能量唤醒工作坊',d:'团体活动邀请 · 为持续耗竭补充支持',i:'🟡'}},
+  烦躁:{em:'😤',res:{n:'情绪暂停提醒卡片',d:'3 秒暂停法 · 给情绪一个缓冲',i:'🛑'},yellow:{n:'身体觉知与释放',d:'团体活动邀请 · 为持续烦躁和身体紧绷提供释放出口',i:'🟡'}},
   低落:{em:'😔',res:{n:'每日三件好事打卡',d:'每日 3 分钟 · 重建对生活的掌控感与意义',i:'✨'},yellow:{n:'身份重塑叙事疗愈小组',d:'团体活动邀请 · 支持价值感与方向感重建',i:'🟡'}},
-  烦躁:{em:'😤',res:{n:'情绪暂停提醒卡片',d:'3 秒暂停法 · 给情绪一个缓冲',i:'🛑'},yellow:{n:'「心流插花」艺术疗愈',d:'团体活动邀请 · 为持续的情绪劳动留出出口',i:'🟡'}},
+  紧张:{em:'😬',res:{n:'渐进式肌肉放松音频',d:'8 分钟 · 卸下身体的持续紧绷',i:'🧘'},yellow:{n:'拳力以赴·解压拳击',d:'线下活动邀请 · 用安全的体能释放承接高压紧绷',i:'🥊'}},
   孤独:{em:'🫥',res:{n:'正念音频',d:'即时可用 · 给独自硬扛的时刻一点陪伴',i:'🎧'},yellow:{n:'跨团队疗愈小组',d:'团体活动邀请 · 在真实的团体中获得支持',i:'🤝'}},
-  紧张:{em:'😬',res:{n:'渐进式肌肉放松音频',d:'5 分钟 · 卸下身体的持续紧绷',i:'🧘'},yellow:{n:'身体觉知与释放工作坊',d:'团体活动邀请 · 面向持续失眠与高压紧绷',i:'🟡'}},
-  委屈:{em:'😞',res:{n:'情绪书写练习',d:'15 分钟表达性写作 · 把咽下去的写出来',i:'✍️'},yellow:{n:'ABC 情绪理论工作坊',d:'团体活动邀请 · 梳理反复触发的委屈与自责',i:'🟡'}},
+  委屈:{em:'😞',res:{n:'情绪书写练习',d:'15 分钟表达性写作 · 把咽下去的写出来',i:'✍️'},yellow:{n:'ABC情绪理论工作坊',d:'团体活动邀请 · 梳理反复触发的委屈与自责',i:'🟡'}},
+  愤怒:{em:'😠',res:{n:'情绪暂停提醒卡片',d:'先让情绪和行动之间留出一个安全间隔',i:'🛑'},yellow:{n:'拳力以赴·解压拳击',d:'线下活动邀请 · 把压抑的愤怒转化为可控的身体释放',i:'🥊'}},
+  迷茫:{em:'🧭',res:{n:'职业价值锚点练习',d:'5 分钟 · 把不确定和自己已经拥有的能力分开来看',i:'🧭'},yellow:{n:'身份重塑叙事疗愈小组',d:'深度小组邀请 · 梳理职业方向、身份变化与价值感',i:'📖'}},
 };
 /* ---------- 词典 ---------- */
 const KW=[
@@ -1884,20 +1951,23 @@ const KW=[
   {e:'疲惫',w:['累','疲惫','疲劳','通宵','加班','熬夜','扛不住','精疲力','耗尽','掏空','没电',
     '连轴','凌晨','爬不起','起不来','动不了','榨干','没力气','歇不了','停不下来','轴转','两班倒','夜班',
     '心累','身心俱疲','996','双休都没','连着上','没休息','歇不下来','两点','三点','四点','周末也']},
-  {e:'低落',w:['没用','没价值','没意义','不想干','提不起','没劲','看不到头','迷茫','废物','失败',
+  {e:'烦躁',w:['烦','烦躁','暴躁','别烦我','无理','受不了','崩溃','抓狂','窝火','上火',
+    '恶心','讨厌','够了','爆炸','压不住','不爽','郁闷','堵','气不过','忍了很久']},
+  {e:'低落',w:['没用','没价值','没意义','不想干','提不起','没劲','看不到头','废物','失败',
     '差劲','配不上','不配','多余','低谷','难过','想哭','沮丧','丧','没盼头','白干','空落落','麻木','行尸走肉',
-    '为了什么','图什么','值得吗','这么拼','熬什么','意义在哪','有什么意思','混日子','原地踏步','看不到未来',
+    '为了什么','图什么','值得吗','这么拼','熬什么','意义在哪','有什么意思','混日子','原地踏步',
     '工具人','螺丝钉','可替代','随时能被换','没存在感','不太好','不好受','不开心','无所谓','破罐子',
     '躺平','摆烂','没什么想做','提不起兴趣','什么都不想']},
+  {e:'紧张',w:['紧张','失眠','睡不着','睡不好','喘不过','压力大','高压','绷','胃疼','头疼',
+    '心跳','出汗','手抖','肩膀','脖子','身体疼','不舒服','放松不了','醒好几次','半夜醒']},
+  {e:'孤独',w:['孤独','没人','一个人','没人说话','孤立','无助','没人懂','没人理','孤单','边缘',
+    '插不上','格格不入','排挤','冷落','说不出口','不敢说','没人问','自己扛']},
   {e:'委屈',w:['委屈','难受','不公平','凭什么','冤枉','误会','背锅','甩锅','当众','被说','被骂',
     '批评','指责','针对','穿小鞋','白眼','脸色','不被认可','没人信','解释不清','说不清','怪我',
     '都是我的错','训了一顿','说了一顿','下不来台','当着面','没面子','不领情','白做了']},
-  {e:'烦躁',w:['烦','烦躁','火大','生气','无理','受不了','忍不住','崩溃','抓狂','窝火','上火',
-    '恶心','讨厌','够了','爆炸','压不住','想摔','不爽','郁闷','堵','气不过','忍了很久']},
-  {e:'孤独',w:['孤独','没人','一个人','没人说话','孤立','无助','没人懂','没人理','孤单','边缘',
-    '插不上','格格不入','排挤','冷落','说不出口','不敢说','没人问','自己扛']},
-  {e:'紧张',w:['紧张','失眠','睡不着','睡不好','喘不过','压力大','高压','绷','胃疼','头疼',
-    '心跳','出汗','手抖','肩膀','脖子','身体疼','不舒服','放松不了','醒好几次','半夜醒']},
+  {e:'愤怒',w:['愤怒','气死了','想骂人','忍无可忍','火大','生气','发火','想摔','想砸','气炸了','火冒三丈']},
+  {e:'迷茫',w:['迷茫','没方向','没有方向','不知道该做什么','不知道怎么办','不知道该怎么办','不确定',
+    '看不到未来','职业方向','何去何从','路在哪','该往哪走','转型怎么办','不知道下一步']},
 ];
 /* 危机词库：含隐晦表达（真实高危表达往往不直白） */
 const RED=['不想活','活不下去','结束这一切','活着没有意义','没有意义活','撑不下去了','轻生',
@@ -2032,6 +2102,20 @@ const RG={
   ask:['大概多久睡不好了？','躺下的时候，脑子里最常转的是什么？',
    '身体上最紧的地方是哪里？肩膀、胃，还是胸口？'],
   hold:['我们先从呼吸开始，慢一点。','不用急，先把这口气吐出来。']},
+ 愤怒:{ack:['听得出来你现在是真的生气了，不只是一般的烦','这股火已经压得很满了',
+   '被推到忍无可忍的位置时，愤怒本身是在提醒边界被碰到了'],
+  norm:['先承认自己在生气，比强行压住它更安全','有愤怒不等于要伤害谁，重要的是给它一个可控的出口',
+   '你可以先把情绪和行动分开，不需要马上做决定'],
+  ask:['这股火最直接是被什么点起来的？','如果先不处理事情本身，你现在最需要把哪一部分情绪放下来？',
+   '你现在身体哪里最明显地绷着？'],
+  hold:['先不用压回去，我在听。','我们先让这股劲儿有个安全出口。']},
+ 迷茫:{ack:['听起来你现在最难受的不是某一件事，而是不知道下一步该往哪里走','这种没有方向感的阶段会让人一直悬着',
+   '当选择都不确定时，人很容易把“不知道下一步”误解成“我什么都不行”'],
+  norm:['暂时没有答案，不代表你没有能力','方向感常常不是一次想清楚的，而是从一个小选择里慢慢长出来',
+   '可以先把外部变化和你已经拥有的能力分开看'],
+  ask:['你现在最拿不准的是继续、转向，还是先停下来？','如果只看未来一个月，你最想先确认哪件事？',
+   '哪些能力是环境怎么变都还在你身上的？'],
+  hold:['先不用逼自己立刻找到答案。','我们可以把不确定一件件拆开。']},
  平静:{ack:['谢谢你愿意在这里停一停','我在这里','不一定要有"值得说的事"才能来'],
   norm:['无论大事小事，这个树洞都愿意听','你现在想聊什么都可以，不用有压力'],
   ask:['最近过得怎么样？','有什么事，是压在心里一直没跟人说过的吗？','今天是什么让你想来说说话？'],
@@ -2107,6 +2191,40 @@ function analyze(t,st,opts){
 /* ---------- 回复生成（片段组合，非查表） ---------- */
 const FALLBACK=['我在听。能再多说一点吗？','嗯，我听着呢。然后呢？',
   '这些我都记下了。还有别的想说的吗？','谢谢你愿意说这些。继续说，我不打断。'];
+
+// 同一句员工表达使用同一套情绪识别与预警规则；处境标签只影响回应中的上下文理解。
+const CONTEXT_REPLY={
+  highIntensity:[
+    '结合你现在的高强度工作节奏，这种紧绷很容易在下班以后还停不下来',
+    '你处在高负荷岗位里，持续赶进度会让身体和注意力很难真正从工作状态退出'
+  ],
+  manager:[
+    '结合你现在承担的管理职责，这份压力里可能还夹着对团队和结果的双重责任',
+    '你在中基层管理位置上，很多压力既要往上交代、又要往下承接，确实更难找到出口'
+  ],
+  newcomer:[
+    '结合你刚进入新环境的阶段，很多压力会和“不熟悉规则、怕被评价”叠在一起',
+    '你还在适应新团队，遇到压力时更容易先怀疑是不是自己还没跟上'
+  ],
+  returner:[
+    '结合你现在的返岗阶段，工作节奏、家庭照护和对自己的期待可能会同时占用精力',
+    '返岗过程中需要重新找节奏，这种累不一定只是工作量本身，也可能来自多种角色同时切换'
+  ],
+  techTransition:[
+    '结合你正在经历的技术变化或职业转型，这份压力里可能还混着对未来位置和能力价值的不确定',
+    '处在技术快速变化的阶段时，同样的工作压力很容易被“会不会跟不上”进一步放大'
+  ],
+  crossCulture:[
+    '结合你的跨文化或国际协作处境，同样的压力还可能叠加语言、表达方式和归属感上的不确定',
+    '跨文化协作里有些话很难判断是工作表达习惯还是针对自己，这会让压力更难消化'
+  ]
+};
+function contextReplyLine(text,st){
+  const tag=currentContextTag();
+  const lines=CONTEXT_REPLY[tag];
+  if(!lines||st.turn>2)return '';
+  return lines[seed(text+'@'+tag)%lines.length];
+}
 function genReply(a,st,text){
   if(a.intent){const R=a.intent.r;return R[seed(text)%R.length]}
   if(text.replace(/[^一-龥a-z]/gi,'').length<=2&&!a.n){
@@ -2116,6 +2234,8 @@ function genReply(a,st,text){
   const out=[];
   if(kw&&st.turn>=1&&r%3!==0)out.push(`你说到"${kw}"。`);
   out.push(P(g.ack,0)+'。');
+  const ctxLine=contextReplyLine(text,st);
+  if(ctxLine)out.push(ctxLine+'。');
   if(st.turn>=1&&r%2===0)out.push(P(g.norm,1)+'。');
   out.push(st.turn<=3?P(g.ask,2):P(g.hold,3));
   const s=out.join('').trim();
@@ -2123,12 +2243,32 @@ function genReply(a,st,text){
   return s||FALLBACK[seed(text+st.turn)%FALLBACK.length];
 }
 /* ---------- 资源推送时机 ---------- */
+function resourceMeta(name,level,fallback){
+  try{
+    const item=(LIB[level]||[]).find(x=>x.n===name);
+    if(item)return {n:item.n,d:item.d,i:item.i};
+  }catch(e){}
+  return fallback||{n:name,d:level==='L2'?'结合当前行业与情绪状态优先推荐的线下支持':'结合当前情绪状态优先推荐的线上工具',i:level==='L2'?'🟡':'🌿'};
+}
 function pickRes(a,st){
   if(a.lv==='red'||a.intent)return null;
   if(!a.n)return null;
   if(st.lastResTop===a.top&&st.lastRes!=null&&st.turn-st.lastRes<3)return null; // 同类资源至少间隔 3 轮，避免刷屏
-  const item=EMO[a.top],r=item&&(a.lv==='yellow'&&item.yellow||item.res);if(!r)return null;
-  if(st.given.includes(r.n))return null;
+  const item=EMO[a.top];if(!item)return null;
+  const level=a.lv==='yellow'?'L2':'L1';
+  const baseline=a.lv==='yellow'?item.yellow:item.res;
+  const industry=(DB&&DB.industryTpl)||'互联网/IT';
+  const pool=(((TPL[industry]||{})[a.top]||{})[level]||[]).slice();
+  // 行业只调整推荐候选与排序，不改变情绪标签和绿/黄/红风险等级。
+  const candidates=pool.length?pool:[baseline.n];
+  const offset=seed(`${ME&&ME.anon||''}|${a.top}|${industry}|${level}`)%candidates.length;
+  let r=null;
+  for(let i=0;i<candidates.length;i++){
+    const name=candidates[(offset+i)%candidates.length];
+    if(st.given.includes(name))continue;
+    r=resourceMeta(name,level,name===baseline.n?baseline:null);break;
+  }
+  if(!r)return null;
   if(a.inten<1.2&&st.turn<2)return null;   // 只有"有点累"这类弱信号才等一轮
   st.given.push(r.n); st.lastRes=st.turn;st.lastResTop=a.top; return r;
 }
@@ -2186,6 +2326,7 @@ function enterApp(){
 $('#wc-enter').onclick=enterApp;
 function finishStaff(){
   if(MEID==='hr'){renderHR();go('hrApp');requestAnimationFrame(()=>$('#hrApp .bodyC').scrollTop=0)}
+  else if(MEID==='ops'){renderOps();go('opsApp');requestAnimationFrame(()=>$('#opsApp .bodyC').scrollTop=0)}
   else{renderHealer();go('healerApp');requestAnimationFrame(()=>$('#healerApp .cases').scrollTop=0)}
 }
 $('#e-back').onclick=()=>{renderDT();go('wecom')};
@@ -2221,7 +2362,7 @@ function renderDT(){
   const seen=(DB.botSeen||{})[ME.anon]||0;
   const unreadCount=Math.max(0,messages.length-seen);
   const botUnread=unreadCount>0;
-  bot.innerHTML=`<div class="mav mb"><img class="brand-ico" src="icon-dog.png" alt="">${botUnread?`<span class="dot">${unreadCount}</span>`:''}</div>
+  bot.innerHTML=`<div class="mav mb"><span class="brand-ico" aria-hidden="true"></span>${botUnread?`<span class="dot">${unreadCount}</span>`:''}</div>
     <div class="mbody"><div class="mtop"><span class="mnm">MindBridge<span class="botTag">机器人</span></span>
       <span class="mtm">${last?hhmm(last.ts):'21:41'}</span></div>
       <div class="mpv">${botUnread?'<b>[有新消息]</b> ':''}${esc(botPreview(last))}</div></div>`;
@@ -2240,7 +2381,6 @@ function botPreview(m){
   if(m.w==='res')return '[疗愈资源] '+m.n;
   if(m.w==='inv')return '[转接邀请]';
   if(m.w==='healer')return '[疗愈师已接入]';
-  if(m.w==='textreq')return '[查看原文授权请求]';
   if(m.w==='quote')return '[聊天记录]';
   if(m.w==='work')return ME.work?ME.work.line:'我在这儿。';
   return (m.t||'').slice(0,24);
@@ -2377,14 +2517,14 @@ function chooseContext(tag){
   const previous=DB.profiles[ME.anon]||{};
   const next={...previous,decided:1,tag:safe,ts:Date.now()};
   if(safe!=='none'&&!previous.recommendationCounted){
-    const stat=DB.activityStats[safe];stat.recommended++;
+    const stat=DB.activityStats[safe];if(stat)stat.recommended++;
     next.recommendationCounted=1;
   }
   DB.profiles[ME.anon]=next;
   const chats=DB.chats[ME.anon]||(DB.chats[ME.anon]=[]);
   if(chats.length===1&&chats[0].w==='ai')chats[0].t=CONTEXTS[safe].welcome;
   $('#context-choice').classList.add('hide');
-  save();renderChat();renderRes();
+  save();renderChat();renderRes();renderPresets();
   toast(safe==='none'?'已跳过 · 继续使用通用推荐':`已选择「${CONTEXTS[safe].label}」 · 仅用于匿名个性化`);
 }
 $$('[data-context]').forEach(b=>b.onclick=()=>chooseContext(b.dataset.context));
@@ -2532,11 +2672,13 @@ const PRESETS={
   ],
 };
 function renderPresets(){
+  // 演示话术只用于展示统一的情绪/预警触发规则，不随员工处境标签变化。
+  // 标签影响的是 AI 如何理解和回应同一句话，而不是风险阈值本身。
   const list=PRESETS[MEID]||PRESETS.emp1;
   [['#presets','#chatin','chat'],['#bot-presets','#bot-in','bot']].forEach(([pb,inp,which])=>{
     const b=$(pb);if(!b)return;b.innerHTML='';
     const hint=document.createElement('div');hint.className='preset-hint';
-    hint.textContent='示例 · 点击直接发送';b.appendChild(hint);
+    hint.textContent='统一预警示例 · 点击直接发送';b.appendChild(hint);
     list.forEach(p=>{
       const x=document.createElement('button');x.className='pst';x.textContent=p.t;
       x.onclick=()=>{const i=$(inp);i.value=p.s;i.dispatchEvent(new Event('input'));send(inp,which)};
@@ -2549,7 +2691,7 @@ function renderChat(){
   if(!ME||ME.kind!=='emp')return;
   const s=$('#stream');s.innerHTML='';
   const privacy=document.createElement('div');privacy.className='privacy-note';
-  privacy.innerHTML='<div class="dot"></div><div class="t">你在这里说的每一句话，都属于隐私。<span>不记录真实身份，你可以随时清空本次对话。</span></div>';
+  privacy.innerHTML='<div class="dot"></div><div class="t">你在这里说的每一句话，都属于隐私。<span>真实身份与心理服务数据隔离，你可以随时清空本次对话。</span></div>';
   s.appendChild(privacy);
   (DB.chats[ME.anon]||[]).forEach(m=>s.appendChild(bubble(m,'chat')));
   s.scrollTop=s.scrollHeight;
@@ -2629,7 +2771,11 @@ function bubble(m,source){
   if(m.w==='work'){
     const w=(ME&&ME.work)||{items:[],line:'',title:''};
     d.className='msg ai';d.style.maxWidth='96%';
+    const pf=(ME&&ME.profile)||{};
     d.innerHTML=`<div class="tm">${hhmm(m.ts)}</div><div class="wkcard">
+      <div class="profile-strip"><div class="pt">企业员工画像 · 已脱敏</div><div class="pp">
+        ${[pf.job,pf.deptType,pf.level,pf.workType].filter(Boolean).map(x=>`<span>${esc(x)}</span>`).join('')}
+      </div><div class="pn">仅使用岗位类别、部门类型、职级区间与工作性质等泛化信息，帮助推荐更贴近工作场景。</div></div>
       <div class="wt">${w.title}</div>
       <div class="wg">${w.items.map(([v,u,l])=>
         `<div class="wi"><div class="wv">${v}<small>${u}</small></div><div class="wl">${l}</div></div>`).join('')}</div>
@@ -2646,7 +2792,7 @@ function bubble(m,source){
       <div class="qh">📄 聊天记录<span class="qsrc">${esc(m.src||'')}</span></div>
       ${m.quotes.slice(0,3).map(q=>`<div class="qline"><b>${esc(q.from)}：</b>${esc(q.text)}</div>`).join('')}
       ${m.quotes.length>3?`<div class="qmore">共 ${m.quotes.length} 条</div>`:''}
-      <div class="qfoot">已抹除 ${sum||'可识别信息'} · 原文不留存</div>
+      <div class="qfoot">已抹除 ${sum||'可识别信息'} · 脱敏副本仅进入你的个人支持空间</div>
     </div>`;
     return d;
   }
@@ -2663,36 +2809,22 @@ function bubble(m,source){
     const decided=!!m.done;
     d.innerHTML=`<div class="tm">${hhmm(m.ts)}</div><div class="invite">
       <div class="system-tag alert">⚠ AI 自动预警</div>
-      <div class="it">我可以帮你联系一位真人疗愈师吗？<br>她是真实的人，会在两小时内联系你。</div>
+      <div class="it">我可以帮你连接一位真人疗愈师。<br>为便于专业人员了解你的情况，继续后，与本次问题相关的对话和支持信息将提供给疗愈师。<b>企业 HR 无法查看这些内容。</b></div>
       ${decided?`<div class="onlyyou" style="margin-top:12px">— 你已选择「${m.done}」—</div>`:
-      `<div class="btns"><button class="b1">好，帮我联系</button><button class="b2">我再想想</button></div>
-       <div class="onlyyou">你不点"好"，不会有任何人被通知</div>`}</div>`;
+      `<div class="btns"><button class="b1">同意并继续</button><button class="b2">暂不连接</button></div>
+       <div class="onlyyou">本次授权仅用于当前人工支持；不授权则不会建立人工个案</div>`}</div>`;
     if(!decided){
       // 邀请卡可能出现在两个 session 中的任意一个，按它所在的流决定回写位置
       const wh=()=>d.closest('#bot-stream')?'bot':'chat';
-      d.querySelector('.b1').onclick=()=>{if(m.done)return;m.done='好，帮我联系';consent(wh())};
-      d.querySelector('.b2').onclick=()=>{if(m.done)return;m.done='我再想想';
+      d.querySelector('.b1').onclick=()=>{if(m.done)return;m.done='同意并继续';consent(wh())};
+      d.querySelector('.b2').onclick=()=>{if(m.done)return;m.done='暂不连接';
         push({w:'ai',t:'好，我不催你。我一直都在这儿。',ts:Date.now()},wh())};
-    }
-    return d}
-  if(m.w==='textreq'){d.className='msg ai';d.style.maxWidth='96%';
-    const decided=!!m.done;
-    d.innerHTML=`<div class="tm">${hhmm(m.ts)}</div><div class="invite">
-      <div class="system-tag alert">🔒 查看原文授权请求</div>
-      <div class="it">疗愈师${esc(m.healerName||'李佳')}想看看你当时说的原话，这样能更准确地帮到你。<br>这不是必须的——不同意也不影响她继续联系你、跟进你。</div>
-      ${decided?`<div class="onlyyou" style="margin-top:12px">— 你已选择「${m.done}」—</div>`:
-      `<div class="btns"><button class="b1">同意，给她看</button><button class="b2">不同意</button></div>
-       <div class="onlyyou">你选"不同意"，原文仍然不会给任何人看</div>`}</div>`;
-    if(!decided){
-      const wh=()=>d.closest('#bot-stream')?'bot':'chat';
-      d.querySelector('.b1').onclick=()=>{if(m.done)return;m.done='同意，给她看';answerTextReq(m,true,wh())};
-      d.querySelector('.b2').onclick=()=>{if(m.done)return;m.done='不同意';answerTextReq(m,false,wh())};
     }
     return d}
   if(m.w==='healer'){d.className='msg ai';d.style.maxWidth='96%';
     d.innerHTML=`<div class="tm">${hhmm(m.ts)}</div><div class="healer-card"><div class="av">🌿</div>
       <div><div class="hn">李佳</div><div class="hq">UNIHEAL 国际疗愈师 · UH-2024-0871</div>
-      <div class="system-tag done">✓ 已获授权 · 支持已接通</div><div class="hs">已收到你的信号 · 将在 2 小时内联系你</div></div></div>`;return d}
+      <div class="system-tag done">✓ 已一次性授权 · 支持已接通</div><div class="hs">已收到本次必要上下文 · 将在 2 小时内联系你</div></div></div>`;return d}
   d.className='msg '+m.w;
   d.innerHTML=`<div class="tm">${hhmm(m.ts)}</div><div class="bb">${esc(m.t)}</div>`;
   return d;
@@ -2706,7 +2838,7 @@ function push(m,which){store(which||'chat').push(m);save();renderChat();renderBo
 function curStream(which){return which==='bot'?$('#bot-stream'):$('#stream')}
 
 /* ---------- 转发落地 ----------
-   直接收下、直接脱敏、直接销毁原文，不让员工做选择题。 */
+   直接收下并脱敏，脱敏副本进入员工个人支持空间，不让员工重复做选择题。 */
 function landQuote(masked,srcName){
   const qtxt=masked.quotes.map(x=>x.text).join('。');
   const st=getST(ME.anon);
@@ -2834,32 +2966,22 @@ function hidePush(){$$('[data-push]').forEach(p=>p.classList.remove('on'))}
 
 /* ---------- 知情同意 → 建单 ---------- */
 function consent(which){
-  push({w:'ai',t:'好。我已经把这条信号交给李佳了——她是真实的人，只会看到你的匿名编号，看不到你的名字。',ts:Date.now()},which);
+  const msgs=store(which);
+  const textSnippets=msgs.filter(x=>x.w==='me').slice(-4).map(x=>x.t);
+  const ctx=CONTEXTS[currentContextTag()]||CONTEXTS.none;
+  push({w:'ai',t:'好，已按你刚才的授权连接李佳。她会看到与本次问题相关的必要上下文，但企业 HR 无法查看这些内容。',ts:Date.now()},which);
   setTimeout(()=>push({w:'healer',ts:Date.now()},which),700);
   DB.cases.push({id:'c'+Date.now(),anon:ME.anon,dept:ME.dept,level:'r',
-    tags:['危机信号','待专业评估'],
-    t:Date.now(),sla:Date.now()+2*3600*1000,status:'pending',log:[],
-    src:which,textReq:'none'});
+    tags:['危机信号','待专业评估',ctx.label],
+    t:Date.now(),sla:Date.now()+2*3600*1000,status:'pending',log:[hhmm(Date.now())+' 员工已一次性授权本次必要上下文'],
+    src:which,textAccess:'granted',textSnippets,workProfile:ME.profile||{}});
   save();
-  toast('已转接 · 疗愈师工作台已实时收到个案');
-  xray('（员工点击「好，帮我联系」）',{emo:['危机'],lv:'red',hits:[],rule:'员工授权'},
-    '生成个案工单 → 推送至疗愈师队列 · SLA 2 小时开始计时。<br>HRBP 侧仅红色计数 +1，<b style="color:#7fc98f">看不到任何详情</b>。');
+  toast('已授权并转接 · 疗愈师工作台已收到必要上下文');
+  xray('（员工点击「同意并继续」）',{emo:['危机'],lv:'red',hits:[],rule:'员工一次性授权'},
+    '生成个案工单 → 本次必要上下文随工单提供给疗愈师 → SLA 2 小时开始计时。<br>HRBP 侧仅红色计数 +1，<b style="color:#7fc98f">看不到任何详情</b>。');
 }
 
-/* ---------- 查看原文二次授权：员工的回应 ---------- */
-function answerTextReq(m,approved,which){
-  const c=DB.cases.find(x=>x.id===m.caseId);if(!c)return;
-  c.textReq=approved?'granted':'denied';
-  if(approved){
-    const msgs=store(which);
-    c.textSnippets=msgs.filter(x=>x.w==='me').slice(-4).map(x=>x.t);
-  }
-  c.log.push(hhmm(Date.now())+(approved?' 员工已同意查看原文':' 员工拒绝查看原文请求'));
-  save();
-  push({w:'ai',t:approved?'谢谢你愿意让她看到完整的话，这会帮她更懂你。':'好，我尊重你的决定，原文不会给任何人看。',ts:Date.now()},which);
-}
-
-/* ---------- 我的活动：推荐、线上完成与线下报名 ---------- */
+/* ---------- 我的活动：通用活动库 + 标签推荐倾向（标签不生成专属活动） ---------- */
 function renderRes(){
   if(!ME||ME.kind!=='emp')return;
   const box=$('#reslist');
@@ -2869,16 +2991,19 @@ function renderRes(){
   box.innerHTML=`<div class="activity-context"><div class="activity-context-main">
     <span class="activity-context-label">当前标签</span><span class="context-pill">${esc(tagLabel)}</span>
     </div><button class="context-edit" id="context-edit">修改</button></div>`;
-  box.insertAdjacentHTML('beforeend',activityCard(online,true,profile.tag==='none'?'适合快速缓解当下的紧绷':'结合你选择的「'+context.label+'」推荐'));
+  const workHint=ME.profile?[ME.profile.job,ME.profile.workType].filter(Boolean).join(' · '):'';
+  const reason=profile.tag==='none'?(workHint?'结合你的脱敏工作背景「'+workHint+'」推荐':'适合快速缓解当下的紧绷'):
+    '从通用活动库中，结合「'+context.label+'」与脱敏工作背景'+(workHint?'「'+workHint+'」':'')+'优先推荐';
+  box.insertAdjacentHTML('beforeend',activityCard(online,true,reason));
   box.insertAdjacentHTML('beforeend',activityCard(offline,true,'如果你更希望在真实的团体中获得支持'));
 }
 function currentContextTag(){
   const p=ME&&DB.profiles&&DB.profiles[ME.anon];return p&&p.tag||'none';
 }
 function activityForResource(name,desc){
-  const direct={'三分钟呼吸着陆法':'breathing','工间舒展操引导':'stretch-video','正念工间操':'stretch-video','情绪暂停提醒卡片':'emotion-unload','情绪书写练习':'emotion-unload','跨团队疗愈小组':'identity-group'}[name];
+  const direct={'三分钟呼吸着陆法':'breathing','职业价值锚点练习':'value-anchor','职业锚点练习':'value-anchor','工间舒展操引导':'stretch-video','正念工间操':'stretch-video','情绪暂停提醒卡片':'emotion-unload','情绪书写练习':'emotion-unload','跨团队疗愈小组':'identity-group'}[name];
   if(direct)return ACTIVITIES[direct];
-  const offline=/小组|工作坊|嘉年华|疗愈/.test(name);
+  const offline=/小组|工作坊|嘉年华|疗愈|拳击|驿站|培训|团体|体验|课程/.test(name);
   const base=ACTIVITIES[offline?(CONTEXTS[currentContextTag()]||CONTEXTS.none).offline:'breathing'];
   return {...base,id:'resource-'+name,title:name,desc:desc||base.desc};
 }
@@ -2945,6 +3070,9 @@ function recordActivityMetric(kind,value){
   }
   if(p)p.lastUpdated=Date.now();
   DB.lastActivityTag=tag;DB.lastActivityId=a&&a.id;
+  DB.opsEvents=DB.opsEvents||[];
+  DB.opsEvents.push({kind,activity:a&&a.title||'',rating:value&&value.rating||null,t:Date.now()});
+  if(DB.opsEvents.length>60)DB.opsEvents=DB.opsEvents.slice(-60);
 }
 function clearBreathDemo(){if(BREATH_TIMER){clearInterval(BREATH_TIMER);BREATH_TIMER=null}}
 function clearVideoDemo(reset=true){
@@ -3105,21 +3233,14 @@ function renderHealer(){
     d.className='case '+(c.status==='done'?'done':c.level);
     const lv=c.level==='r'?'<span class="lvl r">红色 · 危机信号</span>':'<span class="lvl y">黄色 · 信号累积</span>';
     const done=c.status==='done';
-    const textReq=c.textReq||'none';
-    const textBanner=textReq==='granted'
-      ? `<div class="locked granted">${privacyIcon}员工已同意查看原文${c.textSnippets&&c.textSnippets.length?'：<br>'+c.textSnippets.map(t=>'「'+esc(t)+'」').join('<br>'):''}</div>`
-      : textReq==='pending'
-      ? `<div class="locked">${privacyIcon}已发送查看原文授权请求 · 等待员工确认</div>`
-      : textReq==='denied'
-      ? `<div class="locked">${privacyIcon}员工已拒绝查看原文请求 · 原文仍不可见</div>`
-      : `<div class="locked">${privacyIcon}访问受限 · 倾诉原文默认不可见，需员工二次授权后方可查看</div>`;
-    const askBtn=textReq==='granted'?''
-      :textReq==='pending'?`<button class="bt" disabled>等待员工确认…</button>`
-      :`<button class="bt" data-act="ask" data-id="${c.id}">${textReq==='denied'?'重新申请查看原文':'申请查看原文'}</button>`;
+    const textBanner=`<div class="locked granted">${privacyIcon}员工已在进入人工服务时一次性授权本次必要上下文${c.textSnippets&&c.textSnippets.length?'：<br>'+c.textSnippets.map(t=>'「'+esc(t)+'」').join('<br>'):''}</div>`;
+    const wp=c.workProfile||{};
+    const workProfileLine=[wp.job,wp.deptType,wp.level,wp.workType].filter(Boolean);
     d.innerHTML=`<div>
         <div class="cid">${displayIdentity(c.anon)} ${done?'<span class="lvl g">已闭环</span>':lv}</div>
         <div class="meta">${c.dept} · 触发 ${hhmm(c.t)} · ${done?'已完成处置':'员工已授权转接'}</div>
         ${c.tags.length?`<div class="tagrow">${c.tags.map(t=>`<span class="tg">${t}</span>`).join('')}</div>`:''}
+        ${workProfileLine.length?`<div class="meta" style="margin-top:7px">脱敏工作背景：${workProfileLine.map(esc).join(' · ')}</div>`:''}
         ${done?'':textBanner}
         ${c.log.length?`<div class="meta" style="margin-top:9px">${c.log.map(l=>'· '+l).join('<br>')}</div>`:''}
       </div>
@@ -3128,8 +3249,7 @@ function renderHealer(){
       ${done?'':`<div class="acts">
         ${c.status==='pending'?`<button class="bt pri" data-act="start" data-id="${c.id}">开始联系</button>`:
           `<button class="bt pri" data-act="close" data-id="${c.id}">标记已闭环</button>`}
-        ${askBtn}
-        <button class="bt" data-act="refer" data-id="${c.id}">转介外部机构</button>
+        <button class="bt" data-act="refer" data-id="${c.id}">记录专业转介评估</button>
         <span class="logtxt">处置记录将写入审计日志</span></div>`}`;
     box.appendChild(d);
   });
@@ -3140,19 +3260,9 @@ function renderHealer(){
       renderHealer();toast('已开始联系 · 记录写入审计日志')}
     if(b.dataset.act==='close'){c.status='done';c.resp=Math.max(1,Math.round((Date.now()-c.t)/6e4));
       c.log.push(hhmm(Date.now())+' 完成首次会谈 · 已安排后续疗愈');save();renderHealer();toast('个案已闭环')}
-    if(b.dataset.act==='ask'){
-      c.textReq='pending';
-      c.log.push(hhmm(Date.now())+' 已发送查看原文授权请求');
-      const which=c.src||'bot';
-      DB.bot=DB.bot||{};DB.chats=DB.chats||{};
-      const stream=which==='bot'?(DB.bot[c.anon]||(DB.bot[c.anon]=[])):(DB.chats[c.anon]||(DB.chats[c.anon]=[]));
-      stream.push({w:'textreq',caseId:c.id,healerName:'李佳',ts:Date.now()});
-      save();renderHealer();
-      toast('已向员工发出查看原文的授权请求 —— 未经同意，原文始终不可见')
-    }
     if(b.dataset.act==='refer'){
-      c.log.push(hhmm(Date.now())+' 已发起外部转介评估');save();renderHealer();
-      toast('已发起外部转介评估 · 记录写入审计日志')
+      c.log.push(hhmm(Date.now())+' 已记录专业转介评估');save();renderHealer();
+      toast('已记录专业转介评估 · 具体机构由专业团队线下流程决定')
     }
   });
   tickSLA();
@@ -3202,11 +3312,72 @@ function renderHR(){
     `<div class="dr"><span class="sq" style="background:${c}"></span>${n}<span class="dv">${v}%</span></div>`).join('');
   $('#k-green').innerHTML=g+'<small>%</small>';
   $('#d-red').textContent=red;
-  renderActivityStats();renderActivityPerf();
+  renderActivityStats();renderActivityPerf();renderHRBenchmark();
   renderGroups();
 }
+const INDUSTRY_BENCH={
+  '互联网/IT':{companies:18,employees:8420,use:31,complete:66,rating:4.3,activities:[['情绪红绿灯正念工作坊',38,72,4.5],['身份重塑叙事疗愈小组',27,81,4.6],['三分钟呼吸着陆法',44,76,4.3]],clients:[['MB-C017','1000–3000人',39,74,4.5],['MB-C042','500–1000人',28,65,4.2],['MB-C061','3000人以上',34,69,4.4]]},
+  '金融/银行':{companies:12,employees:6110,use:26,complete:63,rating:4.2,activities:[['积极心理与管理提升培训',35,68,4.3],['跨团队疗愈小组',22,79,4.5],['正念音频',31,70,4.1]],clients:[['MB-C008','1000–3000人',25,63,4.2],['MB-C033','3000人以上',29,67,4.4],['MB-C074','500–1000人',23,60,4.0]]},
+  '医护/护理':{companies:9,employees:5270,use:34,complete:71,rating:4.5,activities:[['巴林特小组',29,84,4.7],['困境盲盒工作坊',24,77,4.5],['工间舒展操引导',42,73,4.3]],clients:[['MB-C012','1000–3000人',36,73,4.6],['MB-C052','3000人以上',33,70,4.5],['MB-C085','500–1000人',30,68,4.3]]},
+  '教育':{companies:11,employees:3890,use:29,complete:69,rating:4.4,activities:[['奥尔夫音乐疗愈',32,78,4.6],['ABC情绪理论工作坊',27,73,4.4],['工间舒展操引导',35,68,4.2]],clients:[['MB-C019','500–1000人',31,71,4.5],['MB-C047','1000–3000人',28,69,4.4],['MB-C093','200–500人',24,65,4.1]]},
+  '客服/服务业':{companies:15,employees:7020,use:37,complete:67,rating:4.4,activities:[['「心流插花」艺术疗愈',41,75,4.7],['正念冥想工作坊',35,72,4.5],['芳香疗愈体验',33,70,4.4]],clients:[['MB-C005','1000–3000人',40,68,4.5],['MB-C036','500–1000人',35,66,4.3],['MB-C081','3000人以上',38,69,4.4]]},
+  '制造业':{companies:14,employees:9630,use:24,complete:65,rating:4.2,activities:[['沙盘疗愈·心声共鸣',26,78,4.5],['拳力以赴·解压拳击',31,69,4.3],['心灵驿站·常态化专业支持',28,74,4.4]],clients:[['MB-C014','3000人以上',25,66,4.2],['MB-C049','1000–3000人',23,64,4.1],['MB-C088','500–1000人',27,68,4.3]]},
+  '科技企业':{companies:10,employees:4560,use:33,complete:70,rating:4.5,activities:[['身份重塑叙事疗愈小组',30,83,4.7],['跨团队疗愈小组',25,79,4.6],['正念音频',39,71,4.3]],clients:[['MB-C023','500–1000人',34,72,4.6],['MB-C058','1000–3000人',31,69,4.4],['MB-C097','200–500人',36,73,4.5]]},
+  '公益组织':{companies:7,employees:1840,use:41,complete:73,rating:4.6,activities:[['巴林特小组',36,85,4.8],['心理嘉年华游园会',48,74,4.6],['情绪书写练习',43,76,4.5]],clients:[['MB-C011','200–500人',42,74,4.6],['MB-C067','500–1000人',39,72,4.5],['MB-C101','100–200人',44,76,4.7]]}
+};
+
+const DEMO_COMPANY={code:'MB-DEMO-001',industry:'互联网/IT',size:'500–1000人',employeeSample:680,aiUse:42};
+function companyActivityMetrics(){
+  const stats=DB.activityStats||SEED.activityStats;
+  const vals=Object.values(stats||{}).filter(Boolean);
+  const t=vals.reduce((o,s)=>({recommended:o.recommended+(s.recommended||0),participated:o.participated+(s.participated||0),completed:o.completed+(s.completed||0),feedback:o.feedback+(s.feedback||0),ratingTotal:o.ratingTotal+(s.ratingTotal||0)}),{recommended:0,participated:0,completed:0,feedback:0,ratingTotal:0});
+  return {participation:t.recommended?t.participated/t.recommended*100:0,complete:t.participated?t.completed/t.participated*100:0,rating:t.feedback?t.ratingTotal/t.feedback:0,feedback:t.feedback};
+}
+function liveIndustryMetrics(key){
+  const b=INDUSTRY_BENCH[key], current=companyActivityMetrics();
+  if(key!==DEMO_COMPANY.industry)return {...b,live:false};
+  const n=b.companies, total=n+1;
+  return {...b,live:true,companies:total,employees:b.employees+DEMO_COMPANY.employeeSample,
+    use:(b.use*n+DEMO_COMPANY.aiUse)/total,complete:(b.complete*n+current.complete)/total,rating:(b.rating*n+current.rating)/total};
+}
+function liveIndustryActivities(key){
+  const b=INDUSTRY_BENCH[key];
+  if(key!==DEMO_COMPANY.industry)return b.activities;
+  const perf=Object.values(DB.activityPerf||SEED.activityPerf||{}), n=b.companies;
+  return b.activities.map(a=>{
+    const p=perf.find(x=>x&&x.label===a[0]);if(!p)return a;
+    const part=p.recommended?p.participated/p.recommended*100:a[1], comp=p.participated?p.completed/p.participated*100:a[2], rate=p.feedback?p.ratingTotal/p.feedback:a[3];
+    return [a[0],(a[1]*n+part)/(n+1),(a[2]*n+comp)/(n+1),(a[3]*n+rate)/(n+1)];
+  });
+}
+function fmtPct(v,d=1){return Number(v).toFixed(d).replace(/\.0$/,'')+'%'}
+function fmtRating(v){return Number(v).toFixed(1)}
+function renderHRBenchmark(){
+  const table=$('#hr-benchmark-table');if(!table)return;
+  const c=companyActivityMetrics(), b=liveIndustryMetrics(DEMO_COMPANY.industry);
+  $('#hr-bench-industry').textContent=DEMO_COMPANY.industry;
+  const diff=(a,b)=>a-b, pos=(d,suffix='pt')=>`<span class="pill ${d>=0?'g':'y'}">${d>=0?'高于':'低于'}均值 ${d>=0?'+':''}${d.toFixed(1)}${suffix}</span>`;
+  table.innerHTML='<tr><th>指标</th><th>星原科技</th><th>行业均值</th><th>相对位置</th></tr>'+
+    `<tr><td>员工覆盖率</td><td class="mono">42%</td><td class="mono">${fmtPct(b.use,1)}</td><td>${pos(42-b.use)}</td></tr>`+
+    `<tr><td>活动参与率</td><td class="mono">${fmtPct(c.participation,1)}</td><td class="mono">31%</td><td>${pos(c.participation-31)}</td></tr>`+
+    `<tr><td>活动完成率</td><td class="mono">${fmtPct(c.complete,1)}</td><td class="mono">${fmtPct(b.complete,2)}</td><td>${pos(c.complete-b.complete)}</td></tr>`+
+    `<tr><td>活动满意度</td><td class="mono">${fmtRating(c.rating)} / 5</td><td class="mono">${fmtRating(b.rating)} / 5</td><td>${pos(c.rating-b.rating,'')}</td></tr>`;
+}
+function renderOps(){
+  if(MEID!=='ops')return;
+  const sel=$('#ops-industry');if(!sel)return;
+  if(!sel.options.length){sel.innerHTML=Object.keys(INDUSTRY_BENCH).map(k=>`<option value="${k}">${k}</option>`).join('');sel.value=DEMO_COMPANY.industry;sel.onchange=renderOps;}
+  const key=sel.value||DEMO_COMPANY.industry, d=liveIndustryMetrics(key), c=companyActivityMetrics(), acts=liveIndustryActivities(key), ev=DB.opsEvents||[];
+  $('#ops-company').innerHTML=d.companies+'<small>家</small>';$('#ops-employee').innerHTML=Math.round(d.employees).toLocaleString()+'<small>人</small>';$('#ops-use').innerHTML=fmtPct(d.use,1).replace('%','<small>%</small>');$('#ops-complete').innerHTML=fmtPct(d.complete,2).replace('%','<small>%</small>');
+  const note=$('#ops-live');if(note){const same=key===DEMO_COMPANY.industry,last=ev.length?ev[ev.length-1]:null;note.innerHTML=`<span class="pulse"></span><span>${same?(ev.length?`当前 Demo 企业已贡献 <b>${ev.length}</b> 条新活动事件 · 最近更新 ${new Date(last.t).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false})}`:'当前 Demo 企业已接入匿名统计；员工参与、完成或反馈活动后，本页会自动更新。'):'当前筛选行业未包含本 Demo 企业，显示历史匿名 Benchmark。'}</span>`;}
+  $('#ops-effect-table').innerHTML='<tr><th>活动</th><th>参与率</th><th>完成率</th><th>满意度</th></tr>'+acts.map(a=>`<tr><td>${esc(a[0])}</td><td class="mono">${fmtPct(a[1],1)}</td><td class="mono">${fmtPct(a[2],1)}</td><td class="mono">${Number(a[3]).toFixed(2)} / 5</td></tr>`).join('');
+  const liveRow=key===DEMO_COMPANY.industry?[[DEMO_COMPANY.code,DEMO_COMPANY.size,DEMO_COMPANY.aiUse,c.complete,c.rating,true]]:[];
+  const clients=[...liveRow,...INDUSTRY_BENCH[key].clients.map(a=>[...a,false])];
+  $('#ops-company-table').innerHTML='<tr><th>客户编码</th><th>规模</th><th>AI 月活</th><th>活动完成率</th><th>满意度</th></tr>'+clients.map(a=>`<tr><td class="mono">${a[0]}${a[5]?'<span class="live-chip">实时</span>':''}</td><td>${a[1]}</td><td class="mono">${fmtPct(a[2],1)}</td><td class="mono">${fmtPct(a[3],1)}</td><td class="mono">${Number(a[4]).toFixed(1)}</td></tr>`).join('');
+  $('#ops-industry-table').innerHTML='<tr><th>行业</th><th>企业样本</th><th>员工样本</th><th>AI 月活</th><th>活动完成率</th><th>满意度</th></tr>'+Object.keys(INDUSTRY_BENCH).map(k=>{const x=liveIndustryMetrics(k);return `<tr><td>${k}${x.live?'<span class="live-chip">实时</span>':''}</td><td class="mono">${x.companies}</td><td class="mono">${Math.round(x.employees).toLocaleString()}</td><td class="mono">${fmtPct(x.use,1)}</td><td class="mono">${fmtPct(x.complete,2)}</td><td class="mono">${Number(x.rating).toFixed(2)} / 5</td></tr>`}).join('');
+}
 function renderActivityStats(){
-  const stats=DB.activityStats||SEED.activityStats, keys=['transition','frontline','maternity','other'];
+  const stats=DB.activityStats||SEED.activityStats, keys=['highIntensity','manager','newcomer','returner','techTransition','crossCulture','other'];
   const visible=keys.filter(k=>stats[k]&&stats[k].recommended>=10).map(k=>stats[k]);
   const total=visible.reduce((o,s)=>({recommended:o.recommended+s.recommended,participated:o.participated+s.participated,
     completed:o.completed+s.completed,feedback:o.feedback+s.feedback,ratingTotal:o.ratingTotal+s.ratingTotal}),
@@ -3246,9 +3417,8 @@ function renderActivityPerf(){
 }
 
 /* ==========================================================================
-   办公数据感知能力 · 两级授权
-   一级：行为元数据，随应用安装授权，默认开启
-   二级：群聊消息读取，需企业单独审批，默认关闭；含外部人员的群勾选时弹窗担责
+   办公数据感知能力
+   仅使用非内容型工作节奏元数据；工作消息只允许员工本人主动转发。
    ========================================================================== */
 const LV1=[
   {id:'a1',nm:'考勤打卡',d:'上下班打卡时间、出勤天数'},
@@ -3256,80 +3426,21 @@ const LV1=[
   {id:'a3',nm:'日程密度',d:'会议时长与排布，不含会议内容'},
   {id:'a4',nm:'待办任务',d:'待办数量与完成情况，不含任务详情'},
 ];
-let LV1ON={a1:1,a2:1,a3:1,a4:1};        // 默认全部开启
-
-const GRPS=[
-  {id:'g1',nm:'星火项目攻坚群',n:26,out:0},
-  {id:'g2',nm:'研发中心通知',n:128,out:0},
-  {id:'g3',nm:'客服二组 · 工作群',n:14,out:0},
-  {id:'g4',nm:'大客户服务群',n:38,out:22},
-  {id:'g5',nm:'供应商对接群',n:45,out:31},
-];
-let GRPON={};
+let LV1ON={a1:1,a2:1,a3:1,a4:1};
 
 function renderGroups(){
-  // ---- 一级 ----
-  const l1=$('#lv1-list');
-  if(l1){
-    l1.innerHTML='';
-    LV1.forEach(g=>{
-      const b=document.createElement('button');
-      b.className='grow'+(LV1ON[g.id]?' on':'');
-      b.innerHTML=`<div class="gk">✓</div><div class="gi">
-        <div class="gn">${g.nm}</div><div class="gc">${g.d}</div></div>
-        <div class="gs">${LV1ON[g.id]?'已开启':'已关闭'}</div>`;
-      b.onclick=()=>{LV1ON[g.id]=!LV1ON[g.id];renderGroups();
-        toast(LV1ON[g.id]?`已开启「${g.nm}」`:`已关闭「${g.nm}」`)};
-      l1.appendChild(b);
-    });
-  }
-  // ---- 二级 ----
-  const box=$('#grp-list');if(!box)return;box.innerHTML='';
-  GRPS.forEach(g=>{
+  const l1=$('#lv1-list');if(!l1)return;
+  l1.innerHTML='';
+  LV1.forEach(g=>{
     const b=document.createElement('button');
-    b.className='grow'+(g.out?' warn':'')+(GRPON[g.id]?' on':'');
+    b.className='grow'+(LV1ON[g.id]?' on':'');
     b.innerHTML=`<div class="gk">✓</div><div class="gi">
-      <div class="gn">${g.nm}</div>
-      <div class="gc${g.out?' w':''}">${g.n}人 · ${g.out
-        ?`⚠ 含 ${g.out} 名非本企业人员`:'全部为本企业员工'}</div></div>
-      <div class="gs">${g.out?'需承担告知责任':'可接入'}</div>`;
-    b.onclick=()=>{
-      if(GRPON[g.id]){GRPON[g.id]=false;renderGroups();return}
-      if(g.out)askExternal(g);                       // 含外部人员 → 弹窗担责
-      else{GRPON[g.id]=true;renderGroups();toast(`已接入「${g.nm}」`)}
-    };
-    box.appendChild(b);
+      <div class="gn">${g.nm}</div><div class="gc">${g.d}</div></div>
+      <div class="gs">${LV1ON[g.id]?'已开启':'已关闭'}</div>`;
+    b.onclick=()=>{LV1ON[g.id]=!LV1ON[g.id];renderGroups();
+      toast(LV1ON[g.id]?`已开启「${g.nm}」`:`已关闭「${g.nm}」`)};
+    l1.appendChild(b);
   });
-}
-
-/* 含外部人员的群：不禁止，但把后果摊开、要求担责、并留痕 */
-function askExternal(g){
-  const m=$('#modal');
-  const opener=document.activeElement;
-  m.innerHTML=`<div class="mdbox">
-    <div class="mdh" id="external-modal-title">⚠ 该群含非本企业人员</div>
-    <div class="mdb">
-      <div class="mdg"><b>${esc(g.nm)}</b>　${g.n} 人，其中 <b>${g.out} 名为非本企业人员</b></div>
-      <p>开启后，这 ${g.out} 人的发言也会被系统读取用于情绪聚合。
-        他们与本企业不存在劳动关系，<b>你无法代他们做出同意</b>。</p>
-      <p>如仍需开启，须由本企业自行完成对该群全体成员的告知，并承担相应责任。</p>
-      <label class="mdack"><input type="checkbox" id="md-ack">
-        <span>我已知悉，并确认由本企业承担相应告知责任</span></label>
-      <div class="mdtrace">开启记录将留痕：操作人 张敏 · ${hhmm(Date.now())} · ${esc(g.nm)}</div>
-    </div>
-    <div class="mdf">
-      <button class="mdc">取消</button>
-      <button class="mdok" disabled>确认开启</button>
-    </div></div>`;
-  m.setAttribute('role','dialog');m.setAttribute('aria-modal','true');m.setAttribute('aria-labelledby','external-modal-title');m.classList.add('on');
-  const ok=m.querySelector('.mdok');
-  m.querySelector('#md-ack').onchange=e=>ok.disabled=!e.target.checked;
-  const close=()=>{m.classList.remove('on');m.innerHTML='';m.removeAttribute('role');m.removeAttribute('aria-modal');m.removeAttribute('aria-labelledby');opener?.focus()};
-  m.querySelector('.mdc').onclick=close;
-  m.onclick=e=>{if(e.target===m)close()};
-  ok.onclick=()=>{GRPON[g.id]=true;close();renderGroups();
-    toast('已开启 · 操作人与时间已留痕')};
-  m.querySelector('#md-ack').focus();
 }
 
 /* ---------- 干预阶梯配置 ---------- */
@@ -3345,6 +3456,7 @@ const LIB={
     {n:'工间舒展操引导',d:'适合久坐、久站和轮班岗位的身体紧绷',form:'身体练习',core:'关节活动 · 动态拉伸 · 呼吸收束',i:'🤸',v:'6min'},
     {n:'芳香导入音频',d:'适合客户负面情绪污染和工作状态切换',form:'嗅觉+音频',core:'气味锚定 · 呼吸引导 · 心理边界',i:'🌿',v:'4min'},
     {n:'正念音频',d:'适合日常紧张、孤独和需要短暂抽离的时刻',form:'引导音频',core:'呼吸觉察 · 情绪命名 · 温和收束',i:'🎧',v:'10min'},
+    {n:'职业价值锚点练习',d:'适合职业迷茫、转型不确定和方向感下降',form:'个人引导',core:'区分外部变化 · 识别已有能力 · 选择一个小行动',i:'🧭',v:'5min'},
   ],
   L2:[ // 黄色 · 团体活动
     {n:'情绪红绿灯正念工作坊',d:'适合赶工焦虑、deadline 恐慌与时间压力',form:'团体工作坊',size:'15–30人',core:'匿名情绪投票 · 呼吸着陆 · 可控/不可控拆解',i:'🚦',v:'90min'},
@@ -3355,65 +3467,98 @@ const LIB={
     {n:'「心流插花」艺术疗愈',d:'适合客服与服务岗位的情绪劳动疲劳',form:'手作体验',core:'凭直觉选花 · 专注创作 · 命名作品 · 建立情绪锚点',i:'💐',v:'2h'},
     {n:'沙盘疗愈·心声共鸣',d:'适合产线孤独感、人际疏离与非语言表达需求',form:'个人+团队沙盘',core:'个人心理图景 · 自愿分享 · 团队无语共创',i:'🏖',v:'90min'},
     {n:'跨团队疗愈小组',d:'适合高压竞争中的孤独感和不敢暴露脆弱',form:'跨部门对话',core:'匿名心声 · 集体共情 · 非暴力沟通 · 小组承诺',i:'🤝',v:'2h'},
-    {n:'身体觉知与释放',d:'适合肩颈僵硬、失眠、胸闷与长期压抑愤怒',form:'体能释放/正念手作',size:'15–20人',core:'拳击打击释放，或香囊制作与安神冥想',i:'🕺',v:'2h'},
+    {n:'身体觉知与释放',d:'适合肩颈僵硬、失眠、胸闷与长期压抑愤怒',form:'体能释放/正念手作',size:'15–20人',core:'身体扫描 · 动作觉察 · 拉伸释放 · 安神冥想',i:'🕺',v:'2h'},
     {n:'困境盲盒工作坊',d:'适合医护的生死无意义感、职业迷茫与孤立感',form:'团体讨论',core:'天气隐喻破冰 · 匿名困惑抽取 · 慈心冥想',i:'🎁',v:'75min'},
     {n:'ABC情绪理论工作坊',d:'适合家校沟通焦虑、投诉压力与情绪快速升温',form:'团体工作坊',core:'痛点速写 · ABC 认知链条 · 现场重构 · 3秒暂停',i:'🔤',v:'90min'},
     {n:'积极心理与管理提升培训',d:'适合金融业绩高压、KPI 焦虑与决策疲劳',form:'讲座+互动',core:'压力画像 · 焦虑拆解 · 情绪暂停 · 行动计划',i:'📈',v:'半天'},
     {n:'心理嘉年华游园会',d:'适合全员心理健康日、团队氛围沉闷与预防型建设',form:'摆摊体验+集章',size:'全员开放',core:'手作、心灵探索、解压、协作、能量驿站五大区域',i:'🎪',v:'3–4h'},
+    {n:'拳力以赴·解压拳击',d:'适合高压紧绷、压抑愤怒与需要安全体能释放的员工',form:'线下体能体验',size:'10–20人',core:'安全热身 · 定点打击释放 · 呼吸收束 · 身体复位',i:'🥊',v:'60min'},
+    {n:'正念冥想工作坊',d:'适合持续情绪劳动、注意力耗竭与工作状态难以切换',form:'团体正念体验',size:'15–30人',core:'呼吸觉察 · 身体扫描 · 情绪脱钩 · 温和收束',i:'🧘',v:'75min'},
+    {n:'芳香疗愈体验',d:'适合服务岗位的情绪污染、紧绷与下班后难以切换状态',form:'嗅觉+正念体验',size:'15–25人',core:'气味锚定 · 呼吸引导 · 心理边界 · 自我照护',i:'🌿',v:'75min'},
+    {n:'心灵驿站·常态化专业支持',d:'适合制造等高强度现场岗位的持续性、低门槛专业支持需求',form:'常态化驻场支持',size:'企业现场',core:'固定时段开放 · 低门槛倾诉 · 专业评估 · 必要时资源转介',i:'🏠',v:'持续服务'},
   ],
   healer:[
     {n:'李佳 · UH-2024-0871',d:'职业焦虑 · 存在性议题',i:'🌿',v:'在岗'},
     {n:'王岚 · UH-2023-0442',d:'女性议题 · 家庭系统',i:'🌸',v:'在岗'},
     {n:'陈默 · UH-2024-0113',d:'危机干预 · 哀伤辅导',i:'🕊',v:'备班'},
   ],
-  refer:[
-    {n:'市三院心理科绿色通道',d:'公立三甲 · 优先挂号',i:'🏥',v:'合作'},
-    {n:'区精神卫生中心',d:'重度个案转介',i:'🏛',v:'合作'},
-    {n:'24h 全国心理援助热线',d:'兜底通道',i:'☎️',v:'公共'},
-  ],
 };
-/* ---------- 七种情绪 × 三级干预 ---------- */
+/* ---------- 九种情绪 × 三级干预 ---------- */
 const BASE=[
   {em:'😰',sig:'焦虑',hit:214,L1:['三分钟呼吸着陆法'],L2:['情绪红绿灯正念工作坊'],L3:['疗愈师介入']},
   {em:'😮‍💨',sig:'疲惫',hit:187,L1:['工间身体扫描音频'],L2:['能量唤醒工作坊'],L3:['疗愈师介入']},
-  {em:'😔',sig:'低落',hit:142,L1:['每日三件好事打卡'],L2:['身份重塑叙事疗愈小组'],L3:['疗愈师介入']},
   {em:'😤',sig:'烦躁',hit:118,L1:['情绪暂停提醒卡片'],L2:['身体觉知与释放'],L3:['疗愈师介入']},
+  {em:'😔',sig:'低落',hit:142,L1:['每日三件好事打卡'],L2:['身份重塑叙事疗愈小组'],L3:['疗愈师介入']},
+  {em:'😬',sig:'紧张',hit:131,L1:['渐进式肌肉放松音频'],L2:['拳力以赴·解压拳击'],L3:['疗愈师介入']},
   {em:'🫥',sig:'孤独',hit:96,L1:['正念音频'],L2:['跨团队疗愈小组'],L3:['疗愈师介入']},
-  {em:'😬',sig:'紧张',hit:131,L1:['渐进式肌肉放松音频'],L2:['心理嘉年华游园会'],L3:['疗愈师介入']},
   {em:'😞',sig:'委屈',hit:163,L1:['情绪书写练习'],L2:['ABC情绪理论工作坊'],L3:['疗愈师介入']},
+  {em:'😠',sig:'愤怒',hit:104,L1:['情绪暂停提醒卡片'],L2:['拳力以赴·解压拳击'],L3:['疗愈师介入']},
+  {em:'🧭',sig:'迷茫',hit:89,L1:['职业价值锚点练习'],L2:['身份重塑叙事疗愈小组'],L3:['疗愈师介入']},
 ];
 /* 行业模板：只覆盖差异项，其余沿用 BASE */
 const TPL={
-  '互联网 / IT':{焦虑:{L1:['三分钟呼吸着陆法','正念音频'],L2:['情绪红绿灯正念工作坊','身份重塑叙事疗愈小组']},
-    疲惫:{L1:['工间身体扫描音频'],L2:['能量唤醒工作坊']}},
-  '医护 / 护理':{疲惫:{L1:['工间舒展操引导','三分钟呼吸着陆法'],L2:['巴林特小组','困境盲盒工作坊']},
-    低落:{L1:['情绪书写练习'],L2:['巴林特小组']}},
-  '教育':{烦躁:{L1:['情绪暂停提醒卡片'],L2:['ABC情绪理论工作坊']},
-    疲惫:{L1:['工间舒展操引导'],L2:['奥尔夫音乐疗愈']}},
-  '客服 / 服务业':{烦躁:{L1:['情绪暂停提醒卡片','芳香导入音频'],L2:['「心流插花」艺术疗愈']},
-    委屈:{L1:['情绪书写练习'],L2:['「心流插花」艺术疗愈']}},
-  '金融 / 银行':{焦虑:{L1:['正念音频'],L2:['积极心理与管理提升培训','跨团队疗愈小组']},
-    紧张:{L1:['渐进式肌肉放松音频'],L2:['积极心理与管理提升培训']}},
-  '制造业 / 汽车业':{孤独:{L1:['工间身体扫描音频'],L2:['沙盘疗愈·心声共鸣']},
-    紧张:{L1:['工间舒展操引导'],L2:['身体觉知与释放']}},
+  '互联网/IT':{
+    焦虑:{L1:['三分钟呼吸着陆法','正念音频'],L2:['情绪红绿灯正念工作坊','身份重塑叙事疗愈小组']},
+    疲惫:{L1:['工间身体扫描音频'],L2:['能量唤醒工作坊']},
+    迷茫:{L1:['职业价值锚点练习'],L2:['身份重塑叙事疗愈小组']}
+  },
+  '金融/银行':{
+    焦虑:{L1:['正念音频'],L2:['积极心理与管理提升培训','跨团队疗愈小组']},
+    紧张:{L1:['渐进式肌肉放松音频'],L2:['积极心理与管理提升培训']}
+  },
+  '医护/护理':{
+    疲惫:{L1:['工间舒展操引导','工间身体扫描音频'],L2:['巴林特小组','困境盲盒工作坊']},
+    低落:{L1:['情绪书写练习'],L2:['巴林特小组']},
+    迷茫:{L1:['职业价值锚点练习'],L2:['困境盲盒工作坊']}
+  },
+  '教育':{
+    疲惫:{L1:['工间舒展操引导','工间身体扫描音频'],L2:['奥尔夫音乐疗愈']},
+    低落:{L1:['每日三件好事打卡'],L2:['奥尔夫音乐疗愈']},
+    烦躁:{L1:['情绪暂停提醒卡片'],L2:['ABC情绪理论工作坊']},
+    委屈:{L1:['情绪书写练习'],L2:['ABC情绪理论工作坊']},
+    愤怒:{L1:['情绪暂停提醒卡片'],L2:['ABC情绪理论工作坊']}
+  },
+  '客服/服务业':{
+    烦躁:{L1:['情绪暂停提醒卡片','芳香导入音频'],L2:['「心流插花」艺术疗愈','正念冥想工作坊','芳香疗愈体验']},
+    委屈:{L1:['情绪书写练习','芳香导入音频'],L2:['「心流插花」艺术疗愈','正念冥想工作坊']},
+    愤怒:{L1:['情绪暂停提醒卡片'],L2:['芳香疗愈体验','正念冥想工作坊']}
+  },
+  '制造业':{
+    孤独:{L1:['工间身体扫描音频'],L2:['沙盘疗愈·心声共鸣','心灵驿站·常态化专业支持']},
+    紧张:{L1:['工间舒展操引导','渐进式肌肉放松音频'],L2:['拳力以赴·解压拳击','心灵驿站·常态化专业支持']},
+    愤怒:{L1:['情绪暂停提醒卡片'],L2:['拳力以赴·解压拳击','心灵驿站·常态化专业支持']},
+    疲惫:{L1:['工间身体扫描音频'],L2:['心灵驿站·常态化专业支持']}
+  },
+  '科技企业':{
+    焦虑:{L1:['正念音频','三分钟呼吸着陆法'],L2:['身份重塑叙事疗愈小组','跨团队疗愈小组']},
+    迷茫:{L1:['职业价值锚点练习'],L2:['身份重塑叙事疗愈小组']},
+    孤独:{L1:['正念音频'],L2:['跨团队疗愈小组']}
+  },
+  '公益组织':{
+    疲惫:{L1:['三分钟呼吸着陆法','情绪书写练习'],L2:['巴林特小组','心理嘉年华游园会']},
+    低落:{L1:['每日三件好事打卡'],L2:['跨团队疗愈小组']}
+  }
 };
-let CFG=structuredClone(BASE), curTpl='互联网 / IT', dirty=0;
+function buildCfg(name){
+  const cfg=structuredClone(BASE),t=TPL[name]||{};
+  cfg.forEach(r=>{if(t[r.sig])['L1','L2'].forEach(L=>{if(t[r.sig][L])r[L]=[...t[r.sig][L]]})});
+  return cfg;
+}
+let curTpl=(DB&&DB.industryTpl)||'互联网/IT', CFG=buildCfg(curTpl), dirty=0;
 const SERVICE_CFG={
   healer:['李佳 · UH-2024-0871','王岚 · UH-2023-0442'],
-  refer:['市三院心理科绿色通道'],
 };
 
 function markSaved(){}
 function applyTpl(name){
-  curTpl=name; dirty=0; CFG=structuredClone(BASE);
-  const t=TPL[name]||{};
-  CFG.forEach(r=>{if(t[r.sig])['L1','L2'].forEach(L=>{if(t[r.sig][L])r[L]=[...t[r.sig][L]]})});
+  curTpl=name; dirty=0; CFG=buildCfg(name);
+  DB.industryTpl=name;save();
   renderMx(); markSaved();
-  toast(`已套用「${name}」模板 —— 可在此基础上继续编辑`);
+  toast(`已套用「${name}」模板 · 员工端推荐权重同步更新`);
 }
 const LEVELS=['L1','L2','L3'], EDITABLE_LEVELS=['L1','L2'];
 const LVMETA={L1:{c:'g',n:'绿色 · 自助资源',s:'自动推送，无需人工'},
-              L2:{c:'y',n:'黄色 · 团体活动',s:'自动推送，人工跟进'},
+              L2:{c:'y',n:'黄色 · 线下活动/支持',s:'自动推荐，可人工跟进'},
               L3:{c:'r',n:'红色 · 专业介入',s:'统一流程，不可修改'}};
 function renderMx(){
   $('#mx').innerHTML=
@@ -3438,7 +3583,7 @@ function renderServiceEditors(){
     const el=$(`#${kind}-services`);if(!el)return;
     el.innerHTML=items.map((name,i)=>`<span class="chipC">${name}
       <button class="x" data-remove="${i}" aria-label="移除 ${name}">✕</button></span>`).join('')+
-      `<button class="addc" data-add="${kind}" aria-label="添加${kind==='healer'?'值班疗愈师':'外部转介通道'}">＋</button>`;
+      `<button class="addc" data-add="${kind}" aria-label="添加值班疗愈师">＋</button>`;
   });
 }
 /* ---------- 服务库抽屉 ---------- */
@@ -3447,7 +3592,7 @@ function openPicker(kind,ri){
   pkCtx={kind,ri};
   const isMx=EDITABLE_LEVELS.includes(kind);
   const row=isMx?CFG[ri]:null;
-  $('#pk-t').textContent=isMx?`添加 ${LVMETA[kind].n} 服务`:(kind==='healer'?'指派值班疗愈师':'添加外部转介机构');
+  $('#pk-t').textContent=isMx?`添加 ${LVMETA[kind].n} 服务`:'指派值班疗愈师';
   $('#pk-s').textContent=isMx?`情绪信号：${row.sig} · ${LVMETA[kind].s}`:'来自 MindBridge 服务商网络';
   const have=isMx?row[kind]:SERVICE_CFG[kind];
   $('#pk-b').innerHTML=`<div class="pkgrp">MindBridge 服务商网络 · 共 ${LIB[kind].length} 项</div>`+
@@ -3533,6 +3678,7 @@ function renderAll(){
   if(ME.kind==='emp'){renderWall();renderChat();renderBot();renderRes();renderDT()}
   if(MEID==='healer')renderHealer();
   if(MEID==='hr')renderHR();
+  if(MEID==='ops')renderOps();
 }
 </script>
 </body>
