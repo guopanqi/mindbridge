@@ -589,6 +589,40 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px soli
 .video-control-row button{width:27px;height:27px;border-radius:50%;border:1px solid var(--line);color:var(--cream);display:grid;place-items:center}
 .video-time{margin-left:auto;font-family:var(--mono);color:var(--mut2)}
 
+.act-parts{text-align:center;padding:8px 0 2px}
+.act-part-wrap{height:130px;display:grid;place-items:center}
+.act-part-icon{width:92px;height:92px;border-radius:26px;display:grid;place-items:center;font-size:38px;
+  background:rgba(127,201,143,.08);border:1px solid rgba(127,201,143,.22)}
+.act-part-name{font-family:var(--serif);font-size:16px;color:#faeeda;font-weight:600;margin-top:12px}
+.act-part-hint{font-size:11px;color:var(--mut);line-height:1.7;min-height:34px;margin-top:5px;max-width:280px;margin-left:auto;margin-right:auto}
+.act-dots{display:flex;gap:5px;margin:14px 5px 5px}
+.act-dots i{height:3px;flex:1;background:rgba(127,201,143,.12);border-radius:4px}
+.act-dots i.on{background:var(--candle)}
+
+.act-choice-list{display:flex;flex-direction:column;gap:9px;margin-top:15px}
+.act-choice{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 14px;
+  border-radius:14px;border:1px solid var(--line);background:var(--panel);color:var(--cream);transition:.2s}
+.act-choice .ci{flex:none;width:34px;height:34px;border-radius:10px;font-size:16px;display:grid;place-items:center;background:rgba(127,201,143,.08)}
+.act-choice .ct{flex:1;min-width:0}
+.act-choice b{display:block;font-size:13px;font-weight:650}
+.act-choice span{display:block;font-size:10.5px;color:var(--mut);line-height:1.5;margin-top:3px}
+.act-choice.sel{border-color:rgba(238,185,108,.4);background:rgba(238,185,108,.06)}
+.act-reflection{margin-top:15px;padding:14px 15px;border-radius:12px;border:1px solid rgba(127,201,143,.18);
+  background:rgba(127,201,143,.055);color:var(--mut);font-size:11.5px;line-height:1.8}
+
+.act-textarea{width:100%;min-height:96px;margin-top:14px;padding:12px 13px;border-radius:12px;
+  border:1px solid var(--line);background:rgba(8,17,14,.6);color:var(--cream);font-size:12.5px;line-height:1.7;resize:none}
+.act-textarea::placeholder{color:var(--mut2)}
+
+.act-track-list{display:flex;flex-direction:column;gap:7px;margin-top:14px}
+.act-track{display:flex;justify-content:space-between;align-items:center;width:100%;padding:11px 13px;
+  border-radius:11px;border:1px solid var(--line);background:var(--panel);color:var(--cream)}
+.act-track b{font-size:12px;font-weight:600}
+.act-track span{display:block;font-size:9.5px;color:var(--mut2);margin-top:2px}
+.act-track .pd{font-size:14px;color:var(--mut2);flex:none}
+.act-track.sel{border-color:rgba(238,185,108,.4);background:rgba(238,185,108,.06)}
+.act-track.sel .pd{color:var(--candle)}
+
 /* HRBP 活动效果 */
 .demo-banner{display:flex;gap:10px;align-items:flex-start;background:#fff8e8;border:1px solid #ecdba9;border-radius:8px;
   padding:12px 14px;margin-bottom:12px;color:#76571e;font-size:11px;line-height:1.7}
@@ -1850,7 +1884,13 @@ const SEED={
     'stretch-video':{label:'工间舒展操引导',form:'线上视频跟练 · 5分钟',recommended:145,participated:58,completed:46,feedback:39,ratingTotal:176,effectTotal:101,scoreLabel:'疲惫感',effectDir:'下降'},
     'value-anchor':{label:'职业价值锚点练习',form:'线上引导 · 5分钟',recommended:63,participated:22,completed:17,feedback:15,ratingTotal:65,effectTotal:29,scoreLabel:'职业可控感',effectDir:'提升'},
     'emotion-unload':{label:'三分钟情绪卸载',form:'线上自助 · 3分钟',recommended:124,participated:45,completed:23,feedback:19,ratingTotal:68,effectTotal:21,scoreLabel:'情绪占据感',effectDir:'下降'},
-    'return-rhythm':{label:'返岗节奏重建练习',form:'线上引导 · 5分钟',recommended:37,participated:13,completed:11,feedback:10,ratingTotal:46,effectTotal:29,scoreLabel:'返岗可控感',effectDir:'提升'}
+    'return-rhythm':{label:'返岗节奏重建练习',form:'线上引导 · 5分钟',recommended:37,participated:13,completed:11,feedback:10,ratingTotal:46,effectTotal:29,scoreLabel:'返岗可控感',effectDir:'提升'},
+    'bodyscan-audio':{label:'工间身体扫描音频',form:'线上音频引导 · 5分钟',recommended:98,participated:41,completed:33,feedback:27,ratingTotal:104,effectTotal:52,scoreLabel:'身体疲惫感',effectDir:'下降'},
+    'pause-card':{label:'情绪暂停提醒卡片',form:'线上自助 · 1分钟',recommended:156,participated:79,completed:71,feedback:44,ratingTotal:171,effectTotal:89,scoreLabel:'烦躁程度',effectDir:'下降'},
+    'gratitude-checkin':{label:'每日三件好事打卡',form:'线上自助 · 3分钟',recommended:88,participated:36,completed:29,feedback:22,ratingTotal:90,effectTotal:38,scoreLabel:'情绪低落感',effectDir:'下降'},
+    'pmr-audio':{label:'渐进式肌肉放松音频',form:'线上音频引导 · 6分钟',recommended:52,participated:19,completed:15,feedback:12,ratingTotal:49,effectTotal:24,scoreLabel:'身体紧绷感',effectDir:'下降'},
+    'mindful-audio':{label:'正念音频',form:'线上音频 · 5-12分钟',recommended:67,participated:24,completed:18,feedback:14,ratingTotal:57,effectTotal:22,scoreLabel:'孤独感',effectDir:'下降'},
+    'writing-practice':{label:'情绪书写练习',form:'线上自助 · 5分钟',recommended:41,participated:15,completed:12,feedback:10,ratingTotal:41,effectTotal:19,scoreLabel:'委屈感',effectDir:'下降'}
   },
   topics:{加班强度:86,'晋升与调薪':61,'跨部门协作':44,'客户情绪':37,'工作意义感':23},
 };
@@ -1871,6 +1911,18 @@ const ACTIVITIES={
   'value-anchor':{id:'value-anchor',type:'online',title:'职业价值锚点练习',desc:'把「职位变化」和「你已经拥有的能力」分开来看。',duration:'5 分钟',form:'线上引导',preLabel:'此刻你对职业方向的可控感是多少？',low:'完全不可控',high:'很有把握',direction:'up',steps:[['先写下一个不确定','在心里命名它：我现在最担心的是什么？'],['找回一个已有能力','想一件你曾经处理过的难事，那时你使用了什么能力？'],['选择一个小行动','只定一件本周可以完成的事，让控制感回到手里。']]},
   'emotion-unload':{id:'emotion-unload',type:'online',title:'三分钟情绪卸载',desc:'把客户的情绪与自己分开，不把工作场景继续带在身上。',duration:'3 分钟',form:'线上自助',preLabel:'刚才的情绪还占据你多少？',low:'已经放下',high:'非常强烈',direction:'down',steps:[['命名刚才的情绪','不评价自己，只选一个词：委屈、愤怒、疲惫或其他。'],['区分对方和自己','对方的话来自那个服务场景，它不定义你。'],['给本次对话一个结束','做一次缓慢呼气，在心里说：这段对话现在结束了。']]},
   'return-rhythm':{id:'return-rhythm',type:'online',title:'返岗节奏重建练习',desc:'在工作、身体变化和家庭照护之间，找到今天可承受的节奏。',duration:'5 分钟',form:'线上引导',preLabel:'此刻你对返岗节奏的可控感是多少？',low:'完全失控',high:'比较从容',direction:'up',steps:[['找到最消耗的角色','此刻最占据精力的，是工作任务、家庭照护，还是对自己的要求？'],['缩小今天的必做清单','只保留真正必须完成的一两件事，其他允许暂缓。'],['选择一个可表达的需要','例如调整会议时间、确认优先级，或向可信任的人提出具体帮助。']]},
+  'bodyscan-audio':{id:'bodyscan-audio',type:'online',demoEngine:'bodyscan',title:'工间身体扫描音频',desc:'跟随提示从头到脚逐一觉察身体，把持续伏案的疲惫感落到具体部位。',duration:'5 分钟',form:'线上音频引导',preLabel:'此刻的身体疲惫程度是多少？',low:'轻松',high:'非常疲惫',direction:'down',
+    parts:[{icon:'🧠',name:'头顶与面部',hint:'感受头皮和额头的重量，慢慢松开。'},{icon:'🫀',name:'肩颈与胸口',hint:'留意肩膀是否不自觉地耸起，随呼气落下。'},{icon:'🤲',name:'手臂与双手',hint:'感受手指的温度，不需要用力。'},{icon:'🦵',name:'腰背与双腿',hint:'觉察椅子承托身体的地方。'},{icon:'🦶',name:'双脚',hint:'感受双脚踩在地面上的支撑感。'}]},
+  'pause-card':{id:'pause-card',type:'online',demoEngine:'choice',title:'情绪暂停提醒卡片',desc:'在情绪和反应之间，先给自己一个可以选择的缓冲。',duration:'1 分钟',form:'线上自助',preLabel:'此刻的烦躁程度是多少？',low:'很平静',high:'非常烦躁',direction:'down',
+    choices:[{icon:'🌬️',label:'三次深呼吸',desc:'吸气4秒，屏息4秒，呼气6秒',reflection:'呼吸变慢时，身体会先于情绪安静下来。给自己这三次呼吸的时间。'},{icon:'🔢',label:'默数10个数',desc:'从10倒数到1，给自己一个暂停',reflection:'倒数不是压抑情绪，只是在情绪和行动之间留出一点间隔。'},{icon:'🚶',label:'起身走一走',desc:'离开座位，走30秒再回来',reflection:'离开当下的场景，往往比留在原地更容易平静下来。'}]},
+  'gratitude-checkin':{id:'gratitude-checkin',type:'online',demoEngine:'journal',title:'每日三件好事打卡',desc:'记录今天的一件小事，练习留意生活里的正面信号。',duration:'3 分钟',form:'线上自助',preLabel:'此刻的情绪低落程度是多少？',low:'还不错',high:'非常低落',direction:'down',
+    prompt:'今天有没有一件、哪怕很小的好事？可以是一句话、一个瞬间。',placeholder:'今天发生的一件好事……'},
+  'pmr-audio':{id:'pmr-audio',type:'online',demoEngine:'bodyscan',title:'渐进式肌肉放松音频',desc:'先收紧、再松开，用身体的对比感卸下持续的紧绷。',duration:'6 分钟',form:'线上音频引导',preLabel:'此刻身体的紧绷程度是多少？',low:'很放松',high:'非常紧绷',direction:'down',
+    parts:[{icon:'✋',name:'双手',hint:'握紧拳头4秒，然后突然松开。'},{icon:'💪',name:'手臂',hint:'收紧手臂肌肉，感受紧绷，再完全放下。'},{icon:'😌',name:'面部与肩颈',hint:'皱眉咬紧牙关，再慢慢松开。'},{icon:'🦵',name:'双腿',hint:'绷紧大腿和小腿，再彻底放松。'},{icon:'🌊',name:'全身',hint:'感受收紧与放松之间的差别。'}]},
+  'mindful-audio':{id:'mindful-audio',type:'online',demoEngine:'audio',title:'正念音频',desc:'选一段声音，给独自硬扛的时刻一点陪伴。',duration:'5-12 分钟',form:'线上音频',preLabel:'此刻的孤独感是多少？',low:'很有连接感',high:'非常孤独',direction:'down',
+    tracks:[{icon:'🌊',label:'海浪的声音',desc:'5 分钟 · 自然白噪音'},{icon:'🌲',label:'森林漫步',desc:'8 分钟 · 森林环境音'},{icon:'🕯️',label:'烛光冥想',desc:'10 分钟 · 引导式冥想'}]},
+  'writing-practice':{id:'writing-practice',type:'online',demoEngine:'journal',title:'情绪书写练习',desc:'把说不出的感受写下来，给情绪一个出口。',duration:'5 分钟',form:'线上自助',preLabel:'此刻的委屈感是多少？',low:'已经好些',high:'非常委屈',direction:'down',
+    prompt:'写一写最近让你感到委屈的一件事，不必写得通顺完整。',placeholder:'开始写下你的感受……'},
   'mindfulness-group':{id:'mindfulness-group',type:'offline',title:'情绪红绿灯正念工作坊',desc:'通过匿名情绪投票、呼吸着陆和压力拆解，在团体中练习。',duration:'90 分钟',form:'线下工作坊'},
   'identity-group':{id:'identity-group',type:'offline',title:'身份重塑叙事疗愈小组',desc:'面向职业瓶颈、被替代焦虑与价值感下降的小组支持。',duration:'2 小时 × 4 次',form:'线下小组'},
   'art-group':{id:'art-group',type:'offline',title:'「心流插花」艺术疗愈',desc:'通过专注创作和非语言表达，暂时放下持续的情绪劳动。',duration:'2 小时',form:'线下工作坊'},
@@ -2716,6 +2768,7 @@ const FOLLOWUP_BY_TITLE={
   '职业价值锚点练习':'上次做完职业价值锚点练习后，今天面对手头的事，有没有多一点方向感？',
   '三分钟情绪卸载':'上次做完情绪卸载练习后，刚才那件事在心里有没有少占一点地方？',
   '返岗节奏重建练习':'上次做完返岗节奏练习后，今天的安排有没有更好承受一点？',
+  '工间身体扫描音频':'上次做完身体扫描后，今天有没有更早注意到自己累了？',
   '渐进式肌肉放松音频':'上次做完肌肉放松练习后，今天身体有没有松一点？',
   '正念音频':'上次听完正念音频后，今天有没有给自己留出一点安静的时间？',
   '每日三件好事打卡':'上次做完三件好事打卡后，今天有没有注意到一件还不错的小事？',
@@ -3001,7 +3054,7 @@ function currentContextTag(){
   const p=ME&&DB.profiles&&DB.profiles[ME.anon];return p&&p.tag||'none';
 }
 function activityForResource(name,desc){
-  const direct={'三分钟呼吸着陆法':'breathing','职业价值锚点练习':'value-anchor','职业锚点练习':'value-anchor','工间舒展操引导':'stretch-video','正念工间操':'stretch-video','情绪暂停提醒卡片':'emotion-unload','情绪书写练习':'emotion-unload','跨团队疗愈小组':'identity-group'}[name];
+  const direct={'三分钟呼吸着陆法':'breathing','职业价值锚点练习':'value-anchor','职业锚点练习':'value-anchor','工间舒展操引导':'stretch-video','正念工间操':'stretch-video','工间身体扫描音频':'bodyscan-audio','情绪暂停提醒卡片':'pause-card','每日三件好事打卡':'gratitude-checkin','渐进式肌肉放松音频':'pmr-audio','正念音频':'mindful-audio','情绪书写练习':'writing-practice','跨团队疗愈小组':'identity-group'}[name];
   if(direct)return ACTIVITIES[direct];
   const offline=/小组|工作坊|嘉年华|疗愈|拳击|驿站|培训|团体|体验|课程/.test(name);
   const base=ACTIVITIES[offline?(CONTEXTS[currentContextTag()]||CONTEXTS.none).offline:'breathing'];
@@ -3030,6 +3083,8 @@ function activityCard(a,recommended,reason){
 
 let CURRENT_ACTIVITY=null, ACT_TEMP={rating:4}, BREATH_TIMER=null;
 let VIDEO_TIMER=null,VIDEO_ELAPSED=0,VIDEO_STARTED_AT=0,VIDEO_PLAYING=false;
+let PART_TIMER=null;
+let TRACK_TIMER=null,TRACK_ELAPSED=0,TRACK_STARTED_AT=0,TRACK_PLAYING=false;
 function getActivityById(id,title){
   if(ACTIVITIES[id])return ACTIVITIES[id];
   if(id&&id.startsWith('resource-'))return activityForResource(title||id.slice(9),'');
@@ -3079,6 +3134,11 @@ function clearVideoDemo(reset=true){
   if(VIDEO_TIMER){clearInterval(VIDEO_TIMER);VIDEO_TIMER=null}
   VIDEO_PLAYING=false;if(reset)VIDEO_ELAPSED=0;
 }
+function clearPartDemo(){if(PART_TIMER){clearInterval(PART_TIMER);PART_TIMER=null}}
+function clearTrackDemo(reset=true){
+  if(TRACK_TIMER){clearInterval(TRACK_TIMER);TRACK_TIMER=null}
+  TRACK_PLAYING=false;if(reset)TRACK_ELAPSED=0;
+}
 function breathPhase(elapsed){
   if(elapsed<3)return {name:'prepare',label:'准备',hint:'找到一个稳定的姿势，让双脚接触地面。'};
   if(elapsed<7)return {name:'inhale',label:'吸气',hint:'跟着圆形扩展，用鼻子缓慢吸气。'};
@@ -3113,15 +3173,39 @@ function toggleVideoDemo(){
   const btn=$('#video-toggle'),stageBtn=$('#video-stage-toggle');if(VIDEO_PLAYING){VIDEO_ELAPSED=(Date.now()-VIDEO_STARTED_AT)/1000;clearVideoDemo(false);btn.textContent='▶';stageBtn.textContent='▶';return}
   VIDEO_PLAYING=true;VIDEO_STARTED_AT=Date.now()-VIDEO_ELAPSED*1000;btn.textContent='Ⅱ';stageBtn.textContent='Ⅱ';updateVideoDemo();VIDEO_TIMER=setInterval(updateVideoDemo,200);
 }
+function startPartDemo(parts){
+  clearPartDemo();const perPart=5,total=parts.length*perPart,start=Date.now();
+  const update=()=>{
+    const elapsed=Math.min(total,(Date.now()-start)/1000),idx=Math.min(parts.length-1,Math.floor(elapsed/perPart));
+    const icon=$('#part-icon'),name=$('#part-name'),hint=$('#part-hint'),dots=$$('#part-dots i');
+    if(!icon){clearPartDemo();return}
+    const part=parts[idx];
+    icon.textContent=part.icon;name.textContent=part.name;hint.textContent=part.hint;
+    dots.forEach((d,i)=>d.classList.toggle('on',i<=idx));
+    if(elapsed>=total){clearPartDemo();$('#act-part-complete').classList.remove('hide')}
+  };
+  update();PART_TIMER=setInterval(update,200);
+}
+function updateTrackDemo(){
+  const total=20;TRACK_ELAPSED=Math.min(total,(Date.now()-TRACK_STARTED_AT)/1000);
+  const bar=$('#track-progress'),time=$('#track-time');
+  if(!bar){clearTrackDemo(false);return}
+  bar.style.width=(TRACK_ELAPSED/total*100)+'%';time.textContent=Math.floor(TRACK_ELAPSED)+' / 20秒';
+  if(TRACK_ELAPSED>=total){clearTrackDemo(false);$('#track-toggle').textContent='✓';$('#act-track-complete').classList.remove('hide')}
+}
+function toggleTrackDemo(){
+  const btn=$('#track-toggle');if(TRACK_PLAYING){TRACK_ELAPSED=(Date.now()-TRACK_STARTED_AT)/1000;clearTrackDemo(false);btn.textContent='▶';return}
+  TRACK_PLAYING=true;TRACK_STARTED_AT=Date.now()-TRACK_ELAPSED*1000;btn.textContent='Ⅱ';updateTrackDemo();TRACK_TIMER=setInterval(updateTrackDemo,200);
+}
 function finishOnlineDemo(){
-  clearBreathDemo();clearVideoDemo();const a=CURRENT_ACTIVITY,j=journeyFor(a);
+  clearBreathDemo();clearVideoDemo();clearPartDemo();clearTrackDemo();const a=CURRENT_ACTIVITY,j=journeyFor(a);
   const justCompleted=!j.completed;
   if(justCompleted){j.completed=1;j.completedAt=Date.now();j.followupEligibleAt=Date.now()+12000;recordActivityMetric('completed');schedulePendingFollowup()}
   save();refreshActivityViews();renderActivityStage('feedback');
 }
 function renderActivityStage(stage){
   const a=CURRENT_ACTIVITY,j=journeyFor(a),body=$('#activity-body');
-  clearBreathDemo();clearVideoDemo();
+  clearBreathDemo();clearVideoDemo();clearPartDemo();clearTrackDemo();
   body.onclick=null;
   $('#activity-headline').textContent=a.type==='offline'?'活动报名':'线上活动';
   if(a.type==='offline'){
@@ -3141,7 +3225,12 @@ function renderActivityStage(stage){
   }
   if(j.feedback)stage='done';else if(j.completed&&stage==='detail')stage='feedback';
   if(stage==='detail'){
-    const demoNote=a.demoEngine==='video'?'本 Demo 用空白视频容器演示「播放 → 分段跟练 → 完成反馈」流程；正式产品接入实际跟练视频。':a.id==='breathing'?'这里将完整练习压缩为 30 秒可跟练版本。':'你进入的仍是「'+esc(a.title)+'」，参与和完成也会记在该活动下。为了在评审现场展示完整线上闭环，本 Demo 暂用「三分钟呼吸着陆法」的 30 秒交互作为体验样例。';
+    const demoNote=a.demoEngine==='video'?'本 Demo 用空白视频容器演示「播放 → 分段跟练 → 完成反馈」流程；正式产品接入实际跟练视频。':
+      a.demoEngine==='bodyscan'?'这里将完整练习压缩为一段可跟随的部位觉察演示；正式产品为完整时长的音频引导。':
+      a.demoEngine==='choice'?'选择一种方式即可体验从选择到即时反馈的完整流程。':
+      a.demoEngine==='journal'?'为了在演示中保持匿名性，这里写下的内容只停留在当前界面，不会被保存、上传或展示给任何人。':
+      a.demoEngine==='audio'?'本 Demo 用静音音频容器演示「选择 → 播放 → 完成」流程；正式产品接入实际音频内容。':
+      a.id==='breathing'?'这里将完整练习压缩为 30 秒可跟练版本。':'你进入的仍是「'+esc(a.title)+'」，参与和完成也会记在该活动下。为了在评审现场展示完整线上闭环，本 Demo 暂用「三分钟呼吸着陆法」的 30 秒交互作为体验样例。';
     body.innerHTML=`<div class="act-kicker">线上活动</div><div class="act-title">${esc(a.title)}</div><div class="act-desc">${esc(a.desc)}</div>
       <div class="act-info"><div><span>正式活动时长</span><b>${esc(a.duration)}</b></div><div><span>形式</span><b>${esc(a.form)}</b></div></div>
       <div class="demo-notice"><span class="notice-icon">⚠</span><div><b>演示体验说明</b>${demoNote}</div></div>
@@ -3158,6 +3247,50 @@ function renderActivityStage(stage){
         <button id="video-toggle" aria-label="播放或暂停">▶</button><span>无声演示视频</span><span class="video-time" id="video-time">0 / 30秒</span></div></div></div>
         <button class="act-primary hide" id="act-video-complete">继续记录感受</button>
         <button class="act-secondary" id="act-video-skip">跳过并完成</button>`;
+      return;
+    }
+    if(a.demoEngine==='bodyscan'){
+      const parts=a.parts;
+      body.innerHTML=`<div class="act-kicker">部位觉察 · ${parts.length*5} 秒</div><div class="act-title">${esc(a.title)}</div>
+        <div class="act-parts"><div class="act-part-wrap"><div class="act-part-icon" id="part-icon">${esc(parts[0].icon)}</div></div>
+        <div class="act-part-name" id="part-name">${esc(parts[0].name)}</div>
+        <div class="act-part-hint" id="part-hint">${esc(parts[0].hint)}</div>
+        <div class="act-dots" id="part-dots">${parts.map(()=>'<i></i>').join('')}</div></div>
+        <button class="act-primary hide" id="act-part-complete">继续记录感受</button>
+        <button class="act-secondary" id="act-part-skip">跳过并完成</button>`;
+      requestAnimationFrame(()=>startPartDemo(parts));
+      return;
+    }
+    if(a.demoEngine==='choice'){
+      const idx=ACT_TEMP.choiceIndex;
+      const list=a.choices.map((c,i)=>`<button class="act-choice${idx===i?' sel':''}" data-choice-index="${i}"><span class="ci">${esc(c.icon)}</span><span class="ct"><b>${esc(c.label)}</b><span>${esc(c.desc)}</span></span></button>`).join('');
+      const reflection=idx!=null?`<div class="act-reflection">${esc(a.choices[idx].reflection)}</div>`:'';
+      body.innerHTML=`<div class="act-kicker">选择一种方式 · ${esc(a.duration)}</div><div class="act-title">${esc(a.title)}</div>
+        <div class="act-choice-list">${list}</div>${reflection}
+        <button class="act-primary${idx==null?' hide':''}" id="act-choice-complete">继续记录感受</button>
+        <button class="act-secondary" id="act-choice-skip">跳过并完成</button>`;
+      return;
+    }
+    if(a.demoEngine==='journal'){
+      body.innerHTML=`<div class="act-kicker">书写练习 · ${esc(a.duration)}</div><div class="act-title">${esc(a.title)}</div>
+        <div class="act-desc">${esc(a.prompt)}</div>
+        <textarea class="act-textarea" id="journal-input" placeholder="${esc(a.placeholder)}"></textarea>
+        <div class="act-privacy">你写下的内容只保留在这次演示的界面里，不会被保存、上传或展示给任何人，包括 HRBP。</div>
+        <button class="act-primary" id="act-journal-submit">完成记录</button>
+        <button class="act-secondary" id="act-journal-skip">跳过并完成</button>`;
+      return;
+    }
+    if(a.demoEngine==='audio'){
+      const idx=ACT_TEMP.trackIndex;
+      const list=a.tracks.map((t,i)=>`<button class="act-track${idx===i?' sel':''}" data-track-index="${i}"><span><b>${esc(t.icon)} ${esc(t.label)}</b><span>${esc(t.desc)}</span></span><span class="pd">${idx===i?'●':'▶'}</span></button>`).join('');
+      const player=idx!=null?`<div class="video-demo"><div class="video-stage"><button class="play-mark" id="track-toggle" aria-label="播放或暂停">▶</button><h4 id="track-title">${esc(a.tracks[idx].label)}</h4>
+        <p id="track-hint">安静地听，不需要做什么。</p></div>
+        <div class="video-controls"><div class="video-timeline"><i id="track-progress"></i></div><div class="video-control-row">
+        <span>无声演示音频</span><span class="video-time" id="track-time">0 / 20秒</span></div></div></div>`:'';
+      body.innerHTML=`<div class="act-kicker">选择一段声音 · ${esc(a.duration)}</div><div class="act-title">${esc(a.title)}</div>
+        <div class="act-track-list">${list}</div>${player}
+        <button class="act-primary hide" id="act-track-complete">继续记录感受</button>
+        <button class="act-secondary" id="act-track-skip">跳过并完成</button>`;
       return;
     }
     body.innerHTML=`<div class="act-kicker">呼吸练习 · 30 秒</div><div class="act-title">跟着呼吸着陆</div>
@@ -3183,7 +3316,7 @@ function renderActivityStage(stage){
     <button class="act-primary" id="act-finish">返回我的活动</button>`;
 }
 function refreshActivityViews(){renderRes();renderChat();renderBot()}
-function closeActivity(){clearBreathDemo();clearVideoDemo();$('#activity-flow').classList.add('hide');CURRENT_ACTIVITY=null;refreshActivityViews()}
+function closeActivity(){clearBreathDemo();clearVideoDemo();clearPartDemo();clearTrackDemo();$('#activity-flow').classList.add('hide');CURRENT_ACTIVITY=null;refreshActivityViews()}
 function advanceActivityStep(){
   if(!CURRENT_ACTIVITY)return;
   const a=CURRENT_ACTIVITY,j=journeyFor(a),i=Math.min(j.step||0,a.steps.length-1);
@@ -3203,6 +3336,13 @@ document.addEventListener('click',e=>{
   if(e.target.closest('#act-breath-complete')||e.target.closest('#act-breath-skip')){finishOnlineDemo();return}
   if(e.target.closest('#video-toggle')||e.target.closest('#video-stage-toggle')){toggleVideoDemo();return}
   if(e.target.closest('#act-video-complete')||e.target.closest('#act-video-skip')){finishOnlineDemo();return}
+  if(e.target.closest('#act-part-complete')||e.target.closest('#act-part-skip')){finishOnlineDemo();return}
+  const choiceBtn=e.target.closest('[data-choice-index]');if(choiceBtn){ACT_TEMP.choiceIndex=+choiceBtn.dataset.choiceIndex;renderActivityStage('exercise');return}
+  if(e.target.closest('#act-choice-complete')||e.target.closest('#act-choice-skip')){finishOnlineDemo();return}
+  if(e.target.closest('#act-journal-submit')||e.target.closest('#act-journal-skip')){finishOnlineDemo();return}
+  const trackBtn=e.target.closest('[data-track-index]');if(trackBtn){ACT_TEMP.trackIndex=+trackBtn.dataset.trackIndex;clearTrackDemo(true);renderActivityStage('exercise');return}
+  if(e.target.closest('#track-toggle')){toggleTrackDemo();return}
+  if(e.target.closest('#act-track-complete')||e.target.closest('#act-track-skip')){finishOnlineDemo();return}
   if(e.target.closest('#act-skip-feedback')){const j=journeyFor(CURRENT_ACTIVITY);j.skippedFeedback=1;j.skippedFeedbackAt=Date.now();save();closeActivity();return}
   if(e.target.closest('#act-step-next')){advanceActivityStep();return}
   const feedback=e.target.closest('[data-feedback-rating]');if(feedback){const j=journeyFor(CURRENT_ACTIVITY),rating=+feedback.dataset.feedbackRating;
