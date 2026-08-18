@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>MindBridge AI · 企业员工心理安全与成长共生系统</title>
+<link rel="icon" type="image/png" href="icon-dog.png">
 <style>
 :root{
   --sans:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",-apple-system,sans-serif;
@@ -33,8 +34,9 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px soli
   linear-gradient(168deg,#0f1c19,#0a1512);color:#f2ebe0;overflow-y:auto}
 #gate.on{display:grid;place-items:center}
 .gwrap{width:min(880px,92vw);padding:40px 0;text-align:center}
-.glogo{width:52px;height:52px;margin:0 auto 20px}
-.glogo svg{width:100%;height:100%;filter:drop-shadow(0 0 14px rgba(238,185,108,.35))}
+.glogo{width:76px;height:76px;margin:0 auto 20px}
+.glogo img{width:100%;height:100%;display:block;border-radius:22%;filter:drop-shadow(0 6px 18px rgba(0,0,0,.35))}
+.brand-ico{width:100%;height:100%;display:block;object-fit:cover}
 .gt{font-family:var(--serif);font-size:27px;font-weight:600;letter-spacing:.03em}
 .gt .en{display:block;font-family:var(--sans);font-size:10.5px;letter-spacing:.3em;color:#7d9289;margin-top:9px;font-weight:500}
 .gq{font-size:14px;color:#a5bab0;margin:30px 0 8px}
@@ -1103,12 +1105,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
   <section class="scr on" id="gate">
     <div class="gwrap">
       <div class="glogo">
-        <svg viewBox="0 0 40 40" fill="none">
-          <path d="M20 4c-6 0-11 5-11 11 0 4 2 7 5 9v8a6 6 0 0012 0v-8c3-2 5-5 5-9 0-6-5-11-11-11z"
-            stroke="#eeb96c" stroke-width="1.5" opacity=".8"/>
-          <ellipse cx="20" cy="19" rx="4.5" ry="6" fill="#0a1512" stroke="#eeb96c" stroke-width="1.3"/>
-          <circle cx="20" cy="19" r="1.7" fill="#eeb96c"/>
-        </svg>
+        <img src="icon-dog.png" alt="MindBridge">
       </div>
       <div class="gt">MindBridge AI<span class="en">企业员工心理安全与成长共生系统</span></div>
       <div class="gq">请选择演示身份</div>
@@ -1159,7 +1156,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
           <div class="st">员工关爱</div>
           <div class="apps">
             <button class="app live" id="wc-enter">
-              <div class="ai">🕯</div><div class="an">MindBridge<span class="badge">1</span></div>
+              <div class="ai"><img class="brand-ico" src="icon-dog.png" alt=""></div><div class="an">MindBridge<span class="badge">1</span></div>
             </button>
             <div class="app"><div class="ai">🏥</div><div class="an">体检</div></div>
             <div class="app"><div class="ai">🎁</div><div class="an">福利</div></div>
@@ -1171,7 +1168,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
         <button class="on" data-t="msgs"><span class="ti">💬</span>消息</button>
         <button data-t="work"><span class="ti">🔳</span>工作台</button>
       </div>
-      <div class="pushbar" data-push><div class="ph"><div class="pi">🕯</div>
+      <div class="pushbar" data-push><div class="ph"><div class="pi"><img class="brand-ico" src="icon-dog.png" alt=""></div>
         <div class="pn">MindBridge</div><div class="pt">现在</div></div>
         <div class="pmsg"></div><div class="pnote"></div></div>
     </div></div>
@@ -1215,7 +1212,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
 
       <div class="fwd" id="im-fwd" role="dialog" aria-modal="true" aria-label="选择转发对象" aria-hidden="true" inert><div class="fbox">
         <div class="ft">转发给</div>
-        <button class="frow pri" id="fwd-mb"><div class="fav">🕯</div>
+        <button class="frow pri" id="fwd-mb"><div class="fav"><img class="brand-ico" src="icon-dog.png" alt=""></div>
           <div><div class="fnm">MindBridge</div><div class="fd">员工关爱 · 只有你能看到</div></div></button>
         <button class="frow" disabled><div class="fav">👤</div>
           <div><div class="fnm">刘总</div><div class="fd">研发中心</div></div></button>
@@ -1224,7 +1221,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
         <button class="fx" id="fwd-x">取消</button>
       </div></div>
 
-      <div class="pushbar" data-push><div class="ph"><div class="pi">🕯</div>
+      <div class="pushbar" data-push><div class="ph"><div class="pi"><img class="brand-ico" src="icon-dog.png" alt=""></div>
         <div class="pn">MindBridge</div><div class="pt">现在</div></div>
         <div class="pmsg"></div><div class="pnote"></div></div>
     </div></div>
@@ -1425,7 +1422,7 @@ tr.masked td{color:var(--mut2);font-style:italic;background:#fafbfc}
   <!-- ============ HRBP ============ -->
   <section class="scr" id="hrApp">
     <div class="skC pad">
-      <div class="hd"><div class="lg2">M</div><h3>MindBridge · 员工关爱后台</h3>
+      <div class="hd"><div class="lg2"><img class="brand-ico" src="icon-dog.png" alt=""></div><h3>MindBridge · 员工关爱后台</h3>
         <div class="who"><div class="ava">张</div>张敏 · HRBP · 星原科技</div></div>
       <div class="navbar" role="tablist" aria-label="HRBP 工作台">
         <button class="on" data-c="dash" role="tab" aria-selected="true">组织看板</button>
@@ -2224,7 +2221,7 @@ function renderDT(){
   const seen=(DB.botSeen||{})[ME.anon]||0;
   const unreadCount=Math.max(0,messages.length-seen);
   const botUnread=unreadCount>0;
-  bot.innerHTML=`<div class="mav mb">🕯${botUnread?`<span class="dot">${unreadCount}</span>`:''}</div>
+  bot.innerHTML=`<div class="mav mb"><img class="brand-ico" src="icon-dog.png" alt="">${botUnread?`<span class="dot">${unreadCount}</span>`:''}</div>
     <div class="mbody"><div class="mtop"><span class="mnm">MindBridge<span class="botTag">机器人</span></span>
       <span class="mtm">${last?hhmm(last.ts):'21:41'}</span></div>
       <div class="mpv">${botUnread?'<b>[有新消息]</b> ':''}${esc(botPreview(last))}</div></div>`;
