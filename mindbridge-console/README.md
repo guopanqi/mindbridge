@@ -50,6 +50,9 @@ curl -s https://mindbridge-console.pages.dev/api/health
 `INTERNAL_SERVICE_TOKEN` 必须与 `mindbridge-app` 侧完全一致。
 `/api/health` 会同时确认 `careBindingAbsent: true`。
 
+**注意**：Pages Secret 写入后不会作用于已存在的部署，必须再 `npm run deploy` 一次才生效。
+写完 Secret 直接看 `/api/health` 仍会显示缺失，这是预期行为，不是配置失败。
+
 钉钉开发者后台「管理后台地址」填：
 
 ```text

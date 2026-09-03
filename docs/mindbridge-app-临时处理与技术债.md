@@ -103,12 +103,17 @@
 - 待办：上线前由团队再核实一次号码；补充客户企业自己的 EAP 热线（应为部署变量，不硬编码）。
 - 风险等级：号码写错属于真实伤害，任何改动都必须复核后再发布。
 
-### TD-014：钉钉管理后台免登尚未用真实 SSOSecret 验证
+### TD-014：钉钉管理后台免登已配置，待真实管理员登录复验
 
-- 状态：未关闭，且是 console 上线前的唯一硬阻塞。
-- 已完成：`/api/auth/omp` 按官方链路实现（`sso/gettoken` → `sso/getuserinfo`），含一次性 code 防重放、非管理员拒绝、错误码收敛；`test/omp.test.js` 用 mock 覆盖四条路径。
-- 未完成：`DINGTALK_SSO_SECRET` 还没有配置，`/api/health` 目前返回 `missingConfig: ["DINGTALK_SSO_SECRET"]`。
-- 待办：从钉钉开发者后台「凭证与基础信息」取 SSOSecret 写入 Pages Secret，并在钉钉后台填写管理后台地址后做一次真实管理员登录。
+- 状态：未关闭，但已不再阻塞部署。
+- 已完成（2026-09-03）：`DINGTALK_SSO_SECRET` 已写入 console 的 Pages Secret 并重新部署，`/api/health` 返回 `ok:true`。
+- 已在生产上验证的部分：
+  - `sso/gettoken` 用真实 CorpId + SSOSecret 换取 token 成功（`errcode:0`），说明密钥正确；
+  - 伪造 code 打生产端点返回 `DINGTALK_SSO_USERINFO_FAILED`，说明链路走到了第二步且错误码收敛正确；
+  - 同一个 code 第二次请求返回 `SSO_CODE_REPLAYED`，防重放生效。
+- 未验证：真实管理员从 oa.dingtalk.com 点击进入、拿到真实 code 并换到管理员身份与角色。这一步只能由持有管理员账号的人完成。
+- 已知取舍：已使用的 code 摘要在调用钉钉**之前**写入。这样可以挡住并发重放，代价是网络抖动导致的失败会作废该 code；恢复方式是回钉钉后台重新点击，成本很低。
+- 安全提醒：本次 SSOSecret 通过对话明文传递，路演结束后应在钉钉开发者后台重置。
 
 ### TD-015：疗愈师身份只有邀请码，没有 MFA 与吊销入口
 
