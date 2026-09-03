@@ -210,3 +210,4 @@ main { flex: 1; min-height: 0; }
 .act-stars .star.on { color: #e8a72c; }
 .card-main { display: grid; gap: 4px; }
 .card-cta { margin-top: 8px; justify-self: start; }
+.act-booked{background:var(--brand-soft);border-radius:14px;padding:14px;display:grid;gap:6px;margin-bottom:4px}

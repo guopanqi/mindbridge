@@ -1,32 +1,29 @@
-// 预设疗愈师账号并生成长期门户密钥。一次性运行，输出的链接收好即可。
+// 预设一名疗愈师并生成长期入口链接。
 //
 // 用法：node scripts/provision-healer.mjs "李佳" "UNIHEAL 国际疗愈师 · UH-2024-0871" [--remote]
-import { execFileSync } from 'node:child_process';
+// 输出一条 SQL 与一个入口链接。密钥只以摘要入库，明文只在这一次输出。
 import { createHash, randomBytes } from 'node:crypto';
+import { writeFileSync } from 'node:fs';
 
-const [name = '李佳', title = 'UNIHEAL 国际疗愈师 · UH-2024-0871'] = process.argv.slice(2).filter((a) => !a.startsWith('--'));
-const remote = process.argv.includes('--remote');
+const [name = '李佳', credential = 'UNIHEAL 国际疗愈师 · UH-2024-0871'] = process.argv.slice(2).filter((a) => !a.startsWith('--'));
+const base = process.env.CONSOLE_ORIGIN || 'https://mindbridge-console.pages.dev';
 
 const key = randomBytes(24).toString('base64url');
 const digest = createHash('sha256').update(key).digest('base64url');
+const staffId = `stf_${randomBytes(8).toString('hex')}`;
+const keyId = `key_${randomBytes(8).toString('hex')}`;
 const now = Date.now();
-const staffId = `stf_healer_${randomBytes(6).toString('hex')}`;
-const keyId = `pk_${randomBytes(8).toString('hex')}`;
 const esc = (s) => String(s).replace(/'/g, "''");
 
 const sql = [
-  `INSERT OR REPLACE INTO staff (staff_id, tenant_id, display_name, title, roles, auth_method, status, created_at, updated_at, last_seen_at)`
-  + ` VALUES ('${staffId}', 'external', '${esc(name)}', '${esc(title)}', 'healer', 'portal_key', 'active', ${now}, ${now}, ${now});`,
-  `INSERT INTO healer_portal_keys (id, key_digest, staff_id, label, created_by, created_at)`
-  + ` VALUES ('${keyId}', '${digest}', '${staffId}', '${esc(name)} 门户密钥', 'provision-script', ${now});`,
+  `INSERT OR REPLACE INTO staff (staff_id, tenant_id, display_name, credential, roles, auth_method, status, created_at, updated_at, last_seen_at)`
+  + ` VALUES ('${staffId}', 'external', '${esc(name)}', '${esc(credential)}', 'healer', 'access_key', 'active', ${now}, ${now}, ${now});`,
+  `INSERT INTO staff_access_keys (id, staff_id, key_digest, label, created_at)`
+  + ` VALUES ('${keyId}', '${staffId}', '${digest}', '${esc(name)} 的常用入口', ${now});`,
 ].join('\n');
 
-execFileSync('npx', [
-  'wrangler', 'd1', 'execute', 'mindbridge-staff',
-  remote ? '--remote' : '--local', '--command', sql,
-], { stdio: ['ignore', 'ignore', 'inherit'] });
-
-const origin = remote ? 'https://mindbridge-console.pages.dev' : 'http://localhost:8789';
-console.log(`已创建疗愈师：${name}（${title}）`);
-console.log(`门户链接（请妥善保存，等同于登录凭证）：`);
-console.log(`${origin}/healer?k=${key}`);
+writeFileSync('seed/healer.sql', `${sql}\n`);
+console.log(sql.split('\n').map(() => '').join(''));
+console.log(`已生成 seed/healer.sql（只含摘要，可安全提交给 wrangler 执行）`);
+console.log(`\n疗愈师：${name} · ${credential}`);
+console.log(`入口链接（只显示这一次，请立即保存）：\n${base}/healer?k=${key}\n`);

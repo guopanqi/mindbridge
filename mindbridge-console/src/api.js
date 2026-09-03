@@ -59,10 +59,10 @@ export const api = {
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(payload),
   }),
-  signInAsHealer: (accessCode) => request('/api/auth/healer', {
+  signInAsHealer: (payload) => request('/api/auth/healer', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ accessCode }),
+    body: JSON.stringify(payload),
   }),
   createHealerInvite: (displayName) => request('/api/healer/invite', {
     method: 'POST',

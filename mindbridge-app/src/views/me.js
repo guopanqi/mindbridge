@@ -171,7 +171,13 @@ function consentPanel(reload) {
   ]);
 }
 
-const STATE_LABEL = { offered: '待尝试', joined: '已参加', completed: '已完成', declined: '不适合我' };
+// 线下活动报名后到参加之间是「已报名」，线上活动是「进行中」，两者含义不同。
+const stateLabel = (item) => ({
+  offered: '待尝试',
+  joined: item.kind === 'offline' ? '已报名' : '进行中',
+  completed: '已完成',
+  declined: '不适合我',
+}[item.state] || item.state);
 
 // 员工的反馈是「活动效果」看板唯一的真实数据来源；HR 只看聚合，看不到是谁给的分。
 function resourceActions(item, reload) {
@@ -184,9 +190,14 @@ function resourceActions(item, reload) {
       toast('没有保存成功，请稍后再试。');
     }
   };
-  const openLabel = { offered: '开始', joined: '继续', completed: '再做一次', declined: '再看看' };
+  const openLabel = {
+    offered: item.kind === 'offline' ? '报名' : '开始',
+    joined: item.kind === 'offline' ? '去评价' : '继续',
+    completed: '再做一次',
+    declined: '再看看',
+  };
   const stateRow = el('div', { class: 'res-actions' }, [
-    el('span', { class: 'res-state', text: STATE_LABEL[item.state] || item.state }),
+    el('span', { class: 'res-state', text: stateLabel(item) }),
     el('button', {
       class: 'link', text: openLabel[item.state] || '打开', attrs: { type: 'button' },
       on: { click: () => void openActivity(item.id, reload) },

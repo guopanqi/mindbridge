@@ -135,7 +135,27 @@ async function boot() {
     }
   }
   if (window.location.pathname.startsWith('/healer')) {
-    showGate('疗愈师门户', '请使用企业管理员提供的门户链接打开本页面。链接等同于登录凭证，请不要转发。', null);
+    // 预设入口密钥走 URL 参数：演示时打开链接即登录，不需要在现场输入任何东西。
+    const params = new URLSearchParams(window.location.search);
+    const key = params.get('k');
+    if (key) {
+      // 无论成败都先把密钥从地址栏抹掉，避免留在截图、录屏和浏览器历史里。
+      params.delete('k');
+      const rest = params.toString();
+      window.history.replaceState({}, '', `${window.location.pathname}${rest ? `?${rest}` : ''}`);
+      try {
+        await api.signInAsHealer({ accessKey: key });
+        const session = await api.session();
+        return void enterConsole(session);
+      } catch (error) {
+        const reason = error instanceof ApiError ? error.code : 'UNEXPECTED_CLIENT_ERROR';
+        showGate('疗愈师门户', error instanceof ApiError && error.userMessage
+          ? error.userMessage
+          : '入口链接无效，请联系企业管理员重新获取。', reason);
+        return;
+      }
+    }
+    showGate('疗愈师门户', '请使用企业管理员提供的入口链接打开本页面。链接等同于登录凭证，请不要转发。', null);
     return;
   }
   showGate('需要从钉钉管理后台进入', GATE_TEXT.NO_CODE, null);
@@ -150,7 +170,7 @@ $('#healer-login').addEventListener('click', async () => {
   const code = input.value.trim();
   if (!code) return toast('请填写邀请码。');
   try {
-    await api.signInAsHealer(code);
+    await api.signInAsHealer({ accessCode: code });
     input.value = '';
     const session = await api.session();
     await enterConsole(session);

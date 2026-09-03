@@ -97,7 +97,7 @@ function renderIntro() {
           try {
             await api.activityProgress({ eventId: state.progress.eventId, action: 'skip' });
             toast('好，下次给你换一个。');
-            close(true);
+            close();
           } catch {
             toast('操作没有成功。');
           }
@@ -217,12 +217,33 @@ function renderPostBody() {
             toast(better
               ? `记下了。${label}比开始时${direction === 'down' ? '低' : '高'}了 ${Math.abs(delta)} 分。`
               : '记下了。谢谢你完成它。');
-            close(true);
+            close();
           } catch (error) {
             toast(error instanceof ApiError && error.userMessage ? error.userMessage : '提交没有成功。');
           }
         },
       },
+    }),
+  ]);
+}
+
+// 线下活动报名后不能立刻问「做完了感觉怎么样」——活动还没发生。
+// 报名后停在确认页，等员工真的参加完再回来评价。
+function renderBooked() {
+  return el('div', { class: 'act-body' }, [
+    el('div', { class: 'act-booked' }, [
+      el('p', { class: 'act-step-title', text: '已报名' }),
+      el('p', { class: 'act-step-hint', text: `时间：${state.schedule || '待企业安排'}` }),
+      el('p', { class: 'act-step-hint', text: `地点：${state.location || '待企业安排'}` }),
+    ]),
+    el('p', { class: 'act-note', text: `报名时你给「${state.scoreLabel || '状态'}」打了 ${state.progress.preScore} 分。参加完再回来打一次，就能看到变化。` }),
+    el('button', {
+      class: 'primary act-cta', text: '我已参加，现在评价', attrs: { type: 'button' },
+      on: { click: () => renderPost() },
+    }),
+    el('button', {
+      class: 'link act-skip', text: '还没参加，先关掉', attrs: { type: 'button' },
+      on: { click: () => close() },
     }),
   ]);
 }
@@ -234,20 +255,23 @@ function render() {
   let body;
   if (showingPost) body = renderPostBody();
   else if (state.progress.state === 'joined' && state.stages.length) body = renderStage();
+  else if (state.progress.state === 'joined' && state.kind === 'offline') body = renderBooked();
   else if (state.progress.state === 'joined') body = renderPostBody();
   else body = renderIntro();
   node.append(el('div', { class: 'act-sheet' }, [header(), body]));
   node.hidden = false;
 }
 
-export function close(changed) {
+export function close() {
   showingPost = false;
   state = null;
   if (overlay) {
     overlay.hidden = true;
     clear(overlay);
   }
-  if (changed) onClose();
+  // 关闭时一律刷新列表：中途报名、跳过、评分都会改变状态，
+  // 只在「提交」时刷新会让列表显示过期状态。
+  onClose();
 }
 
 export async function openActivity(eventId, afterClose) {
