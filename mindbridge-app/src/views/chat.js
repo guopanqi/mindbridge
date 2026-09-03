@@ -1,5 +1,6 @@
 import { api, ApiError } from '../api.js';
 import { $, clear, el, toast } from '../dom.js';
+import { openActivity } from './activity.js';
 
 const PRESETS = ['最近一直睡不好', '感觉自己撑不住了', '在这里说话安全吗？', '就是想有个人听听'];
 
@@ -21,10 +22,16 @@ function resourceCard(card) {
   if (!card) return null;
   return el('div', { class: 'card resource' }, [
     el('div', { class: 'card-icon', text: card.icon || '🌿' }),
-    el('div', {}, [
+    el('div', { class: 'card-main' }, [
       el('p', { class: 'card-title', text: card.name }),
       el('p', { class: 'card-desc', text: card.description }),
       el('p', { class: 'card-tag', text: card.level === 'L2' ? '进一步支持 · 需要你主动选择是否参加' : '可立即使用的自助资源' }),
+      card.eventId ? el('button', {
+        class: 'primary small card-cta',
+        text: card.level === 'L2' ? '看看详情' : '现在试试',
+        attrs: { type: 'button' },
+        on: { click: () => void openActivity(card.eventId) },
+      }) : null,
     ]),
   ]);
 }

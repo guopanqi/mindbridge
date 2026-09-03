@@ -4,6 +4,12 @@
 // 不得伪造钉钉考勤、病假或聊天接口返回。这里只生成本系统自己会产生的事件。
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { classifyTopic } from '../functions/api/_lib/topics.js';
+import { ACTIVITIES } from '../functions/api/_lib/activities-data.js';
+
+// 活动名 → 自评方向。down 表示分数越低越好（紧张、疲惫），up 表示越高越好（可控感）。
+const DIRECTION_BY_TITLE = Object.fromEntries(
+  Object.values(ACTIVITIES).map((a) => [a.title, a.direction || 'down'])
+);
 
 const DAYS = 180;  // 需要两个完整周期，看板的环比才有意义
 const HEADCOUNT = 200;
@@ -170,7 +176,14 @@ for (let d = DAYS - 1; d >= 0; d--) {
       // 只有真的参加过的人才会留下评分；分布偏正面但不是满分。
       const rated = state !== 'offered' && rnd() > 0.35;
       const rating = rated ? [3, 4, 4, 4, 5, 5, 5, 2][Math.floor(rnd() * 8)] : null;
-      emit(`INSERT INTO resource_events (id, anon_id, conversation_id, resource_name, resource_level, risk_level, state, rating, feedback_at, created_at, updated_at, data_origin) VALUES ('${id('res')}', '${anonId}', NULL, '${esc(name)}', '${resLevel}', '${level}', '${state}', ${rating ?? 'NULL'}, ${rated ? at + 3600000 : 'NULL'}, ${at}, ${at}, '${ORIGIN}');`);
+      // 完成过的活动留下前后自评；多数人有改善，但不是所有人，避免看起来像编的。
+      const done = state === 'completed';
+      // 按活动自身的自评方向生成前后分，让「改善」在两种方向上都成立。
+      const up = DIRECTION_BY_TITLE[name] === 'up';
+      const pre = done ? (up ? between(2, 6) : between(5, 9)) : null;
+      const shift = rnd() > 0.18 ? between(1, 3) : -between(0, 1);
+      const post = done ? Math.max(1, Math.min(10, up ? pre + shift : pre - shift)) : null;
+      emit(`INSERT INTO resource_events (id, anon_id, conversation_id, resource_name, resource_level, risk_level, state, rating, feedback_at, pre_score, post_score, created_at, updated_at, data_origin) VALUES ('${id('res')}', '${anonId}', NULL, '${esc(name)}', '${resLevel}', '${level}', '${state}', ${rating ?? 'NULL'}, ${rated ? at + 3600000 : 'NULL'}, ${pre ?? 'NULL'}, ${post ?? 'NULL'}, ${at}, ${at}, '${ORIGIN}');`);
       emit(`INSERT INTO aggregate_events (id, event_type, emotion, level, bucket_day, created_at, data_origin) VALUES ('${id('agg')}', 'resource_offered', '${esc(emotion)}', '${level}', '${day}', ${at}, '${ORIGIN}');`);
     }
   }

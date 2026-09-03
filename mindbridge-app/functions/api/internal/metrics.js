@@ -134,12 +134,19 @@ export async function onRequestGet({ request, env }) {
                 COUNT(rating) AS feedback, AVG(rating) AS avg_rating,
                 COUNT(DISTINCT anon_id) AS people
          FROM resource_events WHERE created_at > ?`, since).first(),
-      q(`SELECT resource_name AS label, resource_level AS level, COUNT(*) AS recommended,
-                SUM(CASE WHEN state IN ('joined','completed') THEN 1 ELSE 0 END) AS participated,
-                SUM(CASE WHEN state = 'completed' THEN 1 ELSE 0 END) AS completed,
-                COUNT(rating) AS feedback, AVG(rating) AS avg_rating,
-                COUNT(DISTINCT anon_id) AS people
-         FROM resource_events WHERE created_at > ? GROUP BY resource_name, resource_level ORDER BY recommended DESC LIMIT 8`, since).all(),
+      q(`SELECT e.resource_name AS label, e.resource_level AS level, COUNT(*) AS recommended,
+                SUM(CASE WHEN e.state IN ('joined','completed') THEN 1 ELSE 0 END) AS participated,
+                SUM(CASE WHEN e.state = 'completed' THEN 1 ELSE 0 END) AS completed,
+                COUNT(e.rating) AS feedback, AVG(e.rating) AS avg_rating,
+                COUNT(DISTINCT e.anon_id) AS people,
+                -- 效果 = 前后自评差值，只统计两次自评都留下的记录。
+                AVG(CASE WHEN e.pre_score IS NOT NULL AND e.post_score IS NOT NULL
+                         THEN e.pre_score - e.post_score END) AS effect_delta,
+                SUM(CASE WHEN e.pre_score IS NOT NULL AND e.post_score IS NOT NULL THEN 1 ELSE 0 END) AS effect_samples,
+                MAX(a.score_label) AS score_label, MAX(a.direction) AS direction
+         FROM resource_events e LEFT JOIN resource_catalog c ON c.name = e.resource_name
+              LEFT JOIN activities a ON a.id = COALESCE(e.activity_id, c.activity_id)
+         WHERE e.created_at > ? GROUP BY e.resource_name, e.resource_level ORDER BY recommended DESC LIMIT 8`, since).all(),
     ]);
 
     const headcount = tenant?.headcount || 0;
@@ -288,6 +295,13 @@ export async function onRequestGet({ request, env }) {
           completionRate: percentage(r.completed, r.participated),
           avgRating: r.feedback >= 3 ? Math.round((r.avg_rating || 0) * 10) / 10 : null,
           feedback: r.feedback,
+          // 改善幅度已按 direction 归一：正数一律表示变好，前端不需要再推理方向。
+          // 至少 3 份前后自评才展示，避免个位数样本被当成结论。
+          improvement: r.effect_samples >= 3
+            ? Math.round(((r.direction === 'up' ? -1 : 1) * (r.effect_delta || 0)) * 10) / 10
+            : null,
+          effectSamples: r.effect_samples || 0,
+          scoreLabel: r.score_label || null,
         }, r.people),
       })),
       topEmotions: emotionTotal >= MIN_SAMPLE

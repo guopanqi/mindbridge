@@ -120,11 +120,14 @@ export async function onRequestPost({ request, env }) {
 
     if (result.resource) {
       const cardId = newId('msg');
+      const resourceEventId = newId('res');
+      // 卡片里带上推荐事件 id，员工点开就能直接进入活动引导流程。
+      result.resource.eventId = resourceEventId;
       const sealed = await sealBody(env, JSON.stringify(result.resource), aad);
       statements.push(insert(cardId, 'resource', sealed, result.level, now + 2));
       statements.push(env.CARE_DB.prepare(
         'INSERT INTO resource_events (id, anon_id, conversation_id, resource_name, resource_level, risk_level, state, created_at, updated_at, data_origin) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-      ).bind(newId('res'), anonId, conversation.id, result.resource.name, result.resource.level, result.level, 'offered', now, now, 'live'));
+      ).bind(resourceEventId, anonId, conversation.id, result.resource.name, result.resource.level, result.level, 'offered', now, now, 'live'));
       statements.push(aggregateStatement(env, { eventType: 'resource_offered', emotion: result.emotion, level: result.level, at: now }));
       appended.push({ id: cardId, role: 'resource', at: now + 2, card: result.resource });
     }

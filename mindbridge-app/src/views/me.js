@@ -1,5 +1,6 @@
 import { api, ApiError } from '../api.js';
 import { BUILD_ID } from '../build-id.js';
+import { openActivity } from './activity.js';
 import { clear, el, openSheet, timeAgo, toast } from '../dom.js';
 
 export const CONTEXT_LABELS = {
@@ -183,22 +184,21 @@ function resourceActions(item, reload) {
       toast('没有保存成功，请稍后再试。');
     }
   };
+  const openLabel = { offered: '开始', joined: '继续', completed: '再做一次', declined: '再看看' };
   const stateRow = el('div', { class: 'res-actions' }, [
     el('span', { class: 'res-state', text: STATE_LABEL[item.state] || item.state }),
-    ...(item.state === 'completed' ? [] : [
-      el('button', { class: 'link', text: '我参加了', attrs: { type: 'button' }, on: { click: () => void mark('joined') } }),
-      el('button', { class: 'link', text: '已完成', attrs: { type: 'button' }, on: { click: () => void mark('completed') } }),
-    ]),
-    ...(item.state === 'offered' ? [
-      el('button', { class: 'link mut', text: '不适合我', attrs: { type: 'button' }, on: { click: () => void mark('declined') } }),
-    ] : []),
+    el('button', {
+      class: 'link', text: openLabel[item.state] || '打开', attrs: { type: 'button' },
+      on: { click: () => void openActivity(item.id, reload) },
+    }),
+    item.state === 'offered' ? el('button', {
+      class: 'link mut', text: '不适合我', attrs: { type: 'button' }, on: { click: () => void mark('declined') },
+    }) : null,
   ]);
-  if (item.state !== 'joined' && item.state !== 'completed') return stateRow;
-  const stars = el('div', { class: 'res-stars' }, [1, 2, 3, 4, 5].map((n) => el('button', {
-    class: `star${item.rating >= n ? ' on' : ''}`,
-    text: '★',
-    attrs: { type: 'button', 'aria-label': `${n} 分` },
-    on: { click: () => void mark(item.state, n) },
+  if (!item.rating) return stateRow;
+  // 已经评过分的直接展示结果，重新评分在活动流程里做。
+  const stars = el('div', { class: 'res-stars' }, [1, 2, 3, 4, 5].map((n) => el('span', {
+    class: `star${item.rating >= n ? ' on' : ''}`, text: '★',
   })));
   return el('div', {}, [stateRow, stars]);
 }

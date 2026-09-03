@@ -283,16 +283,18 @@ function renderActivitiesPane(data) {
     ]),
     el('div', { class: 'cardC' }, [
       el('h4', {}, [el('span', { text: '单项活动表现' }), el('span', { class: 'src', text: '按推荐次数排序' })]),
+      el('div', { class: 'cs', text: '「自评改善」是员工在活动开始前与结束后各自评一次的差值，已按方向归一：正数表示变好。至少 3 份前后自评才出数。' }),
       el('table', {}, [
         el('thead', {}, [el('tr', {}, [
           el('th', { text: '活动' }), el('th', { text: '层级' }), el('th', { text: '推荐次数' }),
           el('th', { text: '参与率' }), el('th', { text: '完成率' }), el('th', { text: '满意度' }),
+          el('th', { text: '自评改善' }),
         ])]),
         el('tbody', {}, (data.activityPerformance || []).map((row) => (row.suppressed
           ? el('tr', { class: 'masked' }, [
             el('td', { text: row.label }),
             el('td', { text: row.level }),
-            el('td', { attrs: { colspan: 4 }, text: `有效样本少于 ${data.minSample} 人 · 不予展示` }),
+            el('td', { attrs: { colspan: 5 }, text: `有效样本少于 ${data.minSample} 人 · 不予展示` }),
           ])
           : el('tr', {}, [
             el('td', { text: row.label }),
@@ -301,6 +303,17 @@ function renderActivitiesPane(data) {
             metricCell(row, 'participationRate', '%'),
             metricCell(row, 'completionRate', '%'),
             metricCell(row, 'avgRating'),
+            (() => {
+              // 改善幅度已由接口按方向归一，正数即变好。
+              const v = row.value || {};
+              if (v.improvement === null || v.improvement === undefined) {
+                return el('td', { class: 'mut', text: '样本不足' });
+              }
+              return el('td', {}, [
+                el('span', { class: `pill ${v.improvement > 0 ? 'g' : 'y'}`, text: `${v.improvement > 0 ? '+' : ''}${v.improvement}` }),
+                el('span', { class: 'eff-note', text: `${v.scoreLabel || '自评'} · ${v.effectSamples} 份` }),
+              ]);
+            })(),
           ])))),
       ]),
     ]),

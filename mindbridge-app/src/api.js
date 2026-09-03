@@ -51,6 +51,8 @@ export const api = {
   reply: (postId, text) => post('/api/wall/reply', { postId, text }),
   history: () => request('/api/history'),
   resourceFeedback: (id, state, rating) => post('/api/resources', { id, state, rating }),
+  activity: (eventId) => request(`/api/activities?eventId=${encodeURIComponent(eventId)}`),
+  activityProgress: (payload) => post('/api/activities', payload),
   checkin: () => request('/api/checkin'),
   submitCheckin: (mood) => post('/api/checkin', { mood }),
   appointments: () => request('/api/appointments'),
