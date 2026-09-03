@@ -10,30 +10,55 @@
     <script defer src="/app.js"></script>
   </head>
   <body>
-    <main class="app-shell">
-      <p class="eyebrow">MINDBRIDGE · 企业心理支持</p>
-      <h1>给自己留一座桥</h1>
-      <p class="lead">从钉钉工作台进入后，我们只建立匿名会话。你的钉钉身份不会展示给 HR 或疗愈师。</p>
+    <!-- 启动场景：只展示隐私边界，不展示姓名、工号或任何身份标识 -->
+    <section id="boot" class="boot" aria-live="polite">
+      <div class="boot-mark" aria-hidden="true"><span class="ring"></span><span class="ring d1"></span><span class="core"></span></div>
+      <h1 id="boot-title" class="boot-title">正在建立匿名连接</h1>
+      <p id="boot-detail" class="boot-detail">你的钉钉身份留在门口，不会进入 MindBridge 的业务系统。</p>
+      <ol id="boot-steps" class="boot-steps">
+        <li data-step="verify"><i></i>钉钉确认你属于本企业</li>
+        <li data-step="strip"><i></i>姓名与工号在此处被丢弃</li>
+        <li data-step="anon"><i></i>只带着一个匿名编号进入</li>
+      </ol>
+      <div id="boot-fail" class="boot-fail" hidden>
+        <p id="boot-fail-text"></p>
+        <button id="boot-retry" class="primary" type="button">重试</button>
+        <p class="boot-code">管理员诊断码：<span id="boot-code">-</span></p>
+      </div>
+    </section>
 
-      <section class="status-card" aria-live="polite">
-        <span id="status-dot" class="status-dot pending"></span>
-        <div>
-          <p id="status-title" class="status-title">等待建立匿名会话</p>
-          <p id="status-detail" class="status-detail">请从钉钉工作台打开本应用。</p>
+    <div id="app" class="app" hidden>
+      <header class="topbar">
+        <div class="who">
+          <span class="avatar" aria-hidden="true"></span>
+          <div>
+            <p class="who-name" id="display-name">匿名同事</p>
+            <p class="who-sub">匿名身份 · HR 与疗愈师都看不到你是谁</p>
+          </div>
         </div>
-      </section>
+        <button id="privacy-btn" class="ghost" type="button">隐私说明</button>
+      </header>
 
-      <button id="auth-button" class="primary" type="button">通过钉钉建立匿名会话</button>
-      <button id="logout-button" class="secondary" type="button" hidden>结束本次匿名会话</button>
+      <main id="main">
+        <section id="view-chat" class="view" aria-label="倾诉树洞"></section>
+        <section id="view-wall" class="view" hidden aria-label="匿名广场"></section>
+        <section id="view-me" class="view" hidden aria-label="我的"></section>
+      </main>
 
-      <section class="privacy-card">
-        <h2>这一步会发生什么</h2>
-        <ol>
-          <li>钉钉确认你属于当前企业；</li>
-          <li>服务端创建稳定匿名身份与短期会话；</li>
-          <li>业务系统不保存明文钉钉用户标识。</li>
-        </ol>
-      </section>
-    </main>
+      <nav class="tabbar" role="tablist" aria-label="主导航">
+        <button class="tab on" role="tab" aria-selected="true" data-view="chat"><span aria-hidden="true">🌿</span>倾诉树洞</button>
+        <button class="tab" role="tab" aria-selected="false" data-view="wall"><span aria-hidden="true">💬</span>匿名广场</button>
+        <button class="tab" role="tab" aria-selected="false" data-view="me"><span aria-hidden="true">🗂</span>我的</button>
+      </nav>
+    </div>
+
+    <div id="sheet" class="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+      <div class="sheet-box">
+        <h2 id="sheet-title"></h2>
+        <div id="sheet-body"></div>
+        <button id="sheet-close" class="secondary" type="button">知道了</button>
+      </div>
+    </div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
   </body>
 </html>
