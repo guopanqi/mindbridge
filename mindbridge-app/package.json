@@ -11,7 +11,7 @@
     "deploy": "wrangler pages deploy public --project-name mindbridge-app --branch main",
     "db:migrate:care": "wrangler d1 migrations apply mindbridge-care --remote",
     "db:migrate:identity": "wrangler d1 migrations apply mindbridge-identity --remote",
-    "build:sdk": "esbuild scripts/dingtalk-entry.js --bundle --format=iife --target=chrome90,safari14 --outfile=public/vendor/dingtalk-auth-v3.js",
+    "build:sdk": "node scripts/build-sdk.mjs",
     "build:app": "node scripts/build-app.mjs",
     "seed:generate": "node scripts/generate-seed.mjs",
     "seed:apply:local": "wrangler d1 execute mindbridge-care --local --file seed/demo_seed.sql",

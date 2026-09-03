@@ -1,8 +1,22 @@
+# 缓存策略：每条路径只能得到一个明确的 Cache-Control，绝不叠加。
+# Pages 的 _headers 会把多条匹配规则「合并」而不是覆盖，因此全局规则里
+# 不能出现 Cache-Control，否则会和具体路径的规则拼成冲突指令（TD-006）。
+
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: no-referrer
   Permissions-Policy: geolocation=(), microphone=(), camera=()
+
+# 入口 HTML 与未做内容哈希的前端产物：每次部署都可能变，不允许缓存。
+/
+  Cache-Control: no-store
+/index.html
+  Cache-Control: no-store
+/app.js
+  Cache-Control: no-store
+/styles.css
   Cache-Control: no-store
 
-/vendor/dingtalk-auth-v3.js
+# vendor 产物文件名带内容哈希，内容变了 URL 就变，因此可以安全地长期缓存。
+/vendor/*
   Cache-Control: public, max-age=31536000, immutable
