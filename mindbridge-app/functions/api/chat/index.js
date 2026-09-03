@@ -4,7 +4,7 @@ import {
   ApiError, aggregateStatement, ensureProfile, handleError, newId,
   openBody, readJson, requireSession, requireText, sealBody,
 } from '../_lib/care.js';
-import { triage } from '../_lib/triage.js';
+import { respond } from '../_lib/responder.js';
 
 const CONVERSATION_WINDOW_MS = 6 * 60 * 60 * 1000;
 const RATE_WINDOW_MS = 60_000;
@@ -29,7 +29,7 @@ async function loadMessages(env, anonId, limit = HISTORY_LIMIT) {
 }
 
 function shape(row, text) {
-  if (row.role === 'resource' || row.role === 'consent') {
+  if (row.role === 'resource' || row.role === 'consent' || row.role === 'crisis') {
     let payload = null;
     try { payload = JSON.parse(text); } catch { payload = null; }
     return { id: row.id, role: row.role, at: row.created_at, card: payload };
@@ -96,7 +96,7 @@ export async function onRequestPost({ request, env }) {
     const aad = messageAad(conversation.id);
     const expiresAt = now + RETENTION_DAYS * 86400_000;
 
-    const result = triage(text, state, profile.context_tag);
+    const result = respond(text, state, profile.context_tag);
     const userSealed = await sealBody(env, text, aad);
     const replySealed = await sealBody(env, result.reply, aad);
 
@@ -133,12 +133,22 @@ export async function onRequestPost({ request, env }) {
         kind: 'consent',
         title: '这些感受值得被专业的人接住',
         body: '我能陪你说话，但我不能替代专业支持。如果你愿意，我可以在不透露你身份的前提下，把「有人现在需要支持」这件事交给持证疗愈师；要不要这样做，完全由你决定。',
-        actions: ['我愿意，请安排疗愈师', '暂时不用，我想继续说说'],
+        actions: [
+          { label: '我愿意，请安排疗愈师', action: 'request_appointment' },
+          { label: '暂时不用，我想继续说说', action: 'dismiss' },
+        ],
       };
       const cardId = newId('msg');
       const sealed = await sealBody(env, JSON.stringify(card), aad);
       statements.push(insert(cardId, 'consent', sealed, 'red', now + 3));
       appended.push({ id: cardId, role: 'consent', at: now + 3, card });
+
+      // 紧急资源：只提供可拨打的号码，绝不宣称系统已经代为联系。
+      const crisisCard = { kind: 'crisis', ...result.crisis };
+      const crisisId = newId('msg');
+      const crisisSealed = await sealBody(env, JSON.stringify(crisisCard), aad);
+      statements.push(insert(crisisId, 'crisis', crisisSealed, 'red', now + 4));
+      appended.push({ id: crisisId, role: 'crisis', at: now + 4, card: crisisCard });
     }
 
     if (result.level !== 'green') {

@@ -50,6 +50,13 @@ export const api = {
   hug: (postId) => post('/api/wall/react', { postId }),
   reply: (postId, text) => post('/api/wall/reply', { postId, text }),
   history: () => request('/api/history'),
+  checkin: () => request('/api/checkin'),
+  submitCheckin: (mood) => post('/api/checkin', { mood }),
+  appointments: () => request('/api/appointments'),
+  requestAppointment: (payload) => post('/api/appointments', payload),
+  cancelAppointment: (id) => request(`/api/appointments?id=${encodeURIComponent(id)}`, { method: 'DELETE' }),
+  consents: () => request('/api/consents'),
+  setConsent: (scope, granted) => post('/api/consents', { scope, granted }),
 };
 
 export async function hasSession() {

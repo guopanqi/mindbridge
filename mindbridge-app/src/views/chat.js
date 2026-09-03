@@ -10,6 +10,7 @@ let sending = false;
 function bubble(message) {
   if (message.role === 'resource') return resourceCard(message.card);
   if (message.role === 'consent') return consentCard(message.card);
+  if (message.role === 'crisis') return crisisCard(message.card);
   const mine = message.role === 'user';
   return el('div', { class: `bubble ${mine ? 'mine' : 'bot'}` }, [
     el('p', { class: 'bubble-text', text: message.text }),
@@ -28,21 +29,51 @@ function resourceCard(card) {
   ]);
 }
 
+async function requestAppointment(button) {
+  button.disabled = true;
+  try {
+    const result = await api.requestAppointment({ riskLevel: 'red', shareContext: true });
+    button.textContent = `已提交 · 个案编号 ${result.caseCode}`;
+    toast('已提交。疗愈师会看到个案编号和风险级别，看不到你是谁。你随时可以在「我的」里取消。');
+  } catch (error) {
+    button.disabled = false;
+    toast(error instanceof ApiError && error.userMessage ? error.userMessage : '提交没有成功，请稍后再试。');
+  }
+}
+
 function consentCard(card) {
   if (!card) return null;
   return el('div', { class: 'card consent' }, [
     el('p', { class: 'card-title', text: card.title }),
     el('p', { class: 'card-desc', text: card.body }),
-    el('div', { class: 'card-actions' }, (card.actions || []).map((label, index) => el('button', {
-      class: index === 0 ? 'primary small' : 'secondary small',
-      text: label,
-      attrs: { type: 'button' },
-      on: {
-        click: () => toast(index === 0
-          ? '已记录你的意愿。疗愈师预约将在下一步开放，我们不会在你不知情时联系任何人。'
-          : '好，我们继续说。你随时可以改主意。'),
-      },
-    }))),
+    el('div', { class: 'card-actions' }, (card.actions || []).map((item, index) => {
+      const label = typeof item === 'string' ? item : item.label;
+      const action = typeof item === 'string' ? null : item.action;
+      const button = el('button', {
+        class: index === 0 ? 'primary small' : 'secondary small',
+        text: label,
+        attrs: { type: 'button' },
+      });
+      button.addEventListener('click', () => {
+        if (action === 'request_appointment') return void requestAppointment(button);
+        toast('好，我们继续说。你随时可以改主意。');
+      });
+      return button;
+    })),
+  ]);
+}
+
+// 紧急资源：只给可拨打的号码，明确说明系统不会代替员工联系任何人。
+function crisisCard(card) {
+  if (!card) return null;
+  return el('div', { class: 'card crisis' }, [
+    el('p', { class: 'card-title', text: '如果现在很危险，可以直接打这个电话' }),
+    el('ul', { class: 'crisis-list' }, (card.resources || []).map((item) => el('li', {}, [
+      el('a', { class: 'crisis-tel', text: item.contact, attrs: { href: `tel:${item.contact}` } }),
+      el('span', { class: 'crisis-name', text: item.name }),
+      el('span', { class: 'crisis-note', text: item.note }),
+    ]))),
+    el('p', { class: 'card-desc', text: card.disclaimer || '' }),
   ]);
 }
 
