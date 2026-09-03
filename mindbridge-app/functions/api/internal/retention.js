@@ -7,6 +7,8 @@
 import { json } from '../_lib/http.js';
 
 const BATCH = 500;
+// 顺带清理时用很小的批量：绝大多数请求会删到 0 行，成本可忽略。
+const OPPORTUNISTIC_BATCH = 50;
 
 function timingSafeEqual(a, b) {
   if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
@@ -71,6 +73,19 @@ async function purge(env, dryRun) {
     report.push({ table: item.table, reason: item.reason, deleted: result.meta?.changes ?? 0 });
   }
   return report;
+}
+
+// 顺带清理：跟着正常请求做一小批，不需要独立的定时部署。
+// 调用方必须用 waitUntil 包起来，绝不能阻塞响应，失败也不能影响业务。
+export async function opportunisticPurge(env) {
+  const now = Date.now();
+  let total = 0;
+  for (const item of plan(now)) {
+    const binds = item.binds.map((b) => (b === BATCH ? OPPORTUNISTIC_BATCH : b));
+    const result = await env.CARE_DB.prepare(item.sql).bind(...binds).run();
+    total += result.meta?.changes ?? 0;
+  }
+  return total;
 }
 
 export async function onRequestGet({ request, env }) {
