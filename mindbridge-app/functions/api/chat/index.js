@@ -1,7 +1,7 @@
 // 倾诉树洞：员工原文只以密文进入 care D1，风险判定走确定性规则引擎。
 import { json } from '../_lib/http.js';
 import {
-  ApiError, aggregateStatement, ensureProfile, handleError, newId,
+  ApiError, aggregateStatement, ensureProfile, handleError, loadInterventionMatrix, newId,
   openBody, readJson, requireSession, requireText, sealBody,
 } from '../_lib/care.js';
 import { respond } from '../_lib/responder.js';
@@ -96,7 +96,9 @@ export async function onRequestPost({ request, env }) {
     const aad = messageAad(conversation.id);
     const expiresAt = now + RETENTION_DAYS * 86400_000;
 
-    const result = respond(text, state, profile.context_tag);
+    // 推荐走 HR 在管理端配置的干预阶梯；未配置时规则引擎回落到出厂默认值。
+    const matrix = await loadInterventionMatrix(env);
+    const result = respond(text, state, profile.context_tag, matrix);
     const userSealed = await sealBody(env, text, aad);
     const replySealed = await sealBody(env, result.reply, aad);
 

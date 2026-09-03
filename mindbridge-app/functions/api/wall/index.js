@@ -5,6 +5,7 @@ import {
   openBody, PLAIN_VERSION, readJson, requireSession, requireText, sealBody,
 } from '../_lib/care.js';
 import { analyze } from '../_lib/triage.js';
+import { classifyTopic } from '../_lib/topics.js';
 
 const PAGE_SIZE = 30;
 const RATE_WINDOW_MS = 10 * 60_000;
@@ -112,10 +113,12 @@ export async function onRequestPost({ request, env }) {
     const id = newId('post');
     const sealed = await sealBody(env, text, postAad(id));
     const emotion = analyze(text, null).top;
+    // 议题在此刻分类并落库；HR 端之后只对类别计数，不接触原文。
+    const topic = classifyTopic(text);
     await env.CARE_DB.batch([
       env.CARE_DB.prepare(
-        'INSERT INTO posts (id, anon_id, body_cipher, content_key_version, emotion, created_at, data_origin) VALUES (?, ?, ?, ?, ?, ?, ?)'
-      ).bind(id, anonId, sealed.cipher, sealed.version, emotion, now, 'live'),
+        'INSERT INTO posts (id, anon_id, body_cipher, content_key_version, emotion, topic, created_at, data_origin) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+      ).bind(id, anonId, sealed.cipher, sealed.version, emotion, topic, now, 'live'),
       aggregateStatement(env, { eventType: 'wall_post', emotion, level: 'green', at: now }),
     ]);
     return json({ ok: true, id });

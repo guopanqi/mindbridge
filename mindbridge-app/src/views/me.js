@@ -170,6 +170,39 @@ function consentPanel(reload) {
   ]);
 }
 
+const STATE_LABEL = { offered: '待尝试', joined: '已参加', completed: '已完成', declined: '不适合我' };
+
+// 员工的反馈是「活动效果」看板唯一的真实数据来源；HR 只看聚合，看不到是谁给的分。
+function resourceActions(item, reload) {
+  const mark = async (state, rating) => {
+    try {
+      await api.resourceFeedback(item.id, state, rating);
+      toast(rating ? '谢谢你的反馈。' : '已更新。');
+      reload();
+    } catch {
+      toast('没有保存成功，请稍后再试。');
+    }
+  };
+  const stateRow = el('div', { class: 'res-actions' }, [
+    el('span', { class: 'res-state', text: STATE_LABEL[item.state] || item.state }),
+    ...(item.state === 'completed' ? [] : [
+      el('button', { class: 'link', text: '我参加了', attrs: { type: 'button' }, on: { click: () => void mark('joined') } }),
+      el('button', { class: 'link', text: '已完成', attrs: { type: 'button' }, on: { click: () => void mark('completed') } }),
+    ]),
+    ...(item.state === 'offered' ? [
+      el('button', { class: 'link mut', text: '不适合我', attrs: { type: 'button' }, on: { click: () => void mark('declined') } }),
+    ] : []),
+  ]);
+  if (item.state !== 'joined' && item.state !== 'completed') return stateRow;
+  const stars = el('div', { class: 'res-stars' }, [1, 2, 3, 4, 5].map((n) => el('button', {
+    class: `star${item.rating >= n ? ' on' : ''}`,
+    text: '★',
+    attrs: { type: 'button', 'aria-label': `${n} 分` },
+    on: { click: () => void mark(item.state, n) },
+  })));
+  return el('div', {}, [stateRow, stars]);
+}
+
 function privacyNodes() {
   return [
     el('p', { text: '记录了什么：你在树洞里说的话、你在广场发布的内容，以及被推荐过哪些资源。原文以加密方式保存。' }),
@@ -227,9 +260,12 @@ export async function loadMe() {
     el('section', { class: 'panel' }, [
       el('h2', { text: '收到过的支持资源' }),
       body.resources.length
-        ? el('ul', { class: 'res-list' }, body.resources.map((item) => el('li', {}, [
-          el('span', { class: 'res-name', text: item.name }),
-          el('span', { class: 'res-meta', text: `${item.level === 'L2' ? '进一步支持' : '自助资源'} · ${timeAgo(item.at)}` }),
+        ? el('ul', { class: 'res-list' }, body.resources.map((item) => el('li', { class: 'res-item' }, [
+          el('div', { class: 'res-row' }, [
+            el('span', { class: 'res-name', text: item.name }),
+            el('span', { class: 'res-meta', text: `${item.level === 'L2' ? '进一步支持' : '自助资源'} · ${timeAgo(item.at)}` }),
+          ]),
+          resourceActions(item, reload),
         ])))
         : el('p', { class: 'empty', text: '还没有推荐记录。' }),
     ]),

@@ -96,6 +96,21 @@ async function enterConsole(session) {
 
 async function boot() {
   const url = new URL(window.location.href);
+
+  // 疗愈师门户：预设的长期密钥，进来立刻换成 HttpOnly 会话并从地址栏抹掉。
+  const portalKey = url.searchParams.get('k');
+  if (portalKey) {
+    url.searchParams.delete('k');
+    window.history.replaceState({}, '', url.toString());
+    try {
+      await api.signInWithPortalKey(portalKey);
+    } catch (error) {
+      showGate('疗愈师门户无法打开', error?.userMessage || '门户链接已失效，请联系企业管理员。',
+        error instanceof ApiError ? error.code : null);
+      return;
+    }
+  }
+
   const code = url.searchParams.get('code');
   if (code) {
     // 免登码不应该留在地址栏里，换取会话后立刻从 URL 中抹掉。
@@ -118,6 +133,10 @@ async function boot() {
       showGate('无法进入管理后台', GATE_TEXT[reason] || '身份校验没有完成。', reason);
       return;
     }
+  }
+  if (window.location.pathname.startsWith('/healer')) {
+    showGate('疗愈师门户', '请使用企业管理员提供的门户链接打开本页面。链接等同于登录凭证，请不要转发。', null);
+    return;
   }
   showGate('需要从钉钉管理后台进入', GATE_TEXT.NO_CODE, null);
 }

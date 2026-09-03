@@ -33,27 +33,6 @@ const INDUSTRY_TOPICS = {
 };
 
 // 干预阶梯矩阵配置库（取自 Demo）
-const MATRIX_BASE = [
-  { em: '😰', sig: '焦虑', hit: 214, L1: '三分钟呼吸着陆法', L2: '情绪红绿灯正念工作坊', L3: '疗愈师介入' },
-  { em: '😮‍💨', sig: '疲惫', hit: 187, L1: '工间身体扫描音频', L2: '能量唤醒工作坊', L3: '疗愈师介入' },
-  { em: '😤', sig: '烦躁', hit: 118, L1: '情绪暂停提醒卡片', L2: '身体觉知与释放', L3: '疗愈师介入' },
-  { em: '😔', sig: '低落', hit: 96, L1: '每日三件好事打卡', L2: '身份重塑叙事疗愈小组', L3: '疗愈师介入' },
-  { em: '😬', sig: '紧张', hit: 84, L1: '渐进式肌肉放松音频', L2: '情绪红绿灯正念工作坊', L3: '疗愈师介入' },
-  { em: '🫥', sig: '孤独', hit: 62, L1: '正念音频包', L2: '跨团队疗愈小组', L3: '疗愈师介入' },
-  { em: '🥺', sig: '委屈', hit: 53, L1: '情绪书写练习', L2: '「心流插花」艺术疗愈', L3: '疗愈师介入' },
-  { em: '😡', sig: '愤怒', hit: 41, L1: '情绪暂停提醒卡片', L2: '拳力以赴·解压拳击', L3: '疗愈师介入' },
-  { em: '🌫️', sig: '迷茫', hit: 39, L1: '职业价值锚点练习', L2: '身份重塑叙事疗愈小组', L3: '疗愈师介入' },
-];
-
-const TEMPLATES = {
-  '互联网/IT': { name: '互联网/IT 模板', desc: '聚焦赶工焦虑、加班与身份重塑' },
-  '金融/银行': { name: '金融/高压服务 模板', desc: '聚焦业绩指标、客户消耗与心理韧性' },
-  '医护/护理': { name: '医护/专业关照 模板', desc: '聚焦共情疲劳、巴林特小组与轮班舒缓' },
-  '客服/服务业': { name: '客服/情绪劳动 模板', desc: '聚焦客户冲突、情绪隔离与艺术疗愈' },
-  '制造业': { name: '智能制造 模板', desc: '聚焦身心疲劳、常态化驻场与解压拳击' },
-};
-
-let sensingSwitches = { attendance: true, approval: true, calendar: true, todos: true };
 
 function kpi(value, label, hint) {
   return el('div', { class: 'kp' }, [
@@ -147,8 +126,8 @@ function originCard(title, summary, note) {
 // ---------------- Pane 1: 组织看板 ----------------
 function renderDashPane(data) {
   const min = data.minSample;
-  const topics = data.topics || {};
-  const maxTopic = Math.max(...Object.values(topics), 1);
+  const topics = data.topics || [];
+  const maxTopic = Math.max(...topics.map((t) => t.count), 1);
 
   return el('div', { class: 'inner' }, [
     el('div', { class: 'demo-banner' }, [
@@ -156,24 +135,39 @@ function renderDashPane(data) {
       el('span', { text: '本页以预置样本为基线，并叠加当前 Demo 产生的活动事件；不代表真实组织数据。真实部署中，不足 10 人的结果不予展示。' }),
     ]),
     el('div', { class: 'kpis' }, [
-      kpi(`${data.coverage.rate}<small>%</small>`, '员工覆盖率', `↑ 较上月 ${data.coverage.delta || '+6pt'}`),
-      kpi(`${data.temperature?.value || 6.4}<small>/10</small>`, '全员情绪温度', `↑ ${data.temperature?.delta || '+0.8'}`),
+      kpi(`${data.coverage.rate}<small>%</small>`, '员工覆盖率', data.coverage.delta ? `较上月 ${data.coverage.delta}` : '暂无环比'),
+      kpi(
+        data.temperature?.value === null || data.temperature?.value === undefined
+          ? '<span class="na">样本不足</span>'
+          : `${data.temperature.value}<small>/10</small>`,
+        '全员情绪温度',
+        data.temperature?.delta ? `较上周 ${data.temperature.delta}` : '暂无环比',
+      ),
       kpi(`${data.risk.greenShare}<small>%</small>`, '绿色 · 日常占比', '多为轻量情绪'),
-      kpi(`${data.risk.redHandledRate || '100%'}<small></small>`, '红色个案疗愈师接管率', '零漏接'),
+      kpi(
+        data.risk.redOnTimeRate === null || data.risk.redOnTimeRate === undefined
+          ? '<span class="na">暂无个案</span>'
+          : `${data.risk.redOnTimeRate}<small>%</small>`,
+        '红色个案 SLA 内响应率',
+        data.risk.redBreached ? `${data.risk.redBreached} 例超时` : `${data.risk.redCases} 例中零漏接`,
+      ),
     ]),
     el('div', { class: 'grid2' }, [
       el('div', { class: 'cardC' }, [
-        el('h4', {}, [el('span', { text: '组织议题热度 · 本周' }), el('span', { class: 'src', text: '来源：匿名广场' })]),
+        el('h4', {}, [el('span', { text: '组织议题热度' }), el('span', { class: 'src', text: '来源：匿名广场 · 发帖时分类，不读取原文' })]),
         el('div', { class: 'cs', text: '员工主动谈论什么 —— 回答「公司出什么事了」' }),
-        el('div', {}, Object.entries(topics).map(([name, val], i) => el('div', { class: 'tbar' }, [
-          el('span', { class: 'tn', text: name }),
-          el('div', { class: 'tt' }, [(() => {
-            const bar = el('i');
-            bar.style.width = `${Math.round((val / maxTopic) * 100)}%`;
-            return bar;
-          })()]),
-          el('span', { class: `tv ${i === 0 ? 'up' : ''}`, text: i === 0 ? '↑ 38%' : i === 1 ? '↑ 12%' : '— 持平' }),
-        ]))),
+        topics.length
+          ? el('div', {}, topics.map((t, i) => el('div', { class: 'tbar' }, [
+            el('span', { class: 'tn', text: t.topic }),
+            el('div', { class: 'tt' }, [(() => {
+              const bar = el('i');
+              bar.style.width = `${Math.round((t.count / maxTopic) * 100)}%`;
+              return bar;
+            })()]),
+            // 展示真实条数，不编造趋势箭头。
+            el('span', { class: `tv ${i === 0 ? 'up' : ''}`, text: `${t.count} 条` }),
+          ])))
+          : el('div', { class: 'cs', text: '本周期内还没有可归类的广场内容。' }),
       ]),
       el('div', { class: 'cardC' }, [
         el('h4', {}, [el('span', { text: '情绪分布 · 本周' }), el('span', { class: 'src', text: '来源：私密通道' })]),
@@ -198,13 +192,13 @@ function renderDashPane(data) {
           if (d.suppressed) {
             return el('tr', { class: 'masked' }, [
               el('td', { text: d.name }),
-              el('td', { class: 'mono', text: String(d.count) }),
-              el('td', { attrs: { colspan: 4 }, text: `有效样本 ${d.count} 人 (<10) · 按隐私规则不予展示` }),
+              el('td', { class: 'mono', text: String(d.headcount) }),
+              el('td', { attrs: { colspan: 4 }, text: `有效样本 ${d.sampleSize} 人（少于 ${data.minSample} 人）· 按隐私规则不予展示` }),
             ]);
           }
           return el('tr', {}, [
             el('td', { text: d.name }),
-            el('td', { class: 'mono', text: String(d.count) }),
+            el('td', { class: 'mono', text: String(d.headcount) }),
             el('td', { class: 'mono', text: `${d.participationRate}%` }),
             el('td', { class: 'mono', text: String(d.moodTemp) }),
             el('td', { text: d.mainTopic }),
@@ -214,30 +208,24 @@ function renderDashPane(data) {
       ]),
     ]),
     el('div', { class: 'cardC' }, [
-      el('h4', {}, [el('span', { text: '团队节奏 · 研发中心' }), el('span', { class: 'src', text: '来源：钉钉考勤 / 审批 / 待办' })]),
-      el('div', { class: 'cs', text: '回答「他们有多忙」—— 全部为行为元数据，不含任何消息内容' }),
-      el('div', { class: 'rhy' }, [
-        el('div', { class: 'ri' }, [
-          el('div', { class: 'rv', text: data.rhythm?.medianOffDuty || '20:42' }),
-          el('div', { class: 'rl', text: '下班打卡中位时间' }),
-          el('div', { class: 'rt', text: '仅反映打卡记录时间' }),
-        ]),
-        el('div', { class: 'ri' }, [
-          el('div', { class: 'rv', text: data.rhythm?.lateOffDutyShare || '38%' }),
-          el('div', { class: 'rl', text: '晚间下班打卡占比' }),
-          el('div', { class: 'rt', text: '口径：20:00 后' }),
-        ]),
-        el('div', { class: 'ri' }, [
-          el('div', { class: 'rv', text: data.rhythm?.overtimeApproval || '14 次' }),
-          el('div', { class: 'rl', text: '加班·调休审批' }),
-          el('div', { class: 'rt up', text: data.rhythm?.overtimeWeekend || '其中 9 次在周末' }),
-        ]),
-        el('div', { class: 'ri' }, [
-          el('div', { class: 'rv', text: data.rhythm?.pendingTasks || '14 项' }),
-          el('div', { class: 'rl', text: '未完成待办均值' }),
-          el('div', { class: 'rt', text: data.rhythm?.pendingTrend || '较上周持平' }),
-        ]),
+      el('h4', {}, [
+        el('span', { text: '团队节奏' }),
+        el('span', { class: 'src', text: data.rhythm?.connected ? '来源：钉钉考勤（已连接）' : '来源：钉钉考勤（未接入）' }),
       ]),
+      el('div', { class: 'cs', text: '回答「他们有多忙」—— 全部为行为元数据，不含任何消息内容。未开启或样本不足时不展示数值。' }),
+      el('div', { class: 'rhy' }, (data.rhythm?.metrics || []).map((m) => {
+        // 状态如实呈现：没开就说没开，没同步就说没同步，样本不够就说样本不够。
+        const stateText = {
+          disabled: '未开启该项感知',
+          not_synced: '已开启，尚未同步',
+          suppressed: `有效样本 ${m.sampleSize ?? 0} 人，低于 ${data.minSample} 人`,
+        };
+        return el('div', { class: `ri${m.state === 'ok' ? '' : ' ri-na'}` }, [
+          el('div', { class: 'rv', html: m.state === 'ok' ? m.value : '<span class="na">—</span>' }),
+          el('div', { class: 'rl', text: m.label }),
+          el('div', { class: 'rt', text: m.state === 'ok' ? m.note : stateText[m.state] }),
+        ]);
+      })),
       el('div', { class: 'rhynote', html: '<b>本系统未申请「会话内容存档」权限。</b> 消息条数、@次数、夜间消息占比这类数据，我们拿不到，也不打算拿。<br>以上指标按 ≥10 人聚合，不落个人档案，不与绩效、晋升、续聘挂钩。' }),
     ]),
     el('div', { class: 'cardC' }, [
@@ -267,96 +255,130 @@ function renderDashPane(data) {
 }
 
 // ---------------- Pane 2: 活动效果 ----------------
+function metricCell(row, key, suffix = '') {
+  if (row.suppressed) return el('td', { class: 'mono mut', text: '—' });
+  const value = row.value?.[key];
+  if (value === null || value === undefined) return el('td', { class: 'mono mut', text: '—' });
+  return el('td', { class: 'mono', text: `${value}${suffix}` });
+}
+
 function renderActivitiesPane(data) {
-  const stats = data.activityStats || {};
-  const perf = data.activityPerf || {};
-  const ind = data.tenant?.industry || '互联网/IT';
-  const bench = INDUSTRY_BENCH[ind] || INDUSTRY_BENCH['互联网/IT'];
+  const overall = data.activityOverall || {};
+  const ov = overall.value || {};
+  const ind = data.tenant?.industry;
+  const bench = INDUSTRY_BENCH[ind] || null;
+
+  // 本企业数值全部来自真实聚合；行业均值是模拟对照，两者在表头明确区分。
+  const compare = (mine, theirs, suffix = '%') => {
+    if (mine === null || mine === undefined || !theirs) return el('td', { class: 'mut', text: '—' });
+    const diff = Math.round((mine - theirs) * 10) / 10;
+    const cls = diff >= 0 ? 'g' : 'y';
+    return el('td', {}, [el('span', { class: `pill ${cls}`, text: `${diff >= 0 ? '高于' : '低于'}均值 ${Math.abs(diff)}${suffix === '%' ? 'pt' : ''}` })]);
+  };
 
   return el('div', { class: 'inner' }, [
     el('div', { class: 'demo-banner' }, [
-      el('b', { text: '⚠ 演示数据说明：' }),
-      el('span', { text: '本页以预置样本为基线，并叠加当前 Demo 产生的活动事件；不代表真实组织数据。真实部署中，不足 10 人的结果不予展示。' }),
+      el('b', { text: '数据说明：' }),
+      el('span', { text: '本企业数值来自真实聚合（模拟基线人群 + 现场真实事件）。行业均值为模拟的跨企业对照，用于说明产品形态。样本不足的行不予展示。' }),
     ]),
     el('div', { class: 'kpis' }, [
-      kpi('43<small>%</small>', '综合参与率', '已参与 ÷ 已推荐'),
-      kpi('71<small>%</small>', '综合完成率', '已完成 ÷ 已参与'),
-      kpi('4.4<small>/5</small>', '综合满意度', '评分总和 ÷ 有效反馈数'),
-      kpi('86<small>份</small>', '有效反馈', '已提交且评分有效的反馈数'),
+      kpi(ov.participationRate === undefined ? '<span class="na">样本不足</span>' : `${ov.participationRate}<small>%</small>`,
+        '综合参与率', '已参与 ÷ 已推荐'),
+      kpi(ov.completionRate === undefined ? '<span class="na">样本不足</span>' : `${ov.completionRate}<small>%</small>`,
+        '综合完成率', '已完成 ÷ 已参与'),
+      kpi(overall.avgRating === null || overall.avgRating === undefined ? '<span class="na">反馈不足</span>' : `${overall.avgRating}<small>/5</small>`,
+        '综合满意度', `需至少 ${data.minSample} 份反馈`),
+      kpi(`${overall.feedbackCount ?? 0}<small>份</small>`, '有效反馈', '员工主动提交的评分'),
     ]),
-    el('div', { class: 'cardC' }, [
-      el('h4', {}, [el('span', { text: `行业 Benchmark · ${ind}` }), el('span', { class: 'src', text: 'MindBridge 跨企业匿名基准' })]),
-      el('div', { class: 'cs', text: '企业只看到自己的数据与行业基准，不可查看其他企业明细。' }),
+    bench ? el('div', { class: 'cardC' }, [
+      el('h4', {}, [
+        el('span', { text: `行业 Benchmark · ${ind}` }),
+        el('span', { class: 'src', text: '行业均值为模拟对照' }),
+      ]),
       el('table', {}, [
-        el('thead', {}, [el('tr', {}, [el('th', { text: '指标' }), el('th', { text: data.tenant?.name || '星原科技' }), el('th', { text: '行业均值' }), el('th', { text: '相对位置' })])]),
+        el('thead', {}, [el('tr', {}, [
+          el('th', { text: '指标' }),
+          el('th', { text: `${data.tenant?.name || '本企业'}（真实聚合）` }),
+          el('th', { text: '行业均值（模拟）' }),
+          el('th', { text: '相对位置' }),
+        ])]),
         el('tbody', {}, [
-          el('tr', {}, [el('td', { text: 'AI 树洞月活' }), el('td', { class: 'mono', text: '42%' }), el('td', { class: 'mono', text: `${bench.use}%` }), el('td', {}, [el('span', { class: 'pill g', text: '高于均值 +11.0pt' })])]),
-          el('tr', {}, [el('td', { text: '活动参与率' }), el('td', { class: 'mono', text: '43%' }), el('td', { class: 'mono', text: '31%' }), el('td', {}, [el('span', { class: 'pill g', text: '高于均值 +12.0pt' })])]),
-          el('tr', {}, [el('td', { text: '活动完成率' }), el('td', { class: 'mono', text: '71%' }), el('td', { class: 'mono', text: `${bench.complete}%` }), el('td', {}, [el('span', { class: 'pill g', text: `高于均值 +${(71 - bench.complete).toFixed(1)}pt` })])]),
-          el('tr', {}, [el('td', { text: '活动满意度' }), el('td', { class: 'mono', text: '4.4 / 5' }), el('td', { class: 'mono', text: `${bench.rating} / 5` }), el('td', {}, [el('span', { class: 'pill g', text: '高于均值 +0.1' })])]),
+          el('tr', {}, [
+            el('td', { text: '员工覆盖率' }),
+            el('td', { class: 'mono', text: data.coverage.rate === null ? '—' : `${data.coverage.rate}%` }),
+            el('td', { class: 'mono', text: `${bench.use}%` }),
+            compare(data.coverage.rate, bench.use),
+          ]),
+          el('tr', {}, [
+            el('td', { text: '活动参与率' }),
+            el('td', { class: 'mono', text: ov.participationRate === undefined ? '—' : `${ov.participationRate}%` }),
+            el('td', { class: 'mono', text: `${bench.use}%` }),
+            compare(ov.participationRate, bench.use),
+          ]),
+          el('tr', {}, [
+            el('td', { text: '活动完成率' }),
+            el('td', { class: 'mono', text: ov.completionRate === undefined ? '—' : `${ov.completionRate}%` }),
+            el('td', { class: 'mono', text: `${bench.complete}%` }),
+            compare(ov.completionRate, bench.complete),
+          ]),
+          el('tr', {}, [
+            el('td', { text: '活动满意度' }),
+            el('td', { class: 'mono', text: overall.avgRating ? `${overall.avgRating} / 5` : '—' }),
+            el('td', { class: 'mono', text: `${bench.rating} / 5` }),
+            compare(overall.avgRating, bench.rating, ''),
+          ]),
         ]),
       ]),
-      el('div', { class: 'privacy-rule', text: '行业基准仅在满足最小企业数与最小样本量后展示；本企业数据会以去标识化形式进入统计池，但企业无法查看其他企业名称或单家企业明细。' }),
-    ]),
+      el('div', { class: 'privacy-rule', text: '行业基准仅在满足最小企业数与最小样本量后展示；本企业数据以去标识化形式进入统计池，企业无法查看其他企业名称或单家明细。' }),
+    ]) : null,
     el('div', { class: 'cardC' }, [
       el('h4', {}, [el('span', { text: '不同身份标签的活动表现' }), el('span', { class: 'src', text: '去标识化聚合' })]),
-      el('div', { class: 'cs', text: '只显示群体趋势，HRBP 无法查看任何员工的标签选择或活动记录。' }),
+      el('div', { class: 'cs', text: `只显示群体趋势。有效样本少于 ${data.minSample} 人的标签不予展示，HRBP 无法查看任何员工的标签选择。` }),
       el('table', {}, [
-        el('thead', {}, [el('tr', {}, [el('th', { text: '身份标签' }), el('th', { text: '有效样本' }), el('th', { text: '参与率' }), el('th', { text: '完成率' }), el('th', { text: '满意度' }), el('th', { text: '最受欢迎活动' })])]),
-        el('tbody', {}, Object.entries(stats).map(([, s]) => {
-          if (s.recommended < 10) {
-            return el('tr', { class: 'masked' }, [
-              el('td', { text: s.label }),
-              el('td', { class: 'mono', text: String(s.recommended) }),
-              el('td', { attrs: { colspan: 4 }, text: '样本不足 10 人 · 按隐私规则不予展示' }),
-            ]);
-          }
-          const partPct = Math.round((s.participated / s.recommended) * 100);
-          const compPct = Math.round((s.completed / s.participated) * 100);
-          const ratingVal = (s.ratingTotal / s.feedback).toFixed(1);
-          return el('tr', {}, [
-            el('td', { text: s.label }),
-            el('td', { class: 'mono', text: String(s.recommended) }),
-            el('td', { class: 'mono', text: `${partPct}%` }),
-            el('td', { class: 'mono', text: `${compPct}%` }),
-            el('td', { class: 'mono', text: `${ratingVal} / 5 (${s.feedback}份)` }),
-            el('td', { text: s.popular }),
-          ]);
-        })),
+        el('thead', {}, [el('tr', {}, [
+          el('th', { text: '身份标签' }), el('th', { text: '推荐次数' }), el('th', { text: '参与率' }),
+          el('th', { text: '完成率' }), el('th', { text: '满意度' }),
+        ])]),
+        el('tbody', {}, (data.activityByAudience || []).map((row) => (row.suppressed
+          ? el('tr', { class: 'masked' }, [
+            el('td', { text: row.label }),
+            el('td', { attrs: { colspan: 4 }, text: `有效样本少于 ${data.minSample} 人 · 按隐私规则不予展示` }),
+          ])
+          : el('tr', {}, [
+            el('td', { text: row.label }),
+            metricCell(row, 'recommended'),
+            metricCell(row, 'participationRate', '%'),
+            metricCell(row, 'completionRate', '%'),
+            metricCell(row, 'avgRating'),
+          ])))),
       ]),
-      el('div', { class: 'privacy-rule', text: '隐私规则：有效样本 <10 时整行隐藏；标签不可与部门、姓名、工号交叉下钻。孕产与返岗类信息仅用于匿名支持，不得用于绩效、晋升或续聘判断。' }),
     ]),
     el('div', { class: 'cardC' }, [
-      el('h4', {}, [el('span', { text: '不同线上活动的表现' }), el('span', { class: 'src', text: '全员 · 不区分身份标签' })]),
-      el('div', { class: 'cs', text: '回答「哪个活动该留、哪个该换」——同一批指标，换一个切面看。线下活动依赖现场签到与满意度回收，不纳入本表。' }),
+      el('h4', {}, [el('span', { text: '单项活动表现' }), el('span', { class: 'src', text: '按推荐次数排序' })]),
       el('table', {}, [
-        el('thead', {}, [el('tr', {}, [el('th', { text: '活动' }), el('th', { text: '形式' }), el('th', { text: '有效样本' }), el('th', { text: '参与率' }), el('th', { text: '完成率' }), el('th', { text: '满意度' })])]),
-        el('tbody', {}, Object.entries(perf).map(([, p]) => {
-          if (p.recommended < 10) {
-            return el('tr', { class: 'masked' }, [
-              el('td', { text: p.label }),
-              el('td', { attrs: { colspan: 5 }, text: '样本不足 10 人 · 按隐私规则不予展示' }),
-            ]);
-          }
-          const partPct = Math.round((p.participated / p.recommended) * 100);
-          const compPct = Math.round((p.completed / p.participated) * 100);
-          const ratingVal = (p.ratingTotal / p.feedback).toFixed(1);
-          return el('tr', {}, [
-            el('td', { text: p.label }),
-            el('td', { text: p.form, style: 'color:var(--mut)' }),
-            el('td', { class: 'mono', text: String(p.recommended) }),
-            el('td', { class: 'mono', text: `${partPct}%` }),
-            el('td', { class: 'mono', text: `${compPct}%` }),
-            el('td', { class: 'mono', text: `${ratingVal} / 5 (${p.feedback}份)` }),
-          ]);
-        })),
+        el('thead', {}, [el('tr', {}, [
+          el('th', { text: '活动' }), el('th', { text: '层级' }), el('th', { text: '推荐次数' }),
+          el('th', { text: '参与率' }), el('th', { text: '完成率' }), el('th', { text: '满意度' }),
+        ])]),
+        el('tbody', {}, (data.activityPerformance || []).map((row) => (row.suppressed
+          ? el('tr', { class: 'masked' }, [
+            el('td', { text: row.label }),
+            el('td', { text: row.level }),
+            el('td', { attrs: { colspan: 4 }, text: `有效样本少于 ${data.minSample} 人 · 不予展示` }),
+          ])
+          : el('tr', {}, [
+            el('td', { text: row.label }),
+            el('td', { text: row.level }),
+            metricCell(row, 'recommended'),
+            metricCell(row, 'participationRate', '%'),
+            metricCell(row, 'completionRate', '%'),
+            metricCell(row, 'avgRating'),
+          ])))),
       ]),
-      el('div', { class: 'privacy-rule', text: '隐私规则：有效样本 <10 时整行隐藏，与身份标签相同的口径；本表不按身份、部门二次下钻。' }),
     ]),
   ]);
 }
 
-// ---------------- Pane 3: 行业洞察 ----------------
 function renderIndustryPane(data) {
   const currentIndustry = data.tenant?.industry || '互联网/IT';
   let selectedIndustry = currentIndustry;
@@ -476,166 +498,206 @@ function renderIndustryPane(data) {
 }
 
 // ---------------- Pane 4: 干预阶梯配置 ----------------
+function levelSelect(catalog, level, current, onChange) {
+  const select = el('select', { class: 'cfg-select' });
+  for (const item of catalog.filter((c) => c.level === level)) {
+    const option = el('option', { text: `${item.icon || ''} ${item.name}`.trim(), attrs: { value: item.name } });
+    if (item.name === current) option.selected = true;
+    select.append(option);
+  }
+  select.addEventListener('change', () => onChange(select.value));
+  return select;
+}
+
 function renderCfgPane() {
   const container = el('div', { class: 'inner' });
-  let matrix = [...MATRIX_BASE];
 
-  function renderInner() {
+  async function renderInner() {
+    clear(container);
+    container.append(el('div', { class: 'cardC' }, [el('div', { class: 'cs', text: '正在读取配置…' })]));
+    let config;
+    try {
+      config = await api.config();
+    } catch (error) {
+      clear(container).append(el('div', { class: 'cardC' }, [
+        el('div', { class: 'cs', text: error.userMessage || '配置暂时取不到。' }),
+      ]));
+      return;
+    }
+
+    const save = async (payload, successText) => {
+      try {
+        await api.saveConfig(payload);
+        toast(successText);
+        await renderInner();
+      } catch (error) {
+        toast(error.userMessage || '保存失败');
+        await renderInner();
+      }
+    };
+
     clear(container);
     container.append(
       el('div', { class: 'cardC' }, [
-        el('div', { class: 'cfghead' }, [
-          el('h4', { text: '干预内容矩阵' }),
-          el('div', { class: 'template-control' }, [
-            el('button', {
-              class: 'tplbtn', text: '套用行业模板 ▾', attrs: { type: 'button' },
-              on: {
-                click: (e) => {
-                  const menu = document.querySelector('#tplmenu');
-                  if (menu) menu.classList.toggle('on');
-                  e.stopPropagation();
-                },
-              },
-            }),
-            el('div', { class: 'tplmenu', attrs: { id: 'tplmenu' } }, Object.entries(TEMPLATES).map(([indKey, tpl]) => el('button', {
-              attrs: { type: 'button' },
-              html: `<b>${tpl.name}</b><small>${tpl.desc}</small>`,
-              on: {
-                click: () => {
-                  toast(`已套用「${tpl.name}」`);
-                  document.querySelector('#tplmenu')?.classList.remove('on');
-                },
-              },
-            }))),
-          ]),
-        ]),
-        el('div', { class: 'cs', text: '纵轴决定响应内容，横轴展示三级干预路径。绿色、黄色可配置资源与支持映射；红色由专业流程统一管理，仅作展示。' }),
+        el('h4', { text: '干预内容矩阵' }),
+        el('div', { class: 'cs', text: `这是生效中的配置，不是示意图。改动保存后，员工端下一次触发该情绪信号时拿到的就是新资源。命中次数为最近 ${config.windowDays} 天的真实统计。` }),
         el('div', { class: 'mx-wrap' }, [
           el('table', { class: 'mx' }, [
             el('thead', {}, [el('tr', {}, [
               el('th', { text: '情绪信号' }),
+              el('th', { text: '命中' }),
               el('th', { class: 'g', html: '一级干预 · 绿色<span class="lvsub">个人自助资源</span>' }),
               el('th', { class: 'y', html: '二级干预 · 黄色<span class="lvsub">团体活动与工作坊</span>' }),
               el('th', { class: 'r', html: '三级干预 · 红色<span class="lvsub">专业疗愈师介入</span>' }),
+              el('th', { text: '启用' }),
             ])]),
-            el('tbody', {}, matrix.map((row) => el('tr', {}, [
-              el('td', { class: 'sig' }, [el('span', { class: 'em', text: row.em }), el('span', { text: row.sig })]),
-              el('td', {}, [el('span', { class: 'chipC g', text: row.L1 })]),
-              el('td', {}, [el('span', { class: 'chipC y', text: row.L2 })]),
-              el('td', {}, [el('span', { class: 'chipC r', text: row.L3 })]),
+            el('tbody', {}, config.matrix.map((row) => el('tr', { class: row.enabled ? '' : 'row-off' }, [
+              el('td', { text: `${row.icon} ${row.emotion}` }),
+              el('td', { class: 'mono', text: String(row.hits) }),
+              el('td', {}, [levelSelect(config.catalog, 'L1', row.l1.name, (value) => save(
+                { kind: 'matrix', emotion: row.emotion, l1Name: value },
+                `「${row.emotion}」的一级资源已改为「${value}」`,
+              ))]),
+              el('td', {}, [levelSelect(config.catalog, 'L2', row.l2.name, (value) => save(
+                { kind: 'matrix', emotion: row.emotion, l2Name: value },
+                `「${row.emotion}」的二级资源已改为「${value}」`,
+              ))]),
+              el('td', { class: 'mut', text: row.l3 }),
+              el('td', {}, [(() => {
+                const box = el('input', { attrs: { type: 'checkbox' } });
+                box.checked = row.enabled;
+                box.addEventListener('change', () => save(
+                  { kind: 'matrix', emotion: row.emotion, enabled: box.checked },
+                  box.checked ? `已启用「${row.emotion}」的自动推荐` : `已停用「${row.emotion}」的自动推荐`,
+                ));
+                return box;
+              })()]),
             ]))),
           ]),
         ]),
-      ]),
-      el('div', { class: 'cardC policy-card', style: 'border-left: 4px solid var(--red);' }, [
-        el('h4', { text: '红色预警 · 专业介入流程' }),
-        el('div', { class: 'cs', text: '命中危机词库后停止自动内容推荐，转入人工响应流程。HRBP 可查看流程，不可修改。' }),
-        el('div', { class: 'policy-list' }, [
-          el('div', { class: 'policy-row' }, [
-            el('span', { class: 'policy-label', text: '转接前置条件' }),
-            el('span', { class: 'policy-value', text: '征得员工知情同意后，方可转接专业疗愈师' }),
-            el('span', { class: 'policy-source', text: '伦理委员会规则' }),
-          ]),
-          el('div', { class: 'policy-row' }, [
-            el('span', { class: 'policy-label', text: '首次响应 SLA' }),
-            el('span', { class: 'policy-value', text: '2 小时内完成首次电话或私信确认' }),
-            el('span', { class: 'policy-source', text: '服务协议' }),
-          ]),
-          el('div', { class: 'policy-row' }, [
-            el('span', { class: 'policy-label', text: '值班疗愈师' }),
-            el('span', { class: 'policy-value', text: '李佳 · UH-2024-0871 · 在岗' }),
-            el('span', { class: 'policy-source', text: '实时排班' }),
-          ]),
-          el('div', { class: 'policy-row' }, [
-            el('span', { class: 'policy-label', text: '必要时专业转介' }),
-            el('span', { class: 'policy-value', text: '由 MindBridge 专业团队按危机流程评估决定，企业侧不可配置具体机构' }),
-            el('span', { class: 'policy-source', text: '专业流程' }),
-          ]),
-        ]),
-      ]),
-      el('div', { class: 'cardC policy-card' }, [
-        el('h4', { text: '系统升级规则' }),
-        el('div', { class: 'cs', text: '规则由专业团队制定并经伦理审查，系统自动执行，HRBP 不可单方调整。' }),
-        el('div', { class: 'locked-panel' }, [
-          el('div', { class: 'trow' }, [
-            el('span', { text: '连续 ' }), el('span', { class: 'num', text: '3' }), el('span', { text: ' 天出现「累 / 撑不住」 → 升级黄色 · 推送匹配的线下/团体支持资源' }),
-          ]),
-          el('div', { class: 'trow' }, [
-            el('span', { text: '7 天内倾诉 ≥ ' }), el('span', { class: 'num', text: '5' }), el('span', { text: ' 次 → 保持黄色关注 · 加强资源推荐与后续回访' }),
-          ]),
-          el('div', { class: 'trow' }, [
-            el('span', { text: '命中危机词库 → 立即征求员工同意 · 同意后方可转接疗愈师' }),
-          ]),
-        ]),
-      ]),
-      el('div', { class: 'cardC policy-card' }, [
-        el('h4', { text: '隐私与伦理规则' }),
-        el('div', { class: 'cs', text: '以下规则为系统隐私基线，HRBP 可查看，不可单方修改。' }),
-        el('div', { class: 'locked-panel' }, [
-          el('div', { class: 'trow', style: 'margin-bottom:14px' }, [
-            el('span', { text: '看板最小样本量 ' }), el('span', { class: 'num', text: '10' }), el('span', { text: ' 人（低于此值的部门不出数）' }),
-          ]),
-          el('div', { style: 'font-size:12px;font-weight:600;margin-bottom:8px', text: '匿名广场出现危机信号时——' }),
-          el('div', { class: 'radio on' }, [
-            el('div', { class: 'rb' }),
-            el('div', { class: 'rt', html: '<b>仅向发帖人本人发出私聊邀请</b><div style="font-size:11px;color:var(--mut)">不通知任何第三方。升级与否由员工决定。</div>' }),
-          ]),
-          el('div', { class: 'radio dis' }, [
-            el('div', { class: 'rb' }),
-            el('div', { class: 'rt', html: '<b>自动上报 HRBP</b><div style="font-size:11px;color:var(--mut)">该模式已被伦理委员会禁用：构成未告知监控</div>' }),
-          ]),
-        ]),
+        el('div', { class: 'rhynote', html: '<b>红色一级不可配置。</b>危机判定与是否转接疗愈师由独立于配置的规则引擎决定，HR 无法调整触发条件，也无法关闭危机流程。' }),
       ]),
     );
   }
 
-  document.addEventListener('click', () => {
-    document.querySelector('#tplmenu')?.classList.remove('on');
-  });
-
-  renderInner();
+  void renderInner();
   return container;
 }
 
-// ---------------- Pane 5: 办公数据感知 ----------------
-function renderSensingPane(data) {
+function renderSensingPane() {
   const container = el('div', { class: 'inner' });
-  const items = [
-    { id: 'attendance', name: '考勤打卡', desc: '上下班打卡时间、出勤天数，仅计算中位时间与晚归占比' },
-    { id: 'approval', name: '审批记录', desc: '加班、调休、请假申请频次，不读取请假理由与出差明细' },
-    { id: 'calendar', name: '日程密度', desc: '会议时长与排布密度，不含会议标题与会议内容' },
-    { id: 'todos', name: '待办任务', desc: '待办总数量与完成积压情况，不含具体任务详情' },
-  ];
 
-  function renderInner() {
+  async function renderInner() {
+    clear(container);
+    container.append(el('div', { class: 'cardC' }, [el('div', { class: 'cs', text: '正在读取配置与连接状态…' })]));
+    let config;
+    let status = null;
+    try {
+      config = await api.config();
+    } catch (error) {
+      clear(container).append(el('div', { class: 'cardC' }, [el('div', { class: 'cs', text: error.userMessage || '配置暂时取不到。' })]));
+      return;
+    }
+    try {
+      status = await api.rhythmStatus();
+    } catch {
+      status = null;
+    }
+
+    const save = async (payload, successText) => {
+      try {
+        await api.saveConfig(payload);
+        toast(successText);
+        await renderInner();
+      } catch (error) {
+        toast(error.userMessage || '保存失败');
+      }
+    };
+
+    // 连接状态如实呈现：连上了说连上了，没连上说明缺哪个权限点，绝不显示示例数值。
+    const connection = (() => {
+      if (!status) return { cls: 'r', title: '未能查询连接状态', detail: '管理端到 care 的内部调用失败。' };
+      if (!status.ok || !status.connected) {
+        return {
+          cls: 'r',
+          title: '未连接钉钉考勤接口',
+          detail: `钉钉返回 errcode ${status.errcode ?? '未知'}：${status.errmsg || '未知错误'}。通常是开发者后台尚未开通「考勤打卡数据读权限」，或权限范围未设为全部员工。`,
+        };
+      }
+      if (status.suppressed) {
+        return {
+          cls: 'y',
+          title: '已连接，但样本不足不予展示',
+          detail: `接口调用成功，企业成员 ${status.orgSize} 人，本周有打卡记录 ${status.sampleSize} 人，低于最小样本 ${status.minSample} 人。按隐私规则不展示聚合结果——这不是故障。`,
+        };
+      }
+      return {
+        cls: 'g',
+        title: '已连接钉钉考勤接口',
+        detail: `企业成员 ${status.orgSize} 人，本周有效样本 ${status.sampleSize} 人，满足最小样本 ${status.minSample} 人。`,
+      };
+    })();
+
     clear(container);
     container.append(
       el('div', { class: 'cardC' }, [
-        el('h4', { text: '办公数据感知能力' }),
-        el('div', { class: 'cs', text: 'MindBridge 仅使用经授权的非内容型工作节奏元数据。系统不在后台读取员工群聊或私人通讯内容；如某段工作消息与压力有关，由员工本人主动转发给 MindBridge。' }),
-        el('div', { class: 'grp' }, items.map((item) => {
-          const on = Boolean(sensingSwitches[item.id]);
-          return el('button', {
-            class: `grow ${on ? 'on' : ''}`, attrs: { type: 'button' },
-            on: {
-              click: () => {
-                sensingSwitches[item.id] = !sensingSwitches[item.id];
-                toast(sensingSwitches[item.id] ? `已开启「${item.name}」元数据感知` : `已关闭「${item.name}」感知`);
-                renderInner();
-              },
+        el('h4', { text: '钉钉数据连接状态' }),
+        el('div', { class: `conn ${connection.cls}` }, [
+          el('div', { class: 'conn-t', text: connection.title }),
+          el('div', { class: 'conn-d', text: connection.detail }),
+        ]),
+        el('button', {
+          class: 'bt pri', text: '立即同步一次', attrs: { type: 'button' },
+          on: {
+            click: async (event) => {
+              event.target.disabled = true;
+              event.target.textContent = '同步中…';
+              try {
+                const result = await api.syncRhythm();
+                toast(result.ok
+                  ? (result.suppressed ? `同步完成，有效样本 ${result.sampleSize} 人，未达展示阈值` : `同步完成，写入 ${result.written} 项指标`)
+                  : `同步失败：${result.errmsg || '未知错误'}`);
+              } catch (error) {
+                toast(error.userMessage || '同步失败');
+              }
+              await renderInner();
             },
-          }, [
-            el('div', { class: 'gk', text: on ? '✓' : '' }),
-            el('div', { class: 'gi' }, [el('div', { class: 'gn', text: item.name }), el('div', { class: 'gc', text: item.desc })]),
-            el('div', { class: 'gs', text: on ? '已开启' : '已关闭' }),
-          ]);
-        })),
-        el('div', { class: 'rhynote', style: 'margin-top:16px', html: '<b>工作消息只通过员工主动转发进入个人支持空间。</b><br>HR 无法开启群聊内容读取，也不能查看员工主动转发给 MindBridge 的具体消息。' }),
+          },
+        }),
+      ]),
+      el('div', { class: 'cardC' }, [
+        el('h4', { text: '办公数据感知能力' }),
+        el('div', { class: 'cs', text: '开关即时生效，控制系统是否采集对应的行为元数据。全部为非内容型元数据。' }),
+        el('div', { class: 'grp' }, config.sensing.map((item) => el('button', {
+          class: `grow ${item.enabled ? 'on' : ''} ${item.lockedOff ? 'locked' : ''}`,
+          attrs: { type: 'button' },
+          on: {
+            click: () => {
+              if (item.lockedOff) {
+                toast('本系统不申请该权限，这项无法开启。');
+                return;
+              }
+              void save(
+                { kind: 'sensing', key: item.key, enabled: !item.enabled },
+                item.enabled ? `已关闭「${item.label}」` : `已开启「${item.label}」`,
+              );
+            },
+          },
+        }, [
+          el('div', { class: 'gk', text: item.lockedOff ? '✕' : (item.enabled ? '✓' : '') }),
+          el('div', { class: 'gi' }, [
+            el('div', { class: 'gn', text: `${item.label} · ${item.category}` }),
+            el('div', { class: 'gc', text: item.detail }),
+            el('div', { class: 'gc mut', text: item.requiresPermission ? `钉钉权限点：${item.requiresPermission}` : '' }),
+          ]),
+          el('div', { class: 'gs', text: item.lockedOff ? '永不采集' : (item.enabled ? '已开启' : '已关闭') }),
+        ]))),
+        el('div', { class: 'rhynote', html: '<b>本系统未申请「会话内容存档」权限。</b>消息条数、@次数、夜间消息占比这类数据，我们拿不到，也不打算拿。<br>工作消息只有在员工本人主动转发时才会进入个人支持空间，HR 无法查看转发内容。' }),
       ]),
     );
   }
 
-  renderInner();
+  void renderInner();
   return container;
 }
 

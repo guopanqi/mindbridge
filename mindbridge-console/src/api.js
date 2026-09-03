@@ -36,8 +36,21 @@ export const api = {
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ code }),
   }),
+  signInWithPortalKey: (key) => request('/api/auth/portal', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ key }),
+  }),
   signOut: () => request('/api/session', { method: 'DELETE' }),
   metrics: (days) => request(`/api/metrics?days=${encodeURIComponent(days)}`),
+  config: () => request('/api/config'),
+  saveConfig: (payload) => request('/api/config', {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(payload),
+  }),
+  rhythmStatus: () => request('/api/rhythm'),
+  syncRhythm: () => request('/api/rhythm', { method: 'POST' }),
   audit: () => request('/api/audit'),
   cases: () => request('/api/cases'),
   caseAction: (payload) => request('/api/cases', {

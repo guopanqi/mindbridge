@@ -143,21 +143,34 @@ export function genReply(a, state, text, contextTag) {
 }
 
 // 资源推荐：红色不做普通自动推荐，先走知情同意；同一资源不重复推送。
-export function pickResource(a, state) {
+//
+// matrix 是 HR 在管理端配置的干预阶梯（emotion -> {enabled, l1, l2}）。
+// 传入时以配置为准，未传入或该情绪未配置时回落到 EMO 出厂默认值。
+// 这样"改配置"会真实改变员工端下一次拿到的推荐，而不只是改一张展示表。
+export function pickResource(a, state, matrix) {
   if (a.lv === 'red' || !a.n) return null;
-  const item = EMO[a.top];
-  if (!item) return null;
   const level = a.lv === 'yellow' ? 'L2' : 'L1';
-  const res = a.lv === 'yellow' ? item.yellow : item.res;
-  if ((state?.given || []).includes(res.n)) return null;
+  const configured = matrix?.[a.top];
+  if (configured && configured.enabled === false) return null;
+
+  const fallback = EMO[a.top];
+  const source = configured
+    ? (level === 'L2' ? configured.l2 : configured.l1)
+    : (fallback ? (level === 'L2' ? fallback.yellow : fallback.res) : null);
+  if (!source?.name && !source?.n) return null;
+
+  const name = source.name || source.n;
+  const description = source.description || source.d || '';
+  const icon = source.icon || source.i || '🌿';
+  if ((state?.given || []).includes(name)) return null;
   if (a.lv === 'green' && (state?.turn || 0) < 1) return null;
-  return { name: res.n, description: res.d, icon: res.i, level, emotion: a.top };
+  return { name, description, icon, level, emotion: a.top, configured: Boolean(configured) };
 }
 
-export function triage(text, state, contextTag) {
+export function triage(text, state, contextTag, matrix) {
   const a = analyze(text, state);
   const reply = genReply(a, state, text, contextTag);
-  const resource = pickResource(a, state);
+  const resource = pickResource(a, state, matrix);
   const nextState = {
     ...a.nextState,
     turn: (state?.turn || 0) + 1,

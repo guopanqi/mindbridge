@@ -50,6 +50,7 @@ export const api = {
   hug: (postId) => post('/api/wall/react', { postId }),
   reply: (postId, text) => post('/api/wall/reply', { postId, text }),
   history: () => request('/api/history'),
+  resourceFeedback: (id, state, rating) => post('/api/resources', { id, state, rating }),
   checkin: () => request('/api/checkin'),
   submitCheckin: (mood) => post('/api/checkin', { mood }),
   appointments: () => request('/api/appointments'),

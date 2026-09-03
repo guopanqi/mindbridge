@@ -62,3 +62,33 @@ test('隐私类提问走意图回复，不产生风险升级', () => {
   assert.equal(result.level, 'green');
   assert.match(result.reply, /名字和工号/);
 });
+
+test('HR 配置的干预阶梯会真实改变员工端拿到的推荐', () => {
+  const matrix = {
+    焦虑: {
+      enabled: true,
+      l1: { name: '企业定制·呼吸引导', description: '由 HR 配置', icon: '🫁' },
+      l2: { name: '企业定制·团体工作坊', description: '由 HR 配置', icon: '🏢' },
+    },
+  };
+  let state = emptyState();
+  state = triage('最近有点焦虑', state, 'none', matrix).nextState;
+  const result = triage('还是很焦虑，怕来不及', state, 'none', matrix);
+  assert.equal(result.resource.name, '企业定制·呼吸引导');
+  assert.equal(result.resource.configured, true);
+});
+
+test('未配置该情绪时回落到出厂默认值，不会推荐落空', () => {
+  let state = emptyState();
+  state = triage('最近有点焦虑', state, 'none', { 疲惫: { enabled: true, l1: {}, l2: {} } }).nextState;
+  const result = triage('还是很焦虑，怕来不及', state, 'none', {});
+  assert.equal(result.resource.name, '三分钟呼吸着陆法');
+  assert.equal(result.resource.configured, false);
+});
+
+test('HR 停用某个情绪信号后，该情绪不再自动推荐资源', () => {
+  const matrix = { 焦虑: { enabled: false, l1: { name: 'x' }, l2: { name: 'y' } } };
+  let state = emptyState();
+  state = triage('最近有点焦虑', state, 'none', matrix).nextState;
+  assert.equal(triage('还是很焦虑，怕来不及', state, 'none', matrix).resource, null);
+});

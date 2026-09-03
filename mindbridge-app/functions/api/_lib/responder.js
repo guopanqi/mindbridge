@@ -16,8 +16,8 @@ export const CRISIS_RESOURCES = [
   },
 ];
 
-export function respond(text, state, contextTag) {
-  const result = triage(text, state, contextTag);
+export function respond(text, state, contextTag, matrix) {
+  const result = triage(text, state, contextTag, matrix);
   return {
     ...result,
     // 危机场景展示可拨打的资源，但系统不会代替员工联系任何人。

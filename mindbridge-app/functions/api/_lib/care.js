@@ -132,3 +132,25 @@ export async function ensureProfile(env, anonId) {
     .first();
   return { profile, created: true };
 }
+
+// 读取 HR 配置的干预阶梯。查不到就返回 null，由规则引擎回落到出厂默认值。
+export async function loadInterventionMatrix(env) {
+  try {
+    const { results } = await env.CARE_DB.prepare(
+      'SELECT emotion, icon, l1_name, l1_desc, l2_name, l2_desc, enabled FROM intervention_matrix'
+    ).all();
+    if (!results?.length) return null;
+    const matrix = {};
+    for (const row of results) {
+      matrix[row.emotion] = {
+        enabled: row.enabled === 1,
+        icon: row.icon,
+        l1: { name: row.l1_name, description: row.l1_desc, icon: row.icon },
+        l2: { name: row.l2_name, description: row.l2_desc, icon: row.icon },
+      };
+    }
+    return matrix;
+  } catch {
+    return null;
+  }
+}
