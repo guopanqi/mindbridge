@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# 将「树洞demo」发布到 Cloudflare Pages。
-# 用法：./deploy.sh
-# 可选：./deploy.sh 其他-pages-项目名
+# 将 `prototype/` 中的交互原型发布到 Cloudflare Pages。
+# 用法：./scripts/deploy-prototype.sh
+# 可选：./scripts/deploy-prototype.sh 其他-pages-项目名
 
 set -euo pipefail
 
 if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
-  echo "用法：./deploy.sh [Pages 项目名]"
+  echo "用法：./scripts/deploy-prototype.sh [Pages 项目名]"
   echo "默认项目名：mindbridge-demo"
   exit 0
 fi

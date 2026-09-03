@@ -53,15 +53,15 @@ Staff（D1: mindbridge-staff）
 ## 快速开始
 
 ```bash
-cd mindbridge-app && npm install && npm run check     # 构建 + 29 项单测
-cd mindbridge-console && npm install && npm run build
+cd apps/employee && npm install && npm run check     # 构建 + 29 项单测
+cd apps/console && npm install && npm run check       # 构建 + 8 项单测/边界测试
 ```
 
 本地跑起来（两个服务要同时开，console 通过内部接口向 care 取数）：
 
 ```bash
-cd mindbridge-app && npx wrangler pages dev public --port 8788
-cd mindbridge-console && npx wrangler pages dev public --port 8789
+cd apps/employee && npx wrangler pages dev public --port 8788
+cd apps/console && npx wrangler pages dev public --port 8789
 ```
 
 本地无法走钉钉免登。验证员工端时，直接往本地 care 库 `sessions` 表插一行，

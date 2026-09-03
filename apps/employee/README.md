@@ -11,7 +11,7 @@
 - **阶段 3**：HR 聚合看板与演示数据。care 侧新增 `/api/internal/metrics`（服务令牌鉴权、固定输出阈值抑制结果）、`tenant_profile`、可重复生成与重置的演示 seed 数据。
 - **阶段 4**：疗愈师个案调度。care 侧新增 `/api/internal/cases`（接单、干预记录、二次授权后才返回对话上下文）与员工侧 `/api/authorizations`（员工本人同意或拒绝）。
 
-管理端在独立项目 `mindbridge-console` 中，见该目录的 README。
+管理端在独立项目 `../console` 中，见该目录的 README。
 
 尚未实现：钉钉机器人（阶段 5）、外部大模型接入（接入点已固定在 `responder.js`）。
 
@@ -58,7 +58,7 @@ migrations/care/     业务库（会话与员工业务数据）
 ## 初始化
 
 ```bash
-cd mindbridge-app
+cd apps/employee
 npx wrangler d1 migrations apply mindbridge-care --remote
 npx wrangler d1 migrations apply mindbridge-identity --remote
 ```
