@@ -593,17 +593,26 @@ function renderSensingPane() {
           link,
         };
       }
+      // 「没连上」「连上了但没有数据」「有数据但样本不足」是三种不同的状态，
+      // 混成一句会让人分不清是权限问题还是隐私保护在起作用。
+      if (status.status === 'connected_no_data') {
+        return {
+          cls: 'y',
+          title: '已连接，但所选区间内没有打卡记录',
+          detail: `通讯录与考勤接口均调用成功，企业成员 ${status.orgSize} 人，近 ${status.window?.days ?? 7} 天返回 0 条打卡记录。测试企业通常没有真实打卡行为，这不是故障。`,
+        };
+      }
       if (status.suppressed) {
         return {
           cls: 'y',
           title: '已连接，但样本不足不予展示',
-          detail: `接口调用成功，企业成员 ${status.orgSize} 人，本周有打卡记录 ${status.sampleSize} 人，低于最小样本 ${status.minSample} 人。按隐私规则不展示聚合结果——这不是故障。`,
+          detail: `接口调用成功，企业成员 ${status.orgSize} 人，取到 ${status.recordCount} 条打卡记录、覆盖 ${status.sampleSize} 人，低于最小样本 ${status.minSample} 人。按隐私规则不展示聚合结果——这不是故障。`,
         };
       }
       return {
         cls: 'g',
         title: '已连接钉钉考勤接口',
-        detail: `企业成员 ${status.orgSize} 人，本周有效样本 ${status.sampleSize} 人，满足最小样本 ${status.minSample} 人。`,
+        detail: `企业成员 ${status.orgSize} 人，取到 ${status.recordCount} 条打卡记录、覆盖 ${status.sampleSize} 人，满足最小样本 ${status.minSample} 人。`,
       };
     })();
 

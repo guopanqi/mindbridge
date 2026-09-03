@@ -146,7 +146,11 @@ export async function onRequestGet({ request, env }) {
                 MAX(a.score_label) AS score_label, MAX(a.direction) AS direction
          FROM resource_events e LEFT JOIN resource_catalog c ON c.name = e.resource_name
               LEFT JOIN activities a ON a.id = COALESCE(e.activity_id, c.activity_id)
-         WHERE e.created_at > ? GROUP BY e.resource_name, e.resource_level ORDER BY recommended DESC LIMIT 8`, since).all(),
+         WHERE e.created_at > ? GROUP BY e.resource_name, e.resource_level ORDER BY recommended DESC LIMIT 8`, since)
+        .all()
+        // 活动效果依赖 0012 迁移。迁移未应用时如实上报 schemaPending，
+        // 既不让整页 500，也不静默当成「没有数据」——那两种都会掩盖部署问题。
+        .catch((error) => ({ results: null, failed: String(error?.message || error) })),
     ]);
 
     const headcount = tenant?.headcount || 0;
@@ -286,6 +290,9 @@ export async function onRequestGet({ request, env }) {
           feedback: r.feedback,
         }, r.people),
       })),
+      // perfRows.results 为 null 表示 0012 迁移尚未在该环境应用。
+      // 如实上报，既不让整页 500，也不静默当成「没有数据」。
+      schemaPending: perfRows.results === null ? ['0012_activities'] : [],
       activityPerformance: (perfRows.results || []).map((r) => ({
         label: r.label,
         level: r.level,

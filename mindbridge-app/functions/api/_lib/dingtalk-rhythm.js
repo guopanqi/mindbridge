@@ -79,7 +79,28 @@ export async function listUserIds(token) {
 const pad = (n) => String(n).padStart(2, '0');
 const fmt = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} 00:00:00`;
 
+// 钉钉对 workDate 跨度有上限（超出返回 errcode 41041「时间跨度太大」），
+// 因此按 MAX_SPAN_DAYS 分段拉取再合并。
+const MAX_SPAN_DAYS = 7;
+
+function* dateWindows(fromDate, toDate) {
+  let start = new Date(fromDate);
+  while (start <= toDate) {
+    const end = new Date(Math.min(start.getTime() + (MAX_SPAN_DAYS - 1) * 86400000, toDate.getTime()));
+    yield [start, end];
+    start = new Date(end.getTime() + 86400000);
+  }
+}
+
 export async function fetchAttendance(token, userIds, fromDate, toDate) {
+  const records = [];
+  for (const [windowFrom, windowTo] of dateWindows(fromDate, toDate)) {
+    records.push(...await fetchAttendanceWindow(token, userIds, windowFrom, windowTo));
+  }
+  return records;
+}
+
+async function fetchAttendanceWindow(token, userIds, fromDate, toDate) {
   const records = [];
   for (let i = 0; i < userIds.length; i += USER_CHUNK) {
     const chunk = userIds.slice(i, i + USER_CHUNK);

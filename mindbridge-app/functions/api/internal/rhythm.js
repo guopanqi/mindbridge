@@ -59,7 +59,11 @@ export async function onRequestGet({ request, env }) {
       window,
       // 只回字段名，不回字段值：用来确认接口返回结构，不泄露任何个人打卡数据。
       recordShape: records.length ? Object.keys(records[0]).sort() : [],
+      recordCount: records.length,
       sampleSize: summary.sampleSize,
+      // 三种状态必须能被区分：没连上 / 连上了但没有数据 / 有数据但样本不足。
+      status: records.length === 0 ? 'connected_no_data'
+        : summary.sampleSize < MIN_SAMPLE ? 'suppressed' : 'ready',
       suppressed: summary.sampleSize < MIN_SAMPLE,
       minSample: MIN_SAMPLE,
     });
