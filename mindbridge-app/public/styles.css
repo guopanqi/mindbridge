@@ -1,0 +1,17 @@
+:root { color-scheme: light; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; color: #16332f; background: #eef7f4; }
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 10% 5%, #d9f2e8 0, transparent 33rem), #f8fbfa; }
+.app-shell { width: min(100%, 620px); min-height: 100vh; margin: 0 auto; padding: max(52px, env(safe-area-inset-top)) 24px 40px; }
+.eyebrow { margin: 0 0 12px; font-size: 12px; letter-spacing: .14em; color: #35867b; font-weight: 700; }
+h1 { font-size: clamp(34px, 8vw, 48px); letter-spacing: -.05em; margin: 0; line-height: 1.08; }
+.lead { margin: 18px 0 32px; color: #57726d; line-height: 1.75; font-size: 16px; }
+.status-card, .privacy-card { background: rgba(255,255,255,.88); border: 1px solid #dcebe6; border-radius: 20px; box-shadow: 0 10px 32px rgba(26, 91, 78, .08); }
+.status-card { display: flex; gap: 14px; align-items: flex-start; padding: 18px; margin-bottom: 16px; }
+.status-dot { display: block; flex: 0 0 auto; width: 10px; height: 10px; border-radius: 50%; margin-top: 6px; }
+.pending { background: #e9a23b; }.working { background: #3983c8; animation: pulse 1.2s infinite; }.success { background: #218b63; }.error { background: #c44e50; }
+@keyframes pulse { 50% { opacity: .35; } }
+.status-title { margin: 0 0 5px; font-weight: 700; }.status-detail { margin: 0; color: #64807a; font-size: 14px; line-height: 1.55; }
+button { width: 100%; border-radius: 14px; min-height: 52px; font: inherit; font-weight: 700; cursor: pointer; }
+.primary { border: 0; background: #147b6f; color: white; box-shadow: 0 8px 20px rgba(20,123,111,.22); }.primary:disabled { opacity: .55; cursor: wait; }
+.secondary { border: 1px solid #cfe2db; background: transparent; color: #315e56; margin-top: 10px; }
+.privacy-card { margin-top: 28px; padding: 20px; }.privacy-card h2 { font-size: 16px; margin: 0 0 10px; }.privacy-card ol { margin: 0; padding-left: 20px; color: #56716b; line-height: 1.8; font-size: 14px; }

@@ -1,0 +1,28 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "mindbridge-app",
+  "pages_build_output_dir": "./public",
+  "compatibility_date": "2026-09-02",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "DINGTALK_CLIENT_ID": "dingoyuuq9d3413qqbel",
+    "DINGTALK_CORP_ID": "ding585edf06dbd4a79fc7ca53aad90ff185",
+    "ANON_KEY_VERSION": "v1",
+    "IDENTITY_ENCRYPTION_KEY_VERSION": "v1",
+    "SESSION_TTL_SECONDS": "1800"
+  },
+  "d1_databases": [
+    {
+      "binding": "CARE_DB",
+      "database_name": "mindbridge-care",
+      "database_id": "77456773-bb6f-438a-a0b3-c0678516c2d3",
+      "migrations_dir": "migrations/care"
+    },
+    {
+      "binding": "IDENTITY_DB",
+      "database_name": "mindbridge-identity",
+      "database_id": "02e05edb-6b46-4d30-8add-b75ad81adfe4",
+      "migrations_dir": "migrations/identity"
+    }
+  ]
+}

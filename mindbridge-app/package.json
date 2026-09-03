@@ -1,0 +1,22 @@
+{
+  "name": "mindbridge-app",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild scripts/dingtalk-entry.js --bundle --format=iife --target=chrome90,safari14 --outfile=public/vendor/dingtalk-auth-v3.js",
+    "check": "npm run build && node --test",
+    "dev": "wrangler pages dev public",
+    "predeploy": "npm run check",
+    "deploy": "wrangler pages deploy public --project-name mindbridge-app",
+    "db:migrate:care": "wrangler d1 migrations apply mindbridge-care --remote",
+    "db:migrate:identity": "wrangler d1 migrations apply mindbridge-identity --remote"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "wrangler": "^4.128.0"
+  },
+  "dependencies": {
+    "dingtalk-jsapi": "3.2.9"
+  }
+}
