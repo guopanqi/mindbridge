@@ -1,0 +1,10 @@
+-- 清除全部演示数据。真实数据（data_origin='live'）不受影响。
+DELETE FROM post_reactions WHERE data_origin = 'demo_seed';
+DELETE FROM post_replies WHERE data_origin = 'demo_seed';
+DELETE FROM posts WHERE data_origin = 'demo_seed';
+DELETE FROM resource_events WHERE data_origin = 'demo_seed';
+DELETE FROM risk_events WHERE data_origin = 'demo_seed';
+DELETE FROM mood_checkins WHERE data_origin = 'demo_seed';
+DELETE FROM aggregate_events WHERE data_origin = 'demo_seed';
+DELETE FROM profiles WHERE data_origin = 'demo_seed';
+DELETE FROM tenant_profile WHERE data_origin = 'demo_seed';

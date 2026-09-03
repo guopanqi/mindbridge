@@ -1,0 +1,10 @@
+# 复制为 .dev.vars 后填写。不要提交 .dev.vars。
+# 钉钉开发者后台「凭证与基础信息」中的 SSOSecret，敏感级别等同 AppSecret。
+DINGTALK_SSO_SECRET=""
+STAFF_LOOKUP_KEY_V1=""
+# 32 字节随机值的 base64url 编码
+STAFF_SUBJECT_KEY_V1=""
+# 与 mindbridge-app 侧保持一致
+INTERNAL_SERVICE_TOKEN=""
+# 本地联调时指向 http://localhost:8788
+CARE_API_ORIGIN=""

@@ -8,3 +8,5 @@ SUBJECT_LOOKUP_KEY_V1=""
 IDENTITY_ENCRYPTION_KEY_V1=""
 # care D1 中业务原文的加密密钥：32 字节随机值的 base64url 编码
 CARE_CONTENT_KEY_V1=""
+# care 与 console 之间的内部服务令牌（两侧必须一致）
+INTERNAL_SERVICE_TOKEN=""

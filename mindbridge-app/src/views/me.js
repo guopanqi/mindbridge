@@ -17,7 +17,7 @@ let state = { contextTag: 'none' };
 let data = {
   counts: { messages: 0, posts: 0, checkins: 0, openAppointments: 0 },
   resources: [], retentionDays: 180,
-  checkin: { moods: [], today: null }, appointments: [], consents: [],
+  checkin: { moods: [], today: null }, appointments: [], consents: [], authorizations: [],
 };
 let onClearChat = async () => {};
 
@@ -39,6 +39,40 @@ function contextPicker(reload) {
       },
     },
   })));
+}
+
+// 二次授权请求：疗愈师想看对话上下文时，只有员工本人在这里点同意才会放行。
+function authorizationPanel(reload) {
+  const pending = data.authorizations.filter((r) => r.status === 'pending');
+  if (!pending.length) return null;
+  return el('section', { class: 'panel urgent' }, [
+    el('h2', { text: '有人请求查看你的对话上下文' }),
+    el('p', { class: 'panel-sub', text: '不同意也不会影响你继续使用，疗愈师仍然可以在不看原文的情况下和你沟通。' }),
+    ...pending.map((item) => el('div', { class: 'auth-request' }, [
+      el('p', { class: 'auth-reason', text: item.reason }),
+      el('p', { class: 'res-meta', text: `个案 ${item.caseCode} · ${timeAgo(item.at)}` }),
+      el('div', { class: 'card-actions' }, [
+        el('button', {
+          class: 'primary small', text: '同意查看', attrs: { type: 'button' },
+          on: {
+            click: async () => {
+              try { await api.decideAuthorization(item.id, true); toast('已同意。你随时可以在这里撤销后续请求。'); reload(); }
+              catch { toast('操作没有成功，请稍后再试。'); }
+            },
+          },
+        }),
+        el('button', {
+          class: 'secondary small', text: '不同意', attrs: { type: 'button' },
+          on: {
+            click: async () => {
+              try { await api.decideAuthorization(item.id, false); toast('已拒绝。'); reload(); }
+              catch { toast('操作没有成功，请稍后再试。'); }
+            },
+          },
+        }),
+      ]),
+    ])),
+  ]);
 }
 
 function checkinPanel(reload) {
@@ -65,12 +99,17 @@ function checkinPanel(reload) {
   ]);
 }
 
-const STATUS_LABEL = { requested: '已提交 · 等待疗愈师接单', cancelled: '已取消' };
+const STATUS_LABEL = {
+  requested: '已提交 · 等待疗愈师接单',
+  claimed: '疗愈师已接单',
+  closed: '已结束',
+  cancelled: '已取消',
+};
 
 function appointmentPanel(reload) {
   return el('section', { class: 'panel' }, [
     el('h2', { text: '我的预约' }),
-    el('p', { class: 'panel-sub', text: '疗愈师只会看到个案编号和风险级别。疗愈师端在下一阶段开放，现在预约会停在等待接单。' }),
+    el('p', { class: 'panel-sub', text: '疗愈师只会看到个案编号和风险级别，看不到你是谁。要查看你的对话内容，必须单独征求你同意。' }),
     data.appointments.length
       ? el('ul', { class: 'apt-list' }, data.appointments.map((item) => el('li', {}, [
         el('div', {}, [
@@ -149,8 +188,8 @@ export function renderMe(container, options = {}) {
 export async function loadMe() {
   const reload = () => void loadMe();
   try {
-    const [me, history, checkin, appointments, consents] = await Promise.all([
-      api.me(), api.history(), api.checkin(), api.appointments(), api.consents(),
+    const [me, history, checkin, appointments, consents, authorizations] = await Promise.all([
+      api.me(), api.history(), api.checkin(), api.appointments(), api.consents(), api.authorizations(),
     ]);
     state.contextTag = me.contextTag;
     data = {
@@ -158,13 +197,16 @@ export async function loadMe() {
       checkin: { moods: checkin.moods, today: checkin.today },
       appointments: appointments.appointments,
       consents: consents.consents,
+      authorizations: authorizations.requests,
     };
   } catch (error) {
     if (error instanceof ApiError && error.code === 'SESSION_REQUIRED') throw error;
     toast('部分信息暂时读不出来。');
   }
   const body = data;
-  clear(root).append(
+  // append(null) 会插入字面量 "null" 文本节点，这里必须过滤。
+  clear(root).append(...[
+    authorizationPanel(reload),
     checkinPanel(reload),
     el('section', { class: 'panel' }, [
       el('h2', { text: '我的处境标签' }),
@@ -213,7 +255,7 @@ export async function loadMe() {
         on: { click: () => openSheet('你的数据在这套系统里怎么走', privacyNodes()) },
       }),
     ]),
-  );
+  ].filter(Boolean));
 }
 
 export const privacySheet = () => openSheet('你的数据在这套系统里怎么走', privacyNodes());

@@ -56,6 +56,8 @@ export const api = {
   requestAppointment: (payload) => post('/api/appointments', payload),
   cancelAppointment: (id) => request(`/api/appointments?id=${encodeURIComponent(id)}`, { method: 'DELETE' }),
   consents: () => request('/api/consents'),
+  authorizations: () => request('/api/authorizations'),
+  decideAuthorization: (id, approve) => post('/api/authorizations', { id, approve }),
   setConsent: (scope, granted) => post('/api/consents', { scope, granted }),
 };
 

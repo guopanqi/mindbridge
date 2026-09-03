@@ -1,0 +1,22 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "mindbridge-console",
+  "pages_build_output_dir": "./public",
+  "compatibility_date": "2026-09-02",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "DINGTALK_CORP_ID": "ding585edf06dbd4a79fc7ca53aad90ff185",
+    "CARE_API_ORIGIN": "https://mindbridge-app-8j6.pages.dev",
+    "STAFF_SESSION_TTL_SECONDS": "3600"
+  },
+  // 刻意不绑定 CARE_DB：管理端没有任何数据库路径可以读到员工个案与原文，
+  // 只能通过 CARE_API_ORIGIN 上那个固定输出阈值抑制结果的接口取数。
+  "d1_databases": [
+    {
+      "binding": "STAFF_DB",
+      "database_name": "mindbridge-staff",
+      "database_id": "27b5995d-5d28-4512-a7f2-076dcb3756d2",
+      "migrations_dir": "migrations/staff"
+    }
+  ]
+}

@@ -61,13 +61,18 @@ export async function onRequestPost({ request, env }) {
 
     const id = newId('apt');
     const now = Date.now();
+    // 前端不知道会话 id（也不该知道），预约默认关联该匿名主体最近一次对话，
+    // 供员工同意后疗愈师查看上下文；未授权前这个关联不会暴露任何内容。
+    const latest = await env.CARE_DB
+      .prepare('SELECT id FROM conversations WHERE anon_id = ? ORDER BY last_message_at DESC LIMIT 1')
+      .bind(anonId).first();
     const sealed = note ? await sealBody(env, note, noteAad(id)) : null;
     const code = caseCode();
     const statements = [
       env.CARE_DB.prepare(
         'INSERT INTO appointments (id, case_code, anon_id, conversation_id, risk_level, status, share_context, note_cipher, content_key_version, created_at, updated_at, data_origin) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
       ).bind(
-        id, code, anonId, typeof body?.conversationId === 'string' ? body.conversationId : null,
+        id, code, anonId, latest?.id || null,
         riskLevel, 'requested', shareContext ? 1 : 0,
         sealed?.cipher || null, sealed?.version || null, now, now, 'live'
       ),

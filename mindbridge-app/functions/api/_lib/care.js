@@ -48,7 +48,12 @@ export function sealBody(env, plaintext, aad) {
   return encryptText(plaintext, key, aad).then((cipher) => ({ cipher, version }));
 }
 
+// content_key_version === 'plain' 只用于演示 seed 数据，调用方必须自己确认
+// 该行的 data_origin === 'demo_seed'，否则不得传入 'plain'。
+export const PLAIN_VERSION = 'plain';
+
 export async function openBody(env, cipher, version, aad) {
+  if (version === PLAIN_VERSION) return cipher;
   const key = env[`CARE_CONTENT_KEY_${String(version || 'v1').toUpperCase()}`];
   if (!key) return null;
   try {

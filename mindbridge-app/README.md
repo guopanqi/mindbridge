@@ -8,7 +8,22 @@
 - **阶段 2C 基线**：服务端确定性规则分诊引擎（`functions/api/_lib/triage.js`），green/yellow/red 三级，红色走知情同意流程并展示可拨打的紧急热线，不做医学诊断，不谎称已代为联系任何人。外部大模型延后到阶段 3/4，接入点固定在 `responder.js`。
 - **阶段 2D**：每日情绪打卡、匿名预约（随机个案编号、可取消）、授权与随时撤销、我的历史、清空自己的记录、数据透明说明。
 
-尚未实现：钉钉机器人（3）、疗愈师接单与 HR 看板（4）、演示 seed 数据（`data_origin='demo_seed'` 字段已就位，数据未灌入）。
+- **阶段 3**：HR 聚合看板与演示数据。care 侧新增 `/api/internal/metrics`（服务令牌鉴权、固定输出阈值抑制结果）、`tenant_profile`、可重复生成与重置的演示 seed 数据。
+- **阶段 4**：疗愈师个案调度。care 侧新增 `/api/internal/cases`（接单、干预记录、二次授权后才返回对话上下文）与员工侧 `/api/authorizations`（员工本人同意或拒绝）。
+
+管理端在独立项目 `mindbridge-console` 中，见该目录的 README。
+
+尚未实现：钉钉机器人（阶段 5）、外部大模型接入（接入点已固定在 `responder.js`）。
+
+## 演示数据
+
+```bash
+npm run seed:generate      # 确定性生成，可反复彩排
+npm run seed:apply         # 灌入远端 care 库，全部带 data_origin='demo_seed'
+npm run seed:reset         # 只清除演示数据，不影响 data_origin='live'
+```
+
+演示数据包含 200 人规模、90 天趋势、广场帖子与活动效果，**不含任何真实姓名、工号、联系方式或可识别案例**，也不伪造钉钉考勤、病假或聊天接口返回。看板顶部持续标注"模拟基线 + 当前演示事件"。
 
 ## 阶段 2 验收清单
 

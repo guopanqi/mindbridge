@@ -2,7 +2,7 @@
 import { json } from '../_lib/http.js';
 import {
   ApiError, aggregateStatement, ensureProfile, handleError, newId,
-  openBody, readJson, requireSession, requireText, sealBody,
+  openBody, PLAIN_VERSION, readJson, requireSession, requireText, sealBody,
 } from '../_lib/care.js';
 import { analyze } from '../_lib/triage.js';
 
@@ -46,20 +46,29 @@ export async function onRequestGet({ request, env }) {
     if (ids.length) {
       const placeholders = ids.map(() => '?').join(',');
       const { results } = await env.CARE_DB.prepare(
-        `SELECT rp.id, rp.post_id, rp.anon_id, rp.body_cipher, rp.content_key_version, rp.created_at, pr.display_name
+        `SELECT rp.id, rp.post_id, rp.anon_id, rp.body_cipher, rp.content_key_version, rp.created_at, rp.data_origin, pr.display_name
          FROM post_replies rp LEFT JOIN profiles pr ON pr.anon_id = rp.anon_id
          WHERE rp.post_id IN (${placeholders}) AND rp.deleted_at IS NULL ORDER BY rp.created_at ASC`
       ).bind(...ids).all();
       replies = results || [];
     }
 
+    // 明文只允许出现在演示 seed 行上；真实行即使被写坏也不会被当作明文读出。
+    const readable = (row, version) => (
+      version === PLAIN_VERSION && row.data_origin !== 'demo_seed' ? null : version
+    );
+
     const shaped = [];
     for (const post of posts || []) {
-      const text = await openBody(env, post.body_cipher, post.content_key_version, postAad(post.id));
+      const version = readable(post, post.content_key_version);
+      if (version === null) continue;
+      const text = await openBody(env, post.body_cipher, version, postAad(post.id));
       if (text === null) continue;
       const own = [];
       for (const reply of replies.filter((r) => r.post_id === post.id)) {
-        const body = await openBody(env, reply.body_cipher, reply.content_key_version, replyAad(reply.id));
+        const replyVersion = readable(reply, reply.content_key_version);
+        if (replyVersion === null) continue;
+        const body = await openBody(env, reply.body_cipher, replyVersion, replyAad(reply.id));
         if (body === null) continue;
         own.push({
           id: reply.id,

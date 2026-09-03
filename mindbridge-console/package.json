@@ -1,0 +1,19 @@
+{
+  "name": "mindbridge-console",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-app.mjs",
+    "check": "npm run build && node --test",
+    "dev": "wrangler pages dev public",
+    "predeploy": "npm run check",
+    "deploy": "wrangler pages deploy public --project-name mindbridge-console --branch main",
+    "db:migrate:local": "wrangler d1 migrations apply mindbridge-staff --local",
+    "db:migrate": "wrangler d1 migrations apply mindbridge-staff --remote"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2",
+    "wrangler": "^4.128.0"
+  }
+}
