@@ -12,7 +12,7 @@
     "db:migrate:care": "wrangler d1 migrations apply mindbridge-care --remote",
     "db:migrate:identity": "wrangler d1 migrations apply mindbridge-identity --remote",
     "build:sdk": "esbuild scripts/dingtalk-entry.js --bundle --format=iife --target=chrome90,safari14 --outfile=public/vendor/dingtalk-auth-v3.js",
-    "build:app": "esbuild src/main.js --bundle --format=iife --target=es2020 --minify --outfile=public/app.js"
+    "build:app": "node scripts/build-app.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.28.2",

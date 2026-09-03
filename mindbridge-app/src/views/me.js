@@ -1,4 +1,5 @@
 import { api, ApiError } from '../api.js';
+import { BUILD_ID } from '../build-id.js';
 import { clear, el, openSheet, timeAgo, toast } from '../dom.js';
 
 export const CONTEXT_LABELS = {
@@ -136,6 +137,7 @@ function privacyNodes() {
     el('p', { text: '谁能看到：疗愈师只有在你同意后才会收到必要上下文；HR 只能看到部门层面的聚合趋势，看不到任何一条原文。' }),
     el('p', { text: '保留多久：倾诉原文默认保留 180 天，你也可以随时在「我的」里一键清空。' }),
     el('p', { text: '你的钉钉姓名和工号没有进入这套业务系统，它们只在登录那一刻被用于确认你属于本企业。' }),
+    el('p', { class: 'build-id', text: `版本 ${BUILD_ID}` }),
   ];
 }
 

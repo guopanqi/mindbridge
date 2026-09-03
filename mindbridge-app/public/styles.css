@@ -155,3 +155,4 @@ main { flex: 1; min-height: 0; }
 .consent-list { display: grid; gap: 10px; }
 .consent-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 14px; line-height: 1.6; }
 .consent-row input { width: 20px; height: 20px; flex: 0 0 auto; accent-color: var(--brand); }
+.build-id { font-size: 11px; color: #9db2ae; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }

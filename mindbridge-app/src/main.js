@@ -1,4 +1,5 @@
 import { api, ApiError, hasSession } from './api.js';
+import { BUILD_ID } from './build-id.js';
 import { $, closeSheet, reducedMotion } from './dom.js';
 import { clearChat, focusComposer, loadChat, renderChat } from './views/chat.js';
 import { loadWall, renderWall } from './views/wall.js';
@@ -57,7 +58,7 @@ function showFailure(code) {
   $('#boot-title').textContent = '暂时没能进入 MindBridge';
   $('#boot-detail').textContent = '你的身份信息没有被记录，可以放心重试。';
   $('#boot-fail-text').textContent = FAILURE_TEXT[code] || '连接没有完成，请重试一次。';
-  $('#boot-code').textContent = code || 'UNKNOWN';
+  $('#boot-code').textContent = `${code || 'UNKNOWN'} · ${BUILD_ID}`;
   $('#boot-fail').hidden = false;
   $('#boot').classList.add('failed');
 }
