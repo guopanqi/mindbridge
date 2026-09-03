@@ -12,3 +12,6 @@ DELETE FROM case_notes WHERE data_origin = 'demo_seed';
 DELETE FROM appointments WHERE data_origin = 'demo_seed';
 DELETE FROM org_rhythm WHERE data_origin = 'demo_seed';
 DELETE FROM tenant_profile WHERE data_origin = 'demo_seed';
+DELETE FROM industry_benchmarks WHERE data_origin = 'demo_seed';
+DELETE FROM industry_topics WHERE data_origin = 'demo_seed';
+DELETE FROM industry_activity_effects WHERE data_origin = 'demo_seed';

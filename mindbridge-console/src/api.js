@@ -44,6 +44,7 @@ export const api = {
   signOut: () => request('/api/session', { method: 'DELETE' }),
   metrics: (days) => request(`/api/metrics?days=${encodeURIComponent(days)}`),
   config: () => request('/api/config'),
+  industry: () => request('/api/industry'),
   saveConfig: (payload) => request('/api/config', {
     method: 'PUT',
     headers: { 'content-type': 'application/json' },

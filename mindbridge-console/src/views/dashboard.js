@@ -10,27 +10,6 @@ const SUPPRESSED_TEXT = (min) => `样本不足 ${min} 人，不予展示`;
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 // 8 行业 Benchmark 常模库（取自 Demo）
-const INDUSTRY_BENCH = {
-  '互联网/IT': { companies: 18, employees: 8420, use: 31, complete: 66, rating: 4.3, activities: [['情绪红绿灯正念工作坊', 38, 72, 4.5], ['身份重塑叙事疗愈小组', 27, 81, 4.6], ['三分钟呼吸着陆法', 44, 76, 4.3]] },
-  '金融/银行': { companies: 12, employees: 6110, use: 26, complete: 63, rating: 4.2, activities: [['积极心理与管理提升培训', 35, 68, 4.3], ['跨团队疗愈小组', 22, 79, 4.5], ['正念音频包', 31, 70, 4.1]] },
-  '医护/护理': { companies: 9, employees: 5270, use: 34, complete: 71, rating: 4.5, activities: [['巴林特小组', 29, 84, 4.7], ['困境盲盒工作坊', 24, 77, 4.5], ['工间舒展操引导', 42, 73, 4.3]] },
-  '教育': { companies: 11, employees: 3890, use: 29, complete: 69, rating: 4.4, activities: [['奥尔夫音乐疗愈', 32, 78, 4.6], ['ABC情绪理论工作坊', 27, 73, 4.4], ['工间舒展操引导', 35, 68, 4.2]] },
-  '客服/服务业': { companies: 15, employees: 7020, use: 37, complete: 67, rating: 4.4, activities: [['「心流插花」艺术疗愈', 41, 75, 4.7], ['正念冥想工作坊', 35, 72, 4.5], ['芳香疗愈体验', 33, 70, 4.4]] },
-  '制造业': { companies: 14, employees: 9630, use: 24, complete: 65, rating: 4.2, activities: [['沙盘疗愈·心声共鸣', 26, 78, 4.5], ['拳力以赴·解压拳击', 31, 69, 4.3], ['心灵驿站·常态化专业支持', 28, 74, 4.4]] },
-  '科技企业': { companies: 10, employees: 4560, use: 33, complete: 70, rating: 4.5, activities: [['身份重塑叙事疗愈小组', 30, 83, 4.7], ['跨团队疗愈小组', 25, 79, 4.6], ['正念音频包', 39, 71, 4.3]] },
-  '公益组织': { companies: 7, employees: 1840, use: 41, complete: 73, rating: 4.6, activities: [['巴林特小组', 36, 85, 4.8], ['心理嘉年华游园会', 48, 74, 4.6], ['情绪书写练习', 43, 76, 4.5]] },
-};
-
-const INDUSTRY_TOPICS = {
-  '互联网/IT': [['技术替代焦虑', 31, 8], ['项目赶工与加班', 27, 4], ['晋升与职业路径', 18, 2], ['跨团队协作', 14, -3]],
-  '金融/银行': [['业绩与指标压力', 34, 6], ['客户关系消耗', 23, 2], ['晋升竞争', 19, 3], ['跨团队协作', 12, -1]],
-  '医护/护理': [['共情疲劳', 32, 5], ['轮班与睡眠', 26, 4], ['高风险责任', 21, 1], ['团队支持不足', 13, -2]],
-  '教育': [['多重角色耗竭', 30, 4], ['家校沟通', 25, 3], ['行政事务负担', 20, 2], ['职业意义感', 15, -1]],
-  '客服/服务业': [['客户情绪冲突', 35, 7], ['质检与绩效压力', 24, 3], ['轮班疲劳', 18, 2], ['情绪隔离困难', 14, -2]],
-  '制造业': [['轮班与身体疲劳', 33, 5], ['安全责任压力', 23, 2], ['团队沟通', 17, 1], ['职业发展', 13, -1]],
-  '科技企业': [['技术迭代焦虑', 36, 9], ['远程协作孤立', 22, 3], ['赶工压力', 20, 4], ['职业身份变化', 14, 2]],
-  '公益组织': [['共情疲劳', 38, 6], ['使命感过载', 26, 4], ['资源不足', 19, 3], ['工作边界', 11, -2]],
-};
 
 // 干预阶梯矩阵配置库（取自 Demo）
 
@@ -265,21 +244,10 @@ function metricCell(row, key, suffix = '') {
 function renderActivitiesPane(data) {
   const overall = data.activityOverall || {};
   const ov = overall.value || {};
-  const ind = data.tenant?.industry;
-  const bench = INDUSTRY_BENCH[ind] || null;
-
-  // 本企业数值全部来自真实聚合；行业均值是模拟对照，两者在表头明确区分。
-  const compare = (mine, theirs, suffix = '%') => {
-    if (mine === null || mine === undefined || !theirs) return el('td', { class: 'mut', text: '—' });
-    const diff = Math.round((mine - theirs) * 10) / 10;
-    const cls = diff >= 0 ? 'g' : 'y';
-    return el('td', {}, [el('span', { class: `pill ${cls}`, text: `${diff >= 0 ? '高于' : '低于'}均值 ${Math.abs(diff)}${suffix === '%' ? 'pt' : ''}` })]);
-  };
-
   return el('div', { class: 'inner' }, [
     el('div', { class: 'demo-banner' }, [
       el('b', { text: '数据说明：' }),
-      el('span', { text: '本企业数值来自真实聚合（模拟基线人群 + 现场真实事件）。行业均值为模拟的跨企业对照，用于说明产品形态。样本不足的行不予展示。' }),
+      el('span', { text: '本页数值来自真实聚合（模拟基线人群 + 现场真实事件）。满意度只统计员工主动提交的评分。样本不足的行不予展示。跨行业对照见「行业洞察」页。' }),
     ]),
     el('div', { class: 'kpis' }, [
       kpi(ov.participationRate === undefined ? '<span class="na">样本不足</span>' : `${ov.participationRate}<small>%</small>`,
@@ -290,47 +258,7 @@ function renderActivitiesPane(data) {
         '综合满意度', `需至少 ${data.minSample} 份反馈`),
       kpi(`${overall.feedbackCount ?? 0}<small>份</small>`, '有效反馈', '员工主动提交的评分'),
     ]),
-    bench ? el('div', { class: 'cardC' }, [
-      el('h4', {}, [
-        el('span', { text: `行业 Benchmark · ${ind}` }),
-        el('span', { class: 'src', text: '行业均值为模拟对照' }),
-      ]),
-      el('table', {}, [
-        el('thead', {}, [el('tr', {}, [
-          el('th', { text: '指标' }),
-          el('th', { text: `${data.tenant?.name || '本企业'}（真实聚合）` }),
-          el('th', { text: '行业均值（模拟）' }),
-          el('th', { text: '相对位置' }),
-        ])]),
-        el('tbody', {}, [
-          el('tr', {}, [
-            el('td', { text: '员工覆盖率' }),
-            el('td', { class: 'mono', text: data.coverage.rate === null ? '—' : `${data.coverage.rate}%` }),
-            el('td', { class: 'mono', text: `${bench.use}%` }),
-            compare(data.coverage.rate, bench.use),
-          ]),
-          el('tr', {}, [
-            el('td', { text: '活动参与率' }),
-            el('td', { class: 'mono', text: ov.participationRate === undefined ? '—' : `${ov.participationRate}%` }),
-            el('td', { class: 'mono', text: `${bench.use}%` }),
-            compare(ov.participationRate, bench.use),
-          ]),
-          el('tr', {}, [
-            el('td', { text: '活动完成率' }),
-            el('td', { class: 'mono', text: ov.completionRate === undefined ? '—' : `${ov.completionRate}%` }),
-            el('td', { class: 'mono', text: `${bench.complete}%` }),
-            compare(ov.completionRate, bench.complete),
-          ]),
-          el('tr', {}, [
-            el('td', { text: '活动满意度' }),
-            el('td', { class: 'mono', text: overall.avgRating ? `${overall.avgRating} / 5` : '—' }),
-            el('td', { class: 'mono', text: `${bench.rating} / 5` }),
-            compare(overall.avgRating, bench.rating, ''),
-          ]),
-        ]),
-      ]),
-      el('div', { class: 'privacy-rule', text: '行业基准仅在满足最小企业数与最小样本量后展示；本企业数据以去标识化形式进入统计池，企业无法查看其他企业名称或单家明细。' }),
-    ]) : null,
+
     el('div', { class: 'cardC' }, [
       el('h4', {}, [el('span', { text: '不同身份标签的活动表现' }), el('span', { class: 'src', text: '去标识化聚合' })]),
       el('div', { class: 'cs', text: `只显示群体趋势。有效样本少于 ${data.minSample} 人的标签不予展示，HRBP 无法查看任何员工的标签选择。` }),
@@ -379,125 +307,147 @@ function renderActivitiesPane(data) {
   ]);
 }
 
+function industryRow(cells, cls) {
+  return el('tr', cls ? { class: cls } : {}, cells);
+}
+
 function renderIndustryPane(data) {
-  const currentIndustry = data.tenant?.industry || '互联网/IT';
-  let selectedIndustry = currentIndustry;
   const container = el('div', { class: 'inner' });
+  let selected = data.tenant?.industry || null;
 
-  function renderInner() {
+  async function renderInner() {
     clear(container);
-    const b = INDUSTRY_BENCH[selectedIndustry] || INDUSTRY_BENCH['互联网/IT'];
-    const topics = INDUSTRY_TOPICS[selectedIndustry] || INDUSTRY_TOPICS['互联网/IT'];
-    const maxVal = Math.max(...topics.map((x) => x[1]), 1);
+    container.append(el('div', { class: 'cardC' }, [el('div', { class: 'cs', text: '正在读取行业基准…' })]));
+    let ind;
+    try {
+      ind = await api.industry();
+    } catch (error) {
+      clear(container).append(el('div', { class: 'cardC' }, [
+        el('div', { class: 'cs', text: error.userMessage || '行业数据暂时取不到。' }),
+      ]));
+      return;
+    }
+    if (!selected) selected = ind.benchmarks[0]?.industry || null;
+    const own = ind.benchmarks.find((b) => b.industry === (data.tenant?.industry || selected));
+    const view = ind.benchmarks.find((b) => b.industry === selected);
+    const detail = ind.detail?.[selected] || { topics: [], effects: [] };
+    // 「模拟」这个标注来自数据本身的 data_origin，不是写死在界面上的字。
+    const simulated = ind.benchmarks.some((b) => b.simulated);
+    const ov = data.activityOverall?.value || {};
 
+    const cmp = (mine, theirs, unit = 'pt') => {
+      if (mine === null || mine === undefined || theirs === null || theirs === undefined) {
+        return el('td', { class: 'mut', text: '—' });
+      }
+      const diff = Math.round((mine - theirs) * 10) / 10;
+      return el('td', {}, [el('span', {
+        class: `pill ${diff >= 0 ? 'g' : 'y'}`,
+        text: `${diff >= 0 ? '高于' : '低于'}均值 ${Math.abs(diff)}${unit}`,
+      })]);
+    };
+
+    clear(container);
     container.append(
-      el('div', { class: 'demo-banner' }, [
-        el('b', { text: '⚠ 演示数据说明：' }),
-        el('span', { text: '本页展示模拟的跨企业匿名聚合 Benchmark，用于说明真实产品的数据形态。只有达到最小企业数与最小员工样本量后才形成行业基准；HR 无法查看其他企业名称、单家企业明细或任何员工个人心理数据。' }),
-      ]),
+      simulated ? el('div', { class: 'demo-banner' }, [
+        el('b', { text: '跨企业对照为模拟数据：' }),
+        el('span', { text: `当前只有一个真实租户，行业基准由预置样本生成，用于说明产品形态。表中「${data.tenant?.name || '本企业'}」一列是真实聚合。` }),
+      ]) : null,
+
       el('div', { class: 'cardC' }, [
-        el('h4', {}, [el('span', { text: '当前参照组' }), el('span', { class: 'src', text: '本企业优先' })]),
-        el('div', { class: 'cs', text: '先回答“我们公司在同行里处于什么位置”。参照组同时考虑行业与企业规模。' }),
-        el('div', { class: 'profile-strip' }, [
-          el('div', { class: 'pp' }, [
-            el('span', { text: data.tenant?.name || '星原科技' }),
-            el('span', { text: selectedIndustry }),
-            el('span', { text: '500–1000 人' }),
-            el('span', { text: '匿名聚合' }),
-          ]),
-          el('div', { class: 'pn', text: `行业基准：${b.companies} 家企业 / ${b.employees.toLocaleString()} 名去标识化员工；当前企业产生的新数据进入匿名统计池，但当前对照值采用已形成的历史常模。` }),
+        el('h4', {}, [
+          el('span', { text: `本企业 vs ${own?.industry || '行业'}基准` }),
+          el('span', { class: 'src', text: `样本：${own?.companies ?? 0} 家企业 · ${own?.employees ?? 0} 人` }),
         ]),
-      ]),
-      el('div', { class: 'kpis' }, [
-        kpi('42<small>%</small>', 'AI 树洞月活', `行业均值 ${b.use}%`),
-        kpi('43<small>%</small>', '活动参与率', '行业均值 31%'),
-        kpi('71<small>%</small>', '活动完成率', `行业均值 ${b.complete}%`),
-        kpi('4.4<small>/5</small>', '活动满意度', `行业均值 ${b.rating.toFixed(1)}`),
-      ]),
-      el('div', { class: 'grid2' }, [
-        el('div', { class: 'cardC' }, [
-          el('h4', {}, [el('span', { text: `本行业高频议题 · ${selectedIndustry}` }), el('span', { class: 'src', text: '跨企业匿名聚合' })]),
-          el('div', { class: 'cs', text: '回答“同行最近主要在经历什么”，只展示聚合后的议题分布与趋势。' }),
-          el('div', {}, topics.map(([name, val, delta]) => el('div', { class: 'tbar' }, [
-            el('span', { class: 'tn', text: name }),
-            el('div', { class: 'tt' }, [(() => {
-              const bar = el('i');
-              bar.style.width = `${Math.round((val / maxVal) * 100)}%`;
-              return bar;
-            })()]),
-            el('span', { class: `tv ${delta > 0 ? 'up' : ''}`, text: `${val}% · ${delta > 0 ? `↑ +${delta}` : delta < 0 ? `↓ ${Math.abs(delta)}` : '—'}pt` }),
-          ]))),
-        ]),
-        el('div', { class: 'cardC' }, [
-          el('h4', {}, [el('span', { text: `本行业支持方式表现 · ${selectedIndustry}` })]),
-          el('div', { class: 'cs', text: '回答“同行什么活动更容易被使用、完成并认可”。' }),
-          el('table', {}, [
-            el('thead', {}, [el('tr', {}, [el('th', { text: '支持方式' }), el('th', { text: '参与率' }), el('th', { text: '完成率' }), el('th', { text: '满意度' })])]),
-            el('tbody', {}, b.activities.map((a) => el('tr', {}, [
-              el('td', { text: a[0] }),
-              el('td', { class: 'mono', text: `${a[1]}%` }),
-              el('td', { class: 'mono', text: `${a[2]}%` }),
-              el('td', { class: 'mono', text: `${Number(a[3]).toFixed(1)} / 5` }),
-            ]))),
-          ]),
-        ]),
-      ]),
-      el('div', { class: 'cardC' }, [
-        el('h4', {}, [el('span', { text: '跨行业探索' }), el('span', { class: 'src', text: '匿名行业数据库' })]),
-        el('div', { class: 'cs', text: '用于进一步查看其他行业的使用与疗愈效果常模。这里只能下钻到行业层级，不能查看单一企业。' }),
-        (() => {
-          const sel = el('select');
-          Object.keys(INDUSTRY_BENCH).forEach((k) => {
-            const opt = el('option', { attrs: { value: k }, text: k });
-            if (k === selectedIndustry) opt.selected = true;
-            sel.append(opt);
-          });
-          sel.addEventListener('change', () => {
-            selectedIndustry = sel.value;
-            renderInner();
-          });
-          return sel;
-        })(),
-      ]),
-      el('div', { class: 'cardC' }, [
-        el('h4', {}, [el('span', { text: '八行业 Benchmark 总览' }), el('span', { class: 'src', text: '跨企业匿名统计' })]),
-        el('div', { class: 'cs', text: '快速比较各行业的服务使用与活动效果；“高表现活动”只展示行业聚合结果。' }),
         el('table', {}, [
           el('thead', {}, [el('tr', {}, [
-            el('th', { text: '行业' }), el('th', { text: '企业样本' }), el('th', { text: '员工样本' }),
-            el('th', { text: 'AI月活' }), el('th', { text: '活动完成率' }), el('th', { text: '满意度' }), el('th', { text: '高表现活动' }),
+            el('th', { text: '指标' }),
+            el('th', { text: `${data.tenant?.name || '本企业'}（真实）` }),
+            el('th', { text: '行业均值（模拟）' }),
+            el('th', { text: '相对位置' }),
           ])]),
-          el('tbody', {}, Object.entries(INDUSTRY_BENCH).map(([k, x]) => {
-            const best = [...x.activities].sort((m, n) => n[3] - m[3])[0];
-            return el('tr', {}, [
-              el('td', { text: k }),
-              el('td', { class: 'mono', text: String(x.companies) }),
-              el('td', { class: 'mono', text: x.employees.toLocaleString() }),
-              el('td', { class: 'mono', text: `${x.use}%` }),
-              el('td', { class: 'mono', text: `${x.complete}%` }),
-              el('td', { class: 'mono', text: Number(x.rating).toFixed(1) }),
-              el('td', { text: best ? best[0] : '—' }),
-            ]);
-          })),
+          el('tbody', {}, [
+            industryRow([
+              el('td', { text: '员工覆盖率' }),
+              el('td', { class: 'mono', text: data.coverage.rate === null ? '—' : `${data.coverage.rate}%` }),
+              el('td', { class: 'mono', text: own?.useRate === null || own?.useRate === undefined ? '—' : `${own.useRate}%` }),
+              cmp(data.coverage.rate, own?.useRate),
+            ]),
+            industryRow([
+              el('td', { text: '活动完成率' }),
+              el('td', { class: 'mono', text: ov.completionRate === undefined ? '—' : `${ov.completionRate}%` }),
+              el('td', { class: 'mono', text: own?.completionRate === null || own?.completionRate === undefined ? '—' : `${own.completionRate}%` }),
+              cmp(ov.completionRate, own?.completionRate),
+            ]),
+            industryRow([
+              el('td', { text: '活动满意度' }),
+              el('td', { class: 'mono', text: data.activityOverall?.avgRating ? `${data.activityOverall.avgRating} / 5` : '—' }),
+              el('td', { class: 'mono', text: own?.avgRating ? `${own.avgRating} / 5` : '—' }),
+              cmp(data.activityOverall?.avgRating, own?.avgRating, ''),
+            ]),
+          ]),
         ]),
+        el('div', { class: 'privacy-rule', text: `行业基准需至少 ${ind.thresholds.minCompanies} 家企业且合计 ${ind.thresholds.minEmployees} 人以上才形成；企业无法查看其他企业名称或单家明细。本企业数据以去标识化形式进入统计池。` }),
       ]),
-      el('div', { class: 'blind' }, [
-        el('h5', { text: '行业数据边界' }),
-        el('ul', {}, [
-          el('li', { text: '不向任何企业披露其他企业名称、客户编码或单家企业明细' }),
-          el('li', { text: '不进入员工姓名、工号、倾诉原文或个人活动记录' }),
-          el('li', { text: '企业数或员工样本量不足时不生成 Benchmark' }),
-          el('li', { text: '行业数据仅用于同行参照、服务配置与疗愈效果分析' }),
+
+      el('div', { class: 'cardC' }, [
+        el('h4', {}, [el('span', { text: '按行业浏览' }), el('span', { class: 'src', text: '匿名聚合' })]),
+        (() => {
+          const select = el('select', { class: 'cfg-select' });
+          for (const b of ind.benchmarks) {
+            const option = el('option', { text: `${b.industry}（${b.companies} 家）`, attrs: { value: b.industry } });
+            if (b.industry === selected) option.selected = true;
+            select.append(option);
+          }
+          select.addEventListener('change', () => { selected = select.value; void renderInner(); });
+          return select;
+        })(),
+        view && !view.eligible
+          ? el('div', { class: 'cs', text: `该行业样本为 ${view.companies} 家企业 / ${view.employees} 人，未达展示门槛，不予出数。` })
+          : el('div', { class: 'kpis' }, [
+            kpi(`${view?.useRate ?? '—'}<small>%</small>`, '树洞月活', '行业均值'),
+            kpi(`${view?.completionRate ?? '—'}<small>%</small>`, '活动完成率', '行业均值'),
+            kpi(`${view?.avgRating ?? '—'}<small>/5</small>`, '活动满意度', '行业均值'),
+            kpi(`${view?.companies ?? '—'}<small>家</small>`, '统计池企业数', `合计 ${view?.employees ?? 0} 人`),
+          ]),
+      ]),
+
+      detail.topics.length ? el('div', { class: 'cardC' }, [
+        el('h4', {}, [el('span', { text: `${selected} · 行业议题分布` }), el('span', { class: 'src', text: '跨企业匿名聚合' })]),
+        el('div', {}, detail.topics.map((t) => {
+          const max = Math.max(...detail.topics.map((x) => x.share), 1);
+          return el('div', { class: 'tbar' }, [
+            el('span', { class: 'tn', text: t.topic }),
+            el('div', { class: 'tt' }, [(() => {
+              const bar = el('i');
+              bar.style.width = `${Math.round((t.share / max) * 100)}%`;
+              return bar;
+            })()]),
+            el('span', { class: `tv ${t.delta > 0 ? 'up' : ''}`, text: `${t.share}%${t.delta ? ` (${t.delta > 0 ? '+' : ''}${t.delta})` : ''}` }),
+          ]);
+        })),
+      ]) : null,
+
+      detail.effects.length ? el('div', { class: 'cardC' }, [
+        el('h4', {}, [el('span', { text: `${selected} · 活动效果` }), el('span', { class: 'src', text: '跨企业匿名聚合' })]),
+        el('table', {}, [
+          el('thead', {}, [el('tr', {}, [
+            el('th', { text: '活动' }), el('th', { text: '参与率' }), el('th', { text: '完成率' }), el('th', { text: '满意度' }),
+          ])]),
+          el('tbody', {}, detail.effects.map((e) => el('tr', {}, [
+            el('td', { text: e.activity }),
+            el('td', { class: 'mono', text: `${e.participationRate}%` }),
+            el('td', { class: 'mono', text: `${e.completionRate}%` }),
+            el('td', { class: 'mono', text: `${e.avgRating} / 5` }),
+          ]))),
         ]),
-      ]),
+      ]) : null,
     );
   }
 
-  renderInner();
+  void renderInner();
   return container;
 }
 
-// ---------------- Pane 4: 干预阶梯配置 ----------------
 function levelSelect(catalog, level, current, onChange) {
   const select = el('select', { class: 'cfg-select' });
   for (const item of catalog.filter((c) => c.level === level)) {
@@ -618,10 +568,16 @@ function renderSensingPane() {
     const connection = (() => {
       if (!status) return { cls: 'r', title: '未能查询连接状态', detail: '管理端到 care 的内部调用失败。' };
       if (!status.ok || !status.connected) {
+        // 钉钉的报错里通常带着直接申请权限的链接，原样提取出来做成可点的。
+        const link = (status.errmsg || '').match(/https:\/\/open-dev\.dingtalk\.com\S+?(?=,|\]|\s|$)/)?.[0] || null;
+        const scope = (status.errmsg || '').match(/所需的权限：\[([^\]]+)\]/)?.[1] || null;
         return {
           cls: 'r',
-          title: '未连接钉钉考勤接口',
-          detail: `钉钉返回 errcode ${status.errcode ?? '未知'}：${status.errmsg || '未知错误'}。通常是开发者后台尚未开通「考勤打卡数据读权限」，或权限范围未设为全部员工。`,
+          title: '未连接钉钉接口',
+          detail: scope
+            ? `缺少权限点 ${scope}。在钉钉开发者后台申请开通后即可连接。`
+            : `钉钉返回 errcode ${status.errcode ?? '未知'}：${status.errmsg || '未知错误'}`,
+          link,
         };
       }
       if (status.suppressed) {
@@ -645,6 +601,9 @@ function renderSensingPane() {
         el('div', { class: `conn ${connection.cls}` }, [
           el('div', { class: 'conn-t', text: connection.title }),
           el('div', { class: 'conn-d', text: connection.detail }),
+          connection.link
+            ? el('a', { class: 'conn-link', text: '前往钉钉开发者后台申请该权限 →', attrs: { href: connection.link, target: '_blank', rel: 'noopener noreferrer' } })
+            : null,
         ]),
         el('button', {
           class: 'bt pri', text: '立即同步一次', attrs: { type: 'button' },

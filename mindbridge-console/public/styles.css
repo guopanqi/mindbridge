@@ -284,3 +284,5 @@ tr.masked td { color: var(--mut2); font-style: italic; background: #fafbfc; }
 }
 .toast.on { opacity: 1; transform: translate(-50%, 0); }
 
+
+.conn-link { display: inline-block; margin-top: 8px; font-size: 12px; color: var(--brand); }

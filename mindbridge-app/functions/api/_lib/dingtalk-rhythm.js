@@ -36,6 +36,9 @@ export async function appAccessToken(env) {
 }
 
 // 遍历部门树收集 userid。返回值只在调用方内存中使用。
+//
+// 这里刻意不做静默 catch：缺少通讯录权限时必须把钉钉的 errcode 抛上去，
+// 否则会表现成「连接成功但组织 0 人」，把权限问题伪装成没有数据。
 export async function listUserIds(token) {
   const seen = new Set();
   const queue = [1];
@@ -44,6 +47,7 @@ export async function listUserIds(token) {
     const deptId = queue.shift();
     if (visited.has(deptId)) continue;
     visited.add(deptId);
+
     const subs = await callDingTalk(
       `https://oapi.dingtalk.com/topapi/v2/department/listsub?access_token=${encodeURIComponent(token)}`,
       {
@@ -51,7 +55,7 @@ export async function listUserIds(token) {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ dept_id: deptId }),
       }
-    ).catch(() => ({ result: [] }));
+    );
     for (const dept of subs.result || []) queue.push(dept.dept_id);
 
     const users = await callDingTalk(
@@ -61,8 +65,13 @@ export async function listUserIds(token) {
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ dept_id: deptId }),
       }
-    ).catch(() => ({ result: { userid_list: [] } }));
+    );
     for (const id of users.result?.userid_list || []) seen.add(id);
+  }
+  if (!seen.size) {
+    const error = new Error('DINGTALK_NO_MEMBERS');
+    error.errmsg = '通讯录接口调用成功但没有返回任何成员，请确认应用的权限范围已设为全部员工';
+    throw error;
   }
   return [...seen];
 }
