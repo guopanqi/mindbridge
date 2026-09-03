@@ -139,15 +139,61 @@ export function renderChat(root) {
   );
 }
 
+// 回访：到期后员工下次打开树洞时出现在对话流里。
+// 没有推送通道，所以这是唯一如实的送达方式。
+async function renderFollowup() {
+  let due;
+  try {
+    ({ due } = await api.followups());
+  } catch {
+    return;
+  }
+  if (!due) return;
+  const card = el('div', { class: 'card followup' }, [
+    el('p', { class: 'card-title', text: '回访一下' }),
+    el('p', { class: 'card-desc', text: due.question }),
+  ]);
+  const actions = el('div', { class: 'card-actions' }, [
+    ...due.answers.map((answer) => el('button', {
+      class: 'secondary small', text: answer, attrs: { type: 'button' },
+      on: {
+        click: async () => {
+          try {
+            await api.answerFollowup(due.id, answer);
+            actions.remove();
+            card.append(el('p', { class: 'card-tag', text: '谢谢你告诉我。' }));
+          } catch { toast('没能提交，请稍后再试。'); }
+        },
+      },
+    })),
+    el('button', {
+      class: 'link', text: '跳过', attrs: { type: 'button' },
+      on: {
+        click: async () => {
+          try {
+            await api.answerFollowup(due.id, null);
+            card.remove();
+          } catch { toast('没能跳过，请稍后再试。'); }
+        },
+      },
+    }),
+  ]);
+  card.append(actions);
+  stream.append(card);
+  stream.scrollTop = stream.scrollHeight;
+}
+
 export async function loadChat() {
   try {
     const body = await api.chatHistory();
     clear(stream);
     if (!body.messages.length) {
       append([{ role: 'assistant', text: '我是 MindBridge，一个匿名的心理支持助手。\n有什么想说的，随时发给我。' }]);
+      await renderFollowup();
       return;
     }
     append(body.messages);
+    await renderFollowup();
   } catch (error) {
     if (error instanceof ApiError && error.code === 'SESSION_REQUIRED') throw error;
     toast('历史记录暂时读不出来，你仍然可以继续说。');

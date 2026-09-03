@@ -3,7 +3,9 @@ import { BUILD_ID } from './build-id.js';
 import { $, closeSheet, reducedMotion } from './dom.js';
 import { clearChat, focusComposer, loadChat, renderChat } from './views/chat.js';
 import { loadWall, renderWall } from './views/wall.js';
+import { loadResources, renderResources } from './views/resources.js';
 import { loadMe, renderMe, privacySheet } from './views/me.js';
+import { askContext } from './views/context-prompt.js';
 
 const MIN_BOOT_MS = 1200;
 const AUTH_TIMEOUT_MS = 12_000;
@@ -69,6 +71,8 @@ async function enterApp() {
   $('#boot').hidden = true;
   $('#app').hidden = false;
   await showView('chat');
+  // 还没做过选择的人，进来先问一次处境标签；选过或跳过就不再打扰。
+  if (!me.contextDecided) askContext();
 }
 
 async function showView(view) {
@@ -79,17 +83,19 @@ async function showView(view) {
     tab.classList.toggle('on', on);
     tab.setAttribute('aria-selected', String(on));
   }
-  for (const name of ['chat', 'wall', 'me']) $(`#view-${name}`).hidden = name !== view;
+  for (const name of ['chat', 'wall', 'resources', 'me']) $(`#view-${name}`).hidden = name !== view;
   try {
     if (!loaded.has(view)) {
       loaded.add(view);
       if (view === 'chat') { renderChat($('#view-chat')); await loadChat(); focusComposer(); return; }
       if (view === 'wall') { renderWall($('#view-wall')); await loadWall(); return; }
+      if (view === 'resources') { renderResources($('#view-resources')); await loadResources(); return; }
       renderMe($('#view-me'), { onClearChat: clearChat });
       await loadMe();
       return;
     }
     if (view === 'wall') await loadWall();
+    if (view === 'resources') await loadResources();
     if (view === 'me') await loadMe();
   } catch (error) {
     if (error instanceof ApiError && error.code === 'SESSION_REQUIRED') {

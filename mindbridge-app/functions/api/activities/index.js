@@ -3,9 +3,13 @@
 // 参与记录挂在 resource_events 上，保证「AI 推荐 → 参与 → 完成 → 效果」是同一条链，
 // HR 端的活动效果因此有真实承载物，而不是只有一个参与计数。
 import { json } from '../_lib/http.js';
+import { followupQuestion } from '../_lib/followup-data.js';
 import {
-  ApiError, aggregateStatement, handleError, readJson, requireSession, requireText,
+  ApiError, aggregateStatement, handleError, newId, readJson, requireSession, requireText,
 } from '../_lib/care.js';
+
+// 活动完成后隔多少天回访。真实自然日，不加速。
+const FOLLOWUP_DELAY_DAYS = 3;
 
 const score = (value, field) => {
   if (!Number.isInteger(value) || value < 1 || value > 10) {
@@ -107,6 +111,15 @@ export async function onRequestPost({ request, env }) {
         "UPDATE resource_events SET state = 'completed', post_score = ?, rating = COALESCE(?, rating), feedback_at = ?, updated_at = ? WHERE id = ? AND anon_id = ?"
       ).bind(post, rating, rating ? now : null, now, eventId, anonId));
       statements.push(aggregateStatement(env, { eventType: 'activity_completed', level: 'green', at: now }));
+      // 回访按真实自然日间隔排期，不做演示加速。
+      const dueAt = now + FOLLOWUP_DELAY_DAYS * 86400000;
+      statements.push(env.CARE_DB.prepare(
+        `INSERT INTO follow_ups (id, anon_id, resource_event_id, activity_id, activity_title, question, due_at, state, created_at, data_origin)
+         VALUES (?, ?, ?, ?, ?, ?, ?, 'scheduled', ?, 'live')`
+      ).bind(
+        newId('fup'), anonId, eventId, activity.id, activity.title,
+        followupQuestion(activity.id, activity.title), dueAt, now
+      ));
     } else if (body.action === 'skip') {
       statements.push(env.CARE_DB.prepare(
         "UPDATE resource_events SET state = 'declined', updated_at = ? WHERE id = ? AND anon_id = ?"
