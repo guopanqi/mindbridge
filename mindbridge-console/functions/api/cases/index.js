@@ -41,7 +41,7 @@ export async function onRequestPost({ request, env }) {
     const body = await readJson(request);
     action = body?.action;
     caseCode = body?.caseCode;
-    if (!['claim', 'note', 'request_context', 'read_context'].includes(action)) {
+    if (!['claim', 'start', 'close', 'refer', 'note', 'request_context', 'read_context'].includes(action)) {
       throw new ApiError('ACTION_UNKNOWN', 400, '未知操作');
     }
     if (typeof caseCode !== 'string' || !caseCode) throw new ApiError('CASE_CODE_REQUIRED', 400, '缺少个案编号');

@@ -29,10 +29,18 @@ const noteAad = (id) => `care:appointment:${id}`;
 const caseNoteAad = (id) => `care:case_note:${id}`;
 const messageAad = (conversationId) => `care:message:${conversationId}`;
 
+const formatTime = (ts) => {
+  const d = new Date(ts);
+  const h = String(d.getHours()).padStart(2, '0');
+  const m = String(d.getMinutes()).padStart(2, '0');
+  return `${h}:${m}`;
+};
+
 async function listCases(env) {
   const { results } = await env.CARE_DB.prepare(
-    `SELECT a.id, a.case_code, a.risk_level, a.status, a.share_context, a.note_cipher,
+    `SELECT a.id, a.case_code, a.conversation_id, a.risk_level, a.status, a.share_context, a.note_cipher,
             a.content_key_version, a.created_at, a.claimed_by, a.claimed_at, a.closed_at,
+            a.department, a.work_profile_json, a.tags_json, a.response_minutes, a.log_json, a.sla_at,
             (SELECT COUNT(*) FROM case_notes n WHERE n.appointment_id = a.id) AS note_count,
             (SELECT status FROM context_requests c WHERE c.appointment_id = a.id ORDER BY created_at DESC LIMIT 1) AS context_status
      FROM appointments a WHERE a.status != 'cancelled' ORDER BY a.created_at DESC LIMIT 50`
@@ -43,15 +51,64 @@ async function listCases(env) {
     const note = row.note_cipher
       ? await openBody(env, row.note_cipher, row.content_key_version, noteAad(row.id))
       : null;
+
+    let workProfile = null;
+    if (row.work_profile_json) {
+      try { workProfile = JSON.parse(row.work_profile_json); } catch {}
+    }
+    let tags = [];
+    if (row.tags_json) {
+      try { tags = JSON.parse(row.tags_json); } catch {}
+    }
+    let log = [];
+    if (row.log_json) {
+      try { log = JSON.parse(row.log_json); } catch {}
+    } else {
+      log = [`${formatTime(row.created_at)} 员工已授权转接`];
+      if (row.claimed_at) log.push(`${formatTime(row.claimed_at)} 疗愈师已接单`);
+      if (row.closed_at) log.push(`${formatTime(row.closed_at)} 完成首次会谈 · 已安排后续疗愈`);
+    }
+
+    const contextStatus = row.context_status || (row.share_context ? 'approved' : 'none');
+    let textSnippets = [];
+    if (contextStatus === 'approved' && row.conversation_id) {
+      const { results: msgs } = await env.CARE_DB.prepare(
+        "SELECT body_cipher, content_key_version FROM messages WHERE conversation_id = ? AND role = 'user' ORDER BY created_at ASC LIMIT 2"
+      ).bind(row.conversation_id).all().catch(() => ({ results: [] }));
+      for (const m of msgs || []) {
+        const text = await openBody(env, m.body_cipher, m.content_key_version, messageAad(row.conversation_id));
+        if (text) textSnippets.push(text);
+      }
+      if (!textSnippets.length && note) {
+        textSnippets.push(note);
+      }
+    }
+
+    // 状态映射为 Demo 标准三态：pending / active / done
+    let status = 'pending';
+    if (row.closed_at || row.status === 'closed' || row.status === 'done') {
+      status = 'done';
+    } else if (row.status === 'active' || row.claimed_by) {
+      status = 'active';
+    }
+
     cases.push({
+      id: row.id,
       caseCode: row.case_code,
       riskLevel: row.risk_level,
-      status: row.status,
+      status,
+      dept: row.department || '研发中心',
+      workProfile,
+      tags: tags.length ? tags : (row.risk_level === 'red' ? ['危机表达', '身心耗竭'] : ['情绪困扰']),
+      sla: row.sla_at || (row.created_at + 2 * 3600 * 1000),
+      resp: row.response_minutes || (row.closed_at ? Math.max(1, Math.round((row.closed_at - row.created_at) / 60000)) : null),
+      log,
+      textSnippets,
       claimed: Boolean(row.claimed_by),
       claimedBy: row.claimed_by,
       noteFromEmployee: note,
       noteCount: row.note_count,
-      contextStatus: row.context_status || 'none',
+      contextStatus,
       at: row.created_at,
     });
   }
@@ -82,21 +139,47 @@ export async function onRequestPost({ request, env }) {
   }
   try {
     const appointment = await env.CARE_DB
-      .prepare('SELECT id, anon_id, conversation_id, status, claimed_by FROM appointments WHERE case_code = ?')
+      .prepare('SELECT id, anon_id, conversation_id, status, claimed_by, created_at, log_json FROM appointments WHERE case_code = ?')
       .bind(caseCode).first();
     if (!appointment) return json({ ok: false, reasonCode: 'CASE_NOT_FOUND' }, 404);
     const now = Date.now();
+    const timeStr = formatTime(now);
 
-    if (action === 'claim') {
+    let logs = [];
+    if (appointment.log_json) {
+      try { logs = JSON.parse(appointment.log_json); } catch {}
+    }
+
+    if (action === 'claim' || action === 'start') {
       if (appointment.claimed_by && appointment.claimed_by !== staffId) {
         return json({ ok: false, reasonCode: 'CASE_ALREADY_CLAIMED' }, 409);
       }
+      const newStatus = action === 'start' ? 'active' : 'claimed';
+      const actionMsg = action === 'start' ? `${timeStr} 疗愈师已开始联系` : `${timeStr} 疗愈师已接单`;
+      logs.push(actionMsg);
       await env.CARE_DB.batch([
-        env.CARE_DB.prepare("UPDATE appointments SET status = 'claimed', claimed_by = ?, claimed_at = ?, updated_at = ? WHERE id = ?")
-          .bind(staffId, now, now, appointment.id),
+        env.CARE_DB.prepare("UPDATE appointments SET status = ?, claimed_by = ?, claimed_at = COALESCE(claimed_at, ?), log_json = ?, updated_at = ? WHERE id = ?")
+          .bind(newStatus, staffId, now, JSON.stringify(logs), now, appointment.id),
         aggregateStatement(env, { eventType: 'case_claimed', at: now }),
       ]);
-      return json({ ok: true, status: 'claimed' });
+      return json({ ok: true, status: newStatus, log: logs });
+    }
+
+    if (action === 'close') {
+      const respMinutes = Math.max(1, Math.round((now - appointment.created_at) / 60000));
+      logs.push(`${timeStr} 完成首次会谈 · 已安排后续疗愈`);
+      await env.CARE_DB.prepare(
+        "UPDATE appointments SET status = 'done', closed_at = ?, response_minutes = ?, log_json = ?, updated_at = ? WHERE id = ?"
+      ).bind(now, respMinutes, JSON.stringify(logs), now, appointment.id).run();
+      return json({ ok: true, status: 'done', responseMinutes: respMinutes, log: logs });
+    }
+
+    if (action === 'refer') {
+      logs.push(`${timeStr} 已记录专业转介评估 · 具体机构由专业团队线下流程决定`);
+      await env.CARE_DB.prepare(
+        "UPDATE appointments SET log_json = ?, updated_at = ? WHERE id = ?"
+      ).bind(JSON.stringify(logs), now, appointment.id).run();
+      return json({ ok: true, log: logs });
     }
 
     if (action === 'note') {
@@ -104,10 +187,15 @@ export async function onRequestPost({ request, env }) {
       if (!text || text.length > 500) return json({ ok: false, reasonCode: 'NOTE_INVALID' }, 400);
       const id = newId('note');
       const sealed = await sealBody(env, text, caseNoteAad(id));
-      await env.CARE_DB.prepare(
-        'INSERT INTO case_notes (id, appointment_id, staff_id, body_cipher, content_key_version, created_at, data_origin) VALUES (?, ?, ?, ?, ?, ?, ?)'
-      ).bind(id, appointment.id, staffId, sealed.cipher, sealed.version, now, 'live').run();
-      return json({ ok: true });
+      logs.push(`${timeStr} 疗愈师记录干预备忘`);
+      await env.CARE_DB.batch([
+        env.CARE_DB.prepare(
+          'INSERT INTO case_notes (id, appointment_id, staff_id, body_cipher, content_key_version, created_at, data_origin) VALUES (?, ?, ?, ?, ?, ?, ?)'
+        ).bind(id, appointment.id, staffId, sealed.cipher, sealed.version, now, 'live'),
+        env.CARE_DB.prepare('UPDATE appointments SET log_json = ?, updated_at = ? WHERE id = ?')
+          .bind(JSON.stringify(logs), now, appointment.id),
+      ]);
+      return json({ ok: true, log: logs });
     }
 
     if (action === 'request_context') {
@@ -117,10 +205,15 @@ export async function onRequestPost({ request, env }) {
         "SELECT id FROM context_requests WHERE appointment_id = ? AND status = 'pending' AND expires_at > ?"
       ).bind(appointment.id, now).first();
       if (pending) return json({ ok: true, status: 'pending' });
-      await env.CARE_DB.prepare(
-        'INSERT INTO context_requests (id, appointment_id, anon_id, staff_id, reason, status, created_at, expires_at, data_origin) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-      ).bind(newId('ctx'), appointment.id, appointment.anon_id, staffId, reason, 'pending', now, now + CONTEXT_TTL_MS, 'live').run();
-      return json({ ok: true, status: 'pending' });
+      logs.push(`${timeStr} 申请查看对话上下文（理由：${reason}）`);
+      await env.CARE_DB.batch([
+        env.CARE_DB.prepare(
+          'INSERT INTO context_requests (id, appointment_id, anon_id, staff_id, reason, status, created_at, expires_at, data_origin) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+        ).bind(newId('ctx'), appointment.id, appointment.anon_id, staffId, reason, 'pending', now, now + CONTEXT_TTL_MS, 'live'),
+        env.CARE_DB.prepare('UPDATE appointments SET log_json = ?, updated_at = ? WHERE id = ?')
+          .bind(JSON.stringify(logs), now, appointment.id),
+      ]);
+      return json({ ok: true, status: 'pending', log: logs });
     }
 
     if (action === 'read_context') {

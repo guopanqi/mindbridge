@@ -133,6 +133,46 @@ for (let i = 0; i < POSTS.length; i++) {
   }
 }
 
+// 演示个案体系：覆盖待响应 (pending)、处理中 (active)、已闭环 (done) 三态
+const app1At = now - 3600000;
+const app1Sla = now + 5400000; // 剩余 1.5h
+const app1Prof = JSON.stringify({ job: '后端研发', deptType: '研发中心', level: '一线骨干', workType: '高负荷项目' });
+const app1Tags = JSON.stringify(['危机表达', '身心耗竭', '累']);
+const app1Log = JSON.stringify(['10:24 员工已授权转接']);
+
+emit(`DELETE FROM appointments WHERE data_origin = '${ORIGIN}' OR case_code IN ('MB-MWA5A8', 'MB-K9J2L1', 'MB-P3X8Y2');`);
+emit(`INSERT OR REPLACE INTO appointments (id, case_code, anon_id, conversation_id, risk_level, status, share_context, note_cipher, content_key_version, department, work_profile_json, tags_json, response_minutes, log_json, sla_at, created_at, updated_at, data_origin) VALUES ('app_seed_001', 'MB-MWA5A8', '${people[0]}', 'conv_seed_mwa5a8', 'red', 'pending', 1, '希望约一次线上沟通，晚上方便', 'plain', '研发中心', '${esc(app1Prof)}', '${esc(app1Tags)}', NULL, '${esc(app1Log)}', ${app1Sla}, ${app1At}, ${app1At}, '${ORIGIN}');`);
+
+// 为 MB-MWA5A8 提供可查看上下文与已同意状态
+emit(`INSERT OR REPLACE INTO context_requests (id, appointment_id, anon_id, staff_id, reason, status, created_at, decided_at, expires_at, data_origin) VALUES ('ctx_seed_001', 'app_seed_001', '${people[0]}', 'healer_demo', '评估危机程度并制定安全支持计划', 'approved', ${app1At}, ${app1At + 60000}, ${now + 86400000}, '${ORIGIN}');`);
+emit(`INSERT OR REPLACE INTO messages (id, conversation_id, anon_id, role, body_cipher, content_key_version, created_at, data_origin) VALUES ('msg_seed_001', 'conv_seed_mwa5a8', '${people[0]}', 'user', '最近真的太累了，感觉撑不住了，活着好像没有什么意义', 'plain', ${app1At - 120000}, '${ORIGIN}');`);
+emit(`INSERT OR REPLACE INTO messages (id, conversation_id, anon_id, role, body_cipher, content_key_version, created_at, data_origin) VALUES ('msg_seed_002', 'conv_seed_mwa5a8', '${people[0]}', 'assistant', '我听到你的疲惫与沉重了。请先停下手中的工作，如果需要，专业持证疗愈师可以为你提供一对一的倾听与支持。', 'plain', ${app1At - 60000}, '${ORIGIN}');`);
+
+// 活跃处理中个案（SLA 剩余 25 分钟，触发黄色预警）
+const app2At = now - 5700000;
+const app2Sla = now + 1500000;
+const app2Prof = JSON.stringify({ job: '在线客服', deptType: '客服中心', level: '一线员工', workType: '轮班制' });
+const app2Tags = JSON.stringify(['客户情绪', '崩溃']);
+const app2Log = JSON.stringify(['09:15 员工已授权转接', '09:30 疗愈师已开始联系']);
+emit(`INSERT OR REPLACE INTO appointments (id, case_code, anon_id, conversation_id, risk_level, status, share_context, note_cipher, content_key_version, department, work_profile_json, tags_json, response_minutes, log_json, sla_at, claimed_by, claimed_at, created_at, updated_at, data_origin) VALUES ('app_seed_002', 'MB-K9J2L1', '${people[1]}', NULL, 'red', 'active', 0, '最近客户投诉很多，经常做噩梦，情绪快失控了', 'plain', '客服中心', '${esc(app2Prof)}', '${esc(app2Tags)}', NULL, '${esc(app2Log)}', ${app2Sla}, 'staff_healer_01', ${now - 1200000}, ${app2At}, ${now}, '${ORIGIN}');`);
+
+// 已闭环个案
+const app3At = now - 86400000;
+const app3Closed = app3At + 18 * 60000;
+const app3Prof = JSON.stringify({ job: '大客户销售', deptType: '销售中心', level: '资深经理', workType: '常规' });
+const app3Tags = JSON.stringify(['指标焦虑']);
+const app3Log = JSON.stringify(['昨天 16:40 员工已授权转接', '昨天 16:58 完成首次会谈 · 已安排后续疗愈']);
+emit(`INSERT OR REPLACE INTO appointments (id, case_code, anon_id, conversation_id, risk_level, status, share_context, note_cipher, content_key_version, department, work_profile_json, tags_json, response_minutes, log_json, sla_at, claimed_by, claimed_at, closed_at, created_at, updated_at, data_origin) VALUES ('app_seed_003', 'MB-P3X8Y2', '${people[2]}', NULL, 'red', 'done', 0, '业绩压力很大，整晚失眠', 'plain', '销售中心', '${esc(app3Prof)}', '${esc(app3Tags)}', 18, '${esc(app3Log)}', ${app3At + 7200000}, 'staff_healer_01', ${app3At + 300000}, ${app3Closed}, ${app3At}, ${app3Closed}, '${ORIGIN}');`);
+
+// 团队节奏演示基线数据
+const today = bucket(now);
+emit(`DELETE FROM org_rhythm WHERE data_origin = '${ORIGIN}';`);
+emit(`INSERT OR REPLACE INTO org_rhythm (id, bucket_day, metric, value, sample_size, unit, source, data_origin, created_at) VALUES ('rhy_seed_001', '${today}', 'median_off_duty_minutes', 1242, 145, 'minutes', 'dingtalk_attendance', '${ORIGIN}', ${now});`);
+emit(`INSERT OR REPLACE INTO org_rhythm (id, bucket_day, metric, value, sample_size, unit, source, data_origin, created_at) VALUES ('rhy_seed_002', '${today}', 'late_off_duty_share', 38, 145, 'percent', 'dingtalk_attendance', '${ORIGIN}', ${now});`);
+emit(`INSERT OR REPLACE INTO org_rhythm (id, bucket_day, metric, value, sample_size, unit, source, data_origin, created_at) VALUES ('rhy_seed_003', '${today}', 'off_duty_records', 145, 145, 'number', 'dingtalk_attendance', '${ORIGIN}', ${now});`);
+
 mkdirSync('seed', { recursive: true });
 writeFileSync('seed/demo_seed.sql', `${lines.join('\n')}\n`);
 console.log(`生成 ${lines.length} 条语句 → seed/demo_seed.sql`);
+
+
