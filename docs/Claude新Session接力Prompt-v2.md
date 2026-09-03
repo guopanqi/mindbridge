@@ -3,7 +3,7 @@
 
 ## 1. 产品目标
 
-`mindbridge-app` 不是“带钉钉外壳的心理健康网页”，也不是把 `/Users/usr/Downloads/mindbridge/树洞demo/mindbridge-demo.html` 原封不动上线。目标是把原 Demo 的核心体验迁移成真正运行在企业钉钉组织内的匿名员工支持系统，同时保留适合路演的完整故事和可控演示数据。
+`mindbridge-app` 不是“带钉钉外壳的心理健康网页”，也不是把 `/Users/usr/Downloads/mindbridge/prototype/mindbridge-demo.html` 原封不动上线。目标是把原 Demo 的核心体验迁移成真正运行在企业钉钉组织内的匿名员工支持系统，同时保留适合路演的完整故事和可控演示数据。
 
 真实与模拟必须严格分开：钉钉身份链路、登录、授权码、匿名映射、会话和由测试人员产生的业务事件必须是真实的；200 人企业基线、历史趋势和丰富案例允许使用预置模拟数据，但必须显著标记为模拟，不能伪造“真实钉钉考勤、病假、聊天接口数据”。
 
@@ -37,8 +37,8 @@ Care Domain（mindbridge-care，独立 D1）
 ## 3. 当前代码与资料
 
 - 真实应用：`/Users/usr/Downloads/mindbridge/mindbridge-app`
-- 原型 Demo：`/Users/usr/Downloads/mindbridge/树洞demo/mindbridge-demo.html`
-- 当前应用说明：`mindbridge-app/README.md`
+- 原型 Demo：`/Users/usr/Downloads/mindbridge/prototype/mindbridge-demo.html`
+- 当前应用说明：`apps/employee/README.md`
 - 临时处理与技术债台账：`docs/mindbridge-app-临时处理与技术债.md`
 - 旧待办：`docs/TODO.md`
 
@@ -68,17 +68,17 @@ https://mindbridge-app-8j6.pages.dev/?corpid=$CORPID$&build=11
 
 当前关键文件：
 
-- `mindbridge-app/public/app.js`
-- `mindbridge-app/functions/api/auth.js`
-- `mindbridge-app/functions/api/session.js`
-- `mindbridge-app/functions/api/config.js`
-- `mindbridge-app/functions/api/health.js`
-- `mindbridge-app/functions/api/_lib/crypto.js`
-- `mindbridge-app/scripts/dingtalk-entry.js`
-- `mindbridge-app/migrations/identity/0001_identity_relay.sql`
-- `mindbridge-app/migrations/care/0001_sessions.sql`
-- `mindbridge-app/test/auth.test.js`
-- `mindbridge-app/wrangler.jsonc`
+- `apps/employee/public/app.js`
+- `apps/employee/functions/api/auth.js`
+- `apps/employee/functions/api/session.js`
+- `apps/employee/functions/api/config.js`
+- `apps/employee/functions/api/health.js`
+- `apps/employee/functions/api/_lib/crypto.js`
+- `apps/employee/scripts/dingtalk-entry.js`
+- `apps/employee/migrations/identity/0001_identity_relay.sql`
+- `apps/employee/migrations/care/0001_sessions.sql`
+- `apps/employee/test/auth.test.js`
+- `apps/employee/wrangler.jsonc`
 
 已有测试命令：
 

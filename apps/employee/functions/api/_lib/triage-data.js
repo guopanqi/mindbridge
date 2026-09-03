@@ -1,4 +1,4 @@
-// 本文件的词典与话术片段逐行取自 树洞demo/mindbridge-demo.html，作为服务端规则基线。
+// 本文件的词典与话术片段逐行取自 prototype/mindbridge-demo.html，作为服务端规则基线。
 // 危机词库与情绪词典的任何修改都必须走评审；不要用模型生成内容覆盖。
 
 export const EMO={

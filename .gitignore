@@ -32,3 +32,9 @@ pnpm-debug.log*
 
 # Repository-local disposable work area
 scratch/
+
+# 二进制产物不进仓库：已经进去的删不掉，只会让 clone 越来越重。
+# PPT 与文档产物请放在共享盘或 Release，仓库里只留可编辑的源文件（.md/.js）。
+*.pptx
+*.docx
+*.key

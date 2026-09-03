@@ -23,7 +23,7 @@
 ### TD-002：SDK 暂时使用完整 `dingtalk-jsapi` bundle
 
 - 状态：未关闭
-- 当前文件：`mindbridge-app/public/vendor/dingtalk-auth-v3.js`，约 612 KB。
+- 当前文件：`apps/employee/public/vendor/dingtalk-auth-v3.js`，约 612 KB。
 - 原因：按需导入阶段曾发生导出对象与 API 注册顺序不一致，桌面 WebView 中 `requestAuthCode` 不可用。为先完成真实链路，当前从锁定版本的官方 npm 包构建完整 bundle，并只向业务代码暴露 `requestDingTalkAuthCode`。
 - 正确性：当前不是多 SDK 兼容层，不包含 UA 分支、legacy fallback 或 `dd.ready` 双启动；真实 Mac 钉钉已经通过。
 - 风险：体积偏大；未建立 bundle 导出与真机能力的构建时契约测试。
@@ -174,6 +174,22 @@
 - 当前真实状态：测试企业 `orgSize: 1`，近 30 天 0 条打卡记录，接口返回 `status: 'connected_no_data'`。
 - 仍未关闭：审批（`qyapi_...` 审批实例读权限）与待办权限尚未开通，对应信号仍为关闭状态。
 - 注意：即使有数据，测试企业人数也远低于最小样本 10 人，看板会显示「已连接，但样本不足不予展示」——这是正确行为，不是故障。
+
+### TD-020：仓库目录结构已重整
+
+- 状态：已完成，2026-09-03。
+- 变更：`mindbridge-app` → `apps/employee`，`mindbridge-console` → `apps/console`，
+  `树洞demo` → `prototype`（去掉中文目录名，避免非 macOS 环境与 CI 上的路径问题）；
+  根目录散落的截图与文档归入 `assets/` 与 `docs/`；新增顶层 `README.md`。
+- **Cloudflare Pages 项目名未变**（仍为 `mindbridge-app` / `mindbridge-console`），云端零改动，
+  部署命令在各自项目目录内执行，与路径无关。
+- 有意未做：`packages/shared`。两个项目间 `crypto.js`、`build-id.js` 内容相同，
+  但抽取共享包需要引入 npm workspaces，属于真实工程改造，放到路演之后。
+  `http.js` 的差异是**有意的**（两端 Cookie 名必须不同），不要合并。
+- 顺带修复：`dom.js` 曾无意分叉——console 修空白 bug 时加了 `html`/`style` 支持，
+  员工端没跟上，已同步，避免员工端将来重蹈「静默渲染成空」。
+- 本地开发注意：两个 wrangler 实例默认都占 inspector 端口 9229，
+  第二个必须加 `--inspector-port 9230`。
 
 ## 已关闭的排障项
 

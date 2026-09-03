@@ -13,7 +13,7 @@ fi
 
 PROJECT_NAME="${1:-mindbridge-demo}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SITE_DIR="$SCRIPT_DIR/树洞demo"
+SITE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)/prototype"
 
 if ! command -v npx >/dev/null 2>&1; then
   echo "未找到 npx。请先安装 Node.js（建议 LTS 版本）。" >&2

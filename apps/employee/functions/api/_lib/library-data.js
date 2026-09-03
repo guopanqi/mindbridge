@@ -1,4 +1,4 @@
-// 资源库元数据逐行取自 树洞demo/mindbridge-demo.html 的 LIB。
+// 资源库元数据逐行取自 prototype/mindbridge-demo.html 的 LIB。
 
 export const LIB={
   L1:[ // 绿色 · 自助资源

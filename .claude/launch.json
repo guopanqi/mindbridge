@@ -2,10 +2,34 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "demo",
-      "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8777"],
-      "port": 8777
+      "name": "employee",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "wrangler",
+        "pages",
+        "dev",
+        "public",
+        "--port",
+        "8788"
+      ],
+      "cwd": "apps/employee",
+      "port": 8788
+    },
+    {
+      "name": "console",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "wrangler",
+        "pages",
+        "dev",
+        "public",
+        "--port",
+        "8789",
+        "--inspector-port",
+        "9230"
+      ],
+      "cwd": "apps/console",
+      "port": 8789
     }
   ]
 }
