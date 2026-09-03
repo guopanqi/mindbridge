@@ -94,10 +94,11 @@ function renderCaseCard(item, onReload) {
   // 对话上下文区域
   if (!isDone) {
     if (item.contextStatus === 'approved') {
-      const snippets = item.textSnippets && item.textSnippets.length
-        ? `：<br>${item.textSnippets.map((s) => `「${s}」`).join('<br>')}`
-        : '';
-      const grantedBox = el('div', { class: 'locked granted', html: `🛡️ 员工已在进入人工服务时一次性授权本次必要上下文${snippets}` });
+      // 员工原文一律用 textContent 渲染，绝不拼进 innerHTML。
+      const grantedBox = el('div', { class: 'locked granted' }, [
+        el('span', { text: '🛡️ 员工已在进入人工服务时一次性授权本次必要上下文' }),
+        ...(item.textSnippets || []).map((snippet) => el('p', { class: 'snippet', text: `「${snippet}」` })),
+      ]);
 
       const viewBtn = el('button', {
         class: 'bt small', text: '查看完整解密对话', style: 'margin-top:8px;', attrs: { type: 'button' },

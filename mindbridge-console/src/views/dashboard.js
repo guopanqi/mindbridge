@@ -128,7 +128,9 @@ function renderDashPane(data) {
           ? '<span class="na">暂无个案</span>'
           : `${data.risk.redOnTimeRate}<small>%</small>`,
         '红色个案 SLA 内响应率',
-        data.risk.redBreached ? `${data.risk.redBreached} 例超时` : `${data.risk.redCases} 例中零漏接`,
+        data.risk.redBreached
+          ? `${data.risk.redBreached} 例超时`
+          : `${data.risk.redCases} 例建案中，无超时`,
       ),
     ]),
     el('div', { class: 'grid2' }, [
@@ -156,7 +158,28 @@ function renderDashPane(data) {
           el('div', { class: 'dr' }, [el('span', { class: 'sq', style: 'background:#c07a2c' }), el('span', { text: '黄色 · 需关注' }), el('span', { class: 'dv', text: `${data.risk.yellowPeople}` })]),
           el('div', { class: 'dr' }, [el('span', { class: 'sq', style: 'background:#c9503a' }), el('span', { text: '红色 · 已转疗愈师' }), el('span', { class: 'dv', text: `${data.risk.redPeople}` })]),
         ]),
-        el('div', { class: 'redbox', html: `红色个案共 <b>${data.risk.redCount || 0}</b> 例，均已由持证疗愈师接管。<br><span class="no">你无权查看个案详情。</span>` }),
+        // 红色信号不等于个案：必须员工本人同意才会建案并转给疗愈师。
+        // 把这个漏斗写清楚，否则「信号 9 次、个案 5 例」看起来像漏接了 4 次。
+        el('div', { class: 'redbox' }, [
+          el('div', { class: 'funnel' }, [
+            el('div', { class: 'fn' }, [
+              el('b', { text: String(data.risk.redCount ?? 0) }),
+              el('span', { text: '次红色信号' }),
+            ]),
+            el('span', { class: 'fn-arrow', text: '→' }),
+            el('div', { class: 'fn' }, [
+              el('b', { text: String(data.risk.redCases ?? 0) }),
+              el('span', { text: '例员工同意建案' }),
+            ]),
+            el('span', { class: 'fn-arrow', text: '→' }),
+            el('div', { class: 'fn' }, [
+              el('b', { text: `${data.risk.redHandledRate ?? 0}%` }),
+              el('span', { text: '已被疗愈师接管' }),
+            ]),
+          ]),
+          el('p', { class: 'fn-note', text: '识别到红色信号后，系统会先说明边界并征求本人同意；不同意就不会建案，也不会通知任何人。因此信号数与个案数本来就不相等。' }),
+          el('p', { class: 'no', text: '你无权查看个案详情。' }),
+        ]),
       ]),
     ]),
     el('div', { class: 'cardC' }, [
@@ -589,7 +612,9 @@ function renderSensingPane() {
           title: '未连接钉钉接口',
           detail: scope
             ? `缺少权限点 ${scope}。在钉钉开发者后台申请开通后即可连接。`
-            : `钉钉返回 errcode ${status.errcode ?? '未知'}：${status.errmsg || '未知错误'}`,
+            : status.errcode
+              ? `钉钉返回 errcode ${status.errcode}：${status.errmsg || '未知错误'}`
+              : '调用钉钉接口失败，通常是应用凭据未配置或网络不可达。本地开发环境没有真实钉钉凭据时会出现这个状态。',
           link,
         };
       }

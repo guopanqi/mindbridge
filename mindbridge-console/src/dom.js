@@ -4,6 +4,10 @@ export function el(tag, options = {}, children = []) {
   const node = document.createElement(tag);
   if (options.class) node.className = options.class;
   if (options.text !== undefined) node.textContent = options.text;
+  // html 只允许传入代码里写死的静态片段。任何来自员工、疗愈师或接口的文本
+  // 一律走 text 或子节点，绝不能拼进 HTML。
+  if (options.html !== undefined) node.innerHTML = options.html;
+  if (options.style) node.setAttribute('style', options.style);
   for (const [key, value] of Object.entries(options.attrs || {})) {
     if (value === null || value === false) continue;
     node.setAttribute(key, value === true ? '' : String(value));

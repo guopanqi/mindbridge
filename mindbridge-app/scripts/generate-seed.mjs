@@ -162,7 +162,9 @@ for (let d = DAYS - 1; d >= 0; d--) {
   for (let i = 0; i < chats; i++) {
     const emotion = pick(EMOTIONS);
     const roll = rnd();
-    const level = roll > 0.965 ? 'red' : roll > 0.85 ? 'yellow' : 'green';
+    // 危机级表达在真实企业里是低频事件。原先 3.5% 会让 90 天累计出现 60+ 次红色，
+    // 与「个案需本人同意才建立」的实际转化量对不上，看板上像是大量漏接。
+    const level = roll > 0.9955 ? 'red' : roll > 0.86 ? 'yellow' : 'green';
     const at = ts + between(9, 23) * 3600000;
     const anonId = pick(activePeople);
     emit(`INSERT INTO aggregate_events (id, event_type, emotion, level, bucket_day, created_at, data_origin) VALUES ('${id('agg')}', 'chat_message', '${esc(emotion)}', '${level}', '${day}', ${at}, '${ORIGIN}');`);
