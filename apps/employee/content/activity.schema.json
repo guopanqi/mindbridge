@@ -150,6 +150,15 @@
             "minLength": 1,
             "maxLength": 2000
           },
+          "presentation": {
+            "enum": ["audio", "video"]
+          },
+          "src": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000,
+            "pattern": "^(https://[^\\s]+|/(?!/)[^\\s]+)$"
+          },
           "fallbackHint": {
             "type": "string",
             "minLength": 1,

@@ -13,6 +13,7 @@ function validateSchema(schema, value, path = '$') {
   }
   if (schema.enum && !schema.enum.includes(value)) bad('invalid enum');
   if (typeof value === 'number' && schema.minimum !== undefined && value < schema.minimum) bad('below minimum');
+  if (typeof value === 'number' && schema.maximum !== undefined && value > schema.maximum) bad('above maximum');
   if (typeof value === 'string') {
     if (schema.minLength && value.length < schema.minLength) bad('too short');
     if (schema.maxLength && value.length > schema.maxLength) bad('too long');
@@ -43,13 +44,19 @@ export function validateActivity(a) {
   if (!Array.isArray(a.tags) || a.tags.length > 20 || a.tags.some(t => !str(t, 40))) fail('invalid tags');
   if (!a.scale || !['up', 'down'].includes(a.scale.direction) || ['preLabel', 'low', 'high'].some(k => !str(a.scale[k], 200))) fail('invalid scale');
   if (!Array.isArray(a.stages) || a.stages.length > 50 || (a.kind === 'online' && !a.stages.length)) fail('invalid stages');
-  // 播放器认识的步骤类型。新增类型必须同时在 src/views/activity.js 里有渲染实现，
+  // 播放器认识的步骤类型。新增类型必须同时在 src/views/activity-engines.js 里有渲染实现，
   // 否则旧版本 WebView 会退回 fallbackHint —— 所以除这几种之外一律强制要求 fallbackHint。
-  const KNOWN = ['prompt', 'note', 'input', 'choice', 'breath', 'scan', 'timer', 'entries'];
+  const KNOWN = ['prompt', 'note', 'input', 'choice', 'breath', 'scan', 'timer', 'entries', 'media'];
   const positive = (v, max) => Number.isSafeInteger(v) && v > 0 && v <= max;
   for (const s of a.stages) {
     if (!s || !str(s.type, 40) || !str(s.title, 200)) fail('invalid stage');
     if (s.hint !== undefined && !str(s.hint)) fail('invalid hint');
+    if (s.type === 'media') {
+      if (!['audio', 'video'].includes(s.presentation)) fail('media needs audio/video presentation');
+      if (s.src && (s.src.includes('\\') || !/^(https:\/\/[^\s]+|\/(?!\/)[^\s]+)$/.test(s.src))) fail('invalid media source');
+      if (!s.src && (!Array.isArray(s.segments) || !s.segments.length || s.segments.length > 12
+        || s.segments.some(seg => !str(seg.title, 60) || !positive(seg.seconds, 300)))) fail('demo media needs timed segments');
+    }
     if (!KNOWN.includes(s.type) && !str(s.fallbackHint)) fail('new stage needs fallbackHint');
     if (s.type === 'choice' && (!Array.isArray(s.options) || !s.options.length || s.options.length > 20 || s.options.some(o => !str(o.label, 200)))) fail('invalid choices');
     if (s.type === 'breath') {

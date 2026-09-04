@@ -31,7 +31,7 @@ test('所有契约重试共享八秒预算，耗尽后不再调用模型', async
   assert.deepEqual(budgets, [8000, 4000]);
 });
 
-test('工具查询时间与第二次生成也计入同一预算', async () => {
+test('工具无结果直接说明不可用，不浪费第二次措辞调用', async () => {
   let time = 0;
   const budgets = [];
   const gateway = { async generate(request) {
@@ -48,8 +48,7 @@ test('工具查询时间与第二次生成也计入同一预算', async () => {
     return { results: [] };
   } }; } }; } } };
   await runConversationHarness({ env, gateway, userState: emptyUserState(), recentMessages: [], currentMessage: '活动', clock: () => time });
-  // 首选无结果后还有词级检索与通用检索，三次查询均消耗共享预算。
-  assert.deepEqual(budgets, [8000, 3000]);
+  assert.deepEqual(budgets, [8000]);
 });
 
 test('Gateway 在读取响应正文期间超时仍归类为 MODEL_TIMEOUT', async () => {
@@ -151,7 +150,7 @@ test('活动检索只返回 enabled 活动并限制条数', async () => {
   assert.ok(seen[1].length <= 3);
 });
 
-test('Harness 完成模型→只读工具→模型的闭环', async () => {
+test('明确请求活动仅用一次安全评估和真实检索，必定附卡片', async () => {
   let calls = 0;
   const gateway = {
     async generate(request) {
@@ -179,9 +178,9 @@ test('Harness 完成模型→只读工具→模型的闭环', async () => {
   const result = await runConversationHarness({
     env, gateway, userState: emptyUserState(), recentMessages: [], currentMessage: '有什么活动吗', now: 100,
   });
-  assert.equal(calls, 2);
+  assert.equal(calls, 1);
   assert.equal(result.activity.id, 'breathing');
-  assert.equal(result.decision.reply.text, '可以先看看三分钟呼吸着陆法。');
+  assert.match(result.decision.reply.text, /三分钟呼吸着陆法/);
   assert.equal(result.modelRun.provider, 'test-fixture');
 });
 
@@ -206,6 +205,22 @@ test('红色评估会阻断普通活动工具', async () => {
   assert.equal(dbCalls, 0);
   assert.equal(result.activity, null);
   assert.equal(result.nextState.supportLevel, 'red');
+});
+
+test('显式活动请求不能绕过本轮或跨轮未解决的安全评估', async () => {
+  for (const [previous, assessment] of [
+    [emptyUserState(), { level: 'red', confidence: 1, safetyStatus: 'immediate_risk', evidence: [] }],
+    [{ ...emptyUserState(), supportLevel: 'yellow', safetyCheck: 'pending' }, { level: 'yellow', confidence: 1, safetyStatus: 'needs_clarification', evidence: [] }],
+  ]) {
+    const gateway = { async generate() { return {
+      decision: decision({ reply: { text: '先确认你现在是否安全。' }, supportAssessment: assessment }),
+      usage: { inputTokens: 1, outputTokens: 1 }, meta: { provider: 'fixture', model: 'fixture', latencyMs: 1 },
+    }; } };
+    const env = { CARE_DB: { prepare() { throw new Error('不能检索活动'); } } };
+    const result = await runConversationHarness({ env, gateway, userState: previous, recentMessages: [], currentMessage: '还有什么活动？' });
+    assert.equal(result.activity, null);
+    assert.equal(result.decision.reply.text, '先确认你现在是否安全。');
+  }
 });
 
 test('工具后的措辞调用不能降低首次安全评估', async () => {

@@ -10,6 +10,10 @@ import { onRequestGet as listCases, onRequestPost as caseAction } from '../funct
 import { onRequestGet as readConfig } from '../functions/api/internal/config.js';
 import { onRequestGet as readMetrics } from '../functions/api/internal/metrics.js';
 import { sha256Base64Url, toBase64Url } from '../functions/api/_lib/crypto.js';
+import { sealBody } from '../functions/api/_lib/care.js';
+import { loadMessages } from '../functions/api/_lib/conversation/service.js';
+import { hydrateCards } from '../functions/api/_lib/conversation/card-state.js';
+import { onRequestPost as dismissCard } from '../functions/api/chat/card.js';
 
 const SESSION_TOKEN = 'support-acceptance-session-token-20260904';
 const SERVICE_TOKEN = 'support-acceptance-service-token-20260904-xxxxxxxx';
@@ -83,6 +87,101 @@ async function fixture() {
 async function body(response) {
   return { status: response.status, body: await response.json() };
 }
+
+async function addConsent(env, db, id = 'msg_consent') {
+  const sealed = await sealBody(env, JSON.stringify({ title: '支持', actions: [{ action: 'request_appointment', label: '安排' }, { action: 'dismiss', label: '暂时不用' }] }), 'care:message:conv_support_acceptance');
+  db.prepare('INSERT INTO messages(id, conversation_id, anon_id, role, body_cipher, content_key_version, risk_level, created_at, data_origin) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+    .run(id, 'conv_support_acceptance', 'anon_support_acceptance', 'consent', sealed.cipher, sealed.version, 'red', Date.now(), 'live');
+}
+
+test('对话转接：刷新恢复、接单/结案/取消投影，同卡重试不重复预约', async () => {
+  const { db, env, employeeRequest } = await fixture();
+  await addConsent(env, db);
+  const create = () => createAppointment({ env, request: employeeRequest('/api/appointments', { method: 'POST', body: JSON.stringify({ messageId: 'msg_consent', shareContext: true }) }) });
+  const first = await (await create()).json();
+  assert.equal(first.ok, true);
+  for (const status of ['requested', 'claimed', 'active', 'done', 'cancelled']) {
+    db.prepare('UPDATE appointments SET status=? WHERE id=?').run(status, first.id);
+    const card = (await loadMessages(env, 'anon_support_acceptance')).find(message => message.id === 'msg_consent').card;
+    assert.deepEqual(card.support, { status, caseCode: first.caseCode, linked: true });
+    assert.equal((await (await create()).json()).id, first.id);
+  }
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM appointments').get().n, 1);
+  assert.equal(db.prepare("SELECT COUNT(*) AS n FROM aggregate_events WHERE event_type='appointment_requested'").get().n, 1);
+  db.close();
+});
+
+test('旧转接卡只显示已有预约，不伪造关联；拒绝其他人的卡片', async () => {
+  const { db, env, employeeRequest } = await fixture();
+  await addConsent(env, db);
+  await createAppointment({ env, request: employeeRequest('/api/appointments', { method: 'POST', body: '{}' }) });
+  const history = await loadMessages(env, 'anon_support_acceptance');
+  assert.equal(history.find(message => message.id === 'msg_consent').card.support.linked, false);
+  db.prepare('UPDATE messages SET anon_id=? WHERE id=?').run('another_person', 'msg_consent');
+  const response = await createAppointment({ env, request: employeeRequest('/api/appointments', { method: 'POST', body: JSON.stringify({ messageId: 'msg_consent' }) }) });
+  assert.equal(response.status, 404);
+  db.close();
+});
+
+test('暂时不用持久化，之后可改主意；提交后不能用拒绝动作覆盖', async () => {
+  const { db, env, employeeRequest } = await fixture();
+  await addConsent(env, db);
+  const dismiss = () => dismissCard({ env, request: employeeRequest('/api/chat/card', { method: 'POST', body: JSON.stringify({ messageId: 'msg_consent', action: 'dismiss' }) }) });
+  assert.equal((await dismiss()).status, 200);
+  assert.equal((await loadMessages(env, 'anon_support_acceptance')).find(message => message.id === 'msg_consent').card.support.status, 'dismissed');
+  assert.equal((await createAppointment({ env, request: employeeRequest('/api/appointments', { method: 'POST', body: JSON.stringify({ messageId: 'msg_consent' }) }) })).status, 200);
+  assert.equal((await dismiss()).status, 409);
+  db.close();
+});
+
+test('活动卡读取当前参与与评价，按匿名主体隔离', async () => {
+  const { db, env } = await fixture();
+  db.prepare('INSERT INTO resource_events(id, anon_id, conversation_id, resource_name, resource_level, risk_level, state, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+    .run('res_card', 'anon_support_acceptance', 'conv_support_acceptance', '呼吸', 'L1', 'green', 'offered', Date.now(), Date.now());
+  const messages = [{ role: 'resource', card: { eventId: 'res_card' } }];
+  for (const state of ['offered', 'joined', 'completed', 'declined']) {
+    db.prepare('UPDATE resource_events SET state=?, stage_index=1, helpfulness=? WHERE id=?').run(state, '有帮助', 'res_card');
+    const [message] = await hydrateCards(env, 'anon_support_acceptance', messages);
+    assert.deepEqual(message.card.progress, { state, stageIndex: 1, helpfulness: '有帮助' });
+  }
+  assert.equal((await hydrateCards(env, 'another_person', messages))[0].card.progress.state, 'unavailable');
+  db.close();
+});
+
+test('转接卡关联写入失败时预约及授权整体回滚', async () => {
+  const { db, env, employeeRequest } = await fixture();
+  await addConsent(env, db);
+  db.exec("CREATE TRIGGER fail_card_update BEFORE UPDATE ON messages BEGIN SELECT RAISE(ABORT, 'test rollback'); END");
+  const response = await createAppointment({ env, request: employeeRequest('/api/appointments', { method: 'POST', body: JSON.stringify({ messageId: 'msg_consent', shareContext: true }) }) });
+  assert.equal(response.status, 500);
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM appointments').get().n, 0);
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM consent_grants').get().n, 0);
+  db.close();
+});
+
+test('一人一条未闭环预约，已接单或跟进不能重复；结案后可以再约', async () => {
+  const { db, env, employeeRequest } = await fixture();
+  const create = () => createAppointment({ env, request: employeeRequest('/api/appointments', {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ shareContext: true }),
+  }) });
+  assert.equal((await create()).status, 200);
+  for (const status of ['requested', 'claimed', 'active']) {
+    db.prepare('UPDATE appointments SET status=?').run(status);
+    assert.equal((await create()).status, 429, status);
+  }
+  // 模拟并发下过期的预检查：写入语句仍须阻止重复，不能多统计或多授权。
+  const prepare = env.CARE_DB.prepare.bind(env.CARE_DB);
+  env.CARE_DB.prepare = sql => sql.includes('SELECT COUNT(*) AS n FROM appointments')
+    ? { bind() { return { async first() { return { n: 0 }; } }; } } : prepare(sql);
+  assert.equal((await create()).status, 409);
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM appointments').get().n, 1);
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM consent_grants').get().n, 1);
+  assert.equal(db.prepare("SELECT COUNT(*) n FROM aggregate_events WHERE event_type='appointment_requested'").get().n, 1);
+  db.exec("UPDATE appointments SET status='done'");
+  assert.equal((await create()).status, 200);
+  assert.equal(db.prepare('SELECT COUNT(*) n FROM appointments').get().n, 2);
+  db.close();
+});
 
 test('支持链路：MB 编号可见、接单闭环后员工状态同步', async () => {
   const { db, env, employeeRequest, healerRequest } = await fixture();

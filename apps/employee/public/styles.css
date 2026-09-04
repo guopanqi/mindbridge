@@ -47,7 +47,11 @@ h1, h2 { margin: 0; }
 .app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; width: min(100%, 720px); margin: 0 auto; background: var(--bg); box-shadow: 0 0 0 1px var(--line); }
 /* 输入法弹出时隐藏 tab 栏。可视区被键盘压缩后，tab 栏会浮到键盘正上方，
    既挡内容又容易误触；正在打字时需要留在屏幕上的只有输入框和发送。 */
-.app.keyboard-open .tabbar { display: none; }
+.app:has(textarea:focus) .tabbar,
+.app:has(input:not([type="checkbox"]):not([type="radio"]):focus) .tabbar,
+.app.keyboard-open .tabbar { display: none !important; }
+.app:has(textarea:focus) .composer,
+.app:has(input:not([type="checkbox"]):not([type="radio"]):focus) .composer,
 .app.keyboard-open .composer { padding-bottom: 10px; }
 .topbar {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -210,6 +214,29 @@ main { flex: 1; min-height: 0; }
 .act-title { margin: 0; font-weight: 700; font-size: 16px; }
 .act-meta { margin: 2px 0 0; font-size: 12px; color: var(--ink-soft); }
 .act-body { padding: 18px 16px calc(20px + env(safe-area-inset-bottom)); overflow-y: auto; flex: 1; display: grid; gap: 14px; align-content: start; }
+.act-head { flex-shrink: 0; }
+.act-body { min-height: 0; }
+.act-sheet--experience .act-head { padding: 10px 14px; }
+.act-sheet--experience .act-body { padding: 12px 14px calc(16px + env(safe-area-inset-bottom)); gap: 10px; }
+.act-experience-heading { display: flex; align-items: center; gap: 12px; justify-content: space-between; }
+.act-experience-heading .act-step-title { margin: 0; font-size: 17px; line-height: 1.4; }
+.act-step-count { flex-shrink: 0; font-size: 12px; color: var(--ink-soft); }
+.act-cue { margin: 0; font-size: 13px; color: var(--ink-soft); }
+.act-engine { display: grid; gap: 10px; min-width: 0; }
+.act-instructions { border-top: 1px solid var(--line); padding-top: 10px; color: var(--ink-soft); font-size: 13px; }
+.act-instructions summary { cursor: pointer; padding: 6px 0; }
+.act-instructions p { margin: 8px 0 0; line-height: 1.65; }
+.act-conclusion { display: grid; gap: 14px; padding-bottom: 8px; }
+.act-closing-copy { margin: 4px 0 0; line-height: 1.7; color: var(--ink-soft); }
+.act-feedback { margin-top: 18px; padding: 20px 16px 16px; border: 1px solid var(--line); border-top: 3px solid #cbdad7; border-radius: 14px; background: #fff; }
+.act-feedback-heading { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.act-feedback-heading h2 { margin: 0; font-size: 16px; }
+.act-feedback-heading span { padding: 3px 8px; border-radius: 5px; background: #edf3f1; font-size: 12px; color: var(--ink-soft); }
+.act-feedback .act-help { margin-bottom: 12px; }
+@media (max-width: 600px) {
+  .act-sheet--experience { height: 100vh; height: 100dvh; border-radius: 0; }
+  .act-sheet--experience .act-head { border-radius: 0; }
+}
 .act-desc { margin: 0; font-size: 15px; line-height: 1.75; color: var(--ink-soft); }
 .act-info { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: grid; gap: 4px; }
 .act-info p { margin: 0; font-size: 14px; }
@@ -294,11 +321,21 @@ main { flex: 1; min-height: 0; }
 /* ---------- 活动步骤：可体验的交互 ---------- */
 /* 呼吸圆。缩放时长由 JS 按当前相的秒数设置，动画和文字必须对得上。 */
 .breath-wrap { display: grid; place-items: center; gap: 10px; padding: 10px 0 4px; }
+.breath-status { display: flex; align-items: center; justify-content: center; gap: 16px; min-height: 38px; }
+.breath-wrap .secondary { min-height: 44px; min-width: 88px; }
 .breath-orb {
   width: 140px; height: 140px; border-radius: 50%; display: grid; place-items: center;
   background: radial-gradient(circle at 38% 32%, #9fe0d0, var(--brand));
   color: #fff; transform: scale(.62); transition: transform linear;
   box-shadow: 0 10px 30px rgba(20, 123, 111, .28);
+}
+.act-sheet--experience .breath-orb { width: clamp(112px, 28dvh, 176px); height: clamp(112px, 28dvh, 176px); }
+@media (max-height: 650px) {
+  .act-sheet--experience .demo-screen { min-height: 170px; padding: 12px; gap: 8px; }
+  .act-sheet--experience .demo-figure { height: 100px; transform: scale(.8); transform-origin: center top; margin-bottom: -16px; }
+  .act-sheet--experience .demo-wave { height: 60px; }
+  .act-sheet--experience .demo-player { gap: 8px; }
+  .act-sheet--experience .demo-player-caption { font-size: 13px; min-height: 0; }
 }
 .breath-orb.inhale { transform: scale(1); }
 .breath-orb.hold { transform: scale(1); }
@@ -326,8 +363,40 @@ main { flex: 1; min-height: 0; }
 .timer-clock { margin: 4px 0 0; font-size: 30px; font-weight: 700; color: var(--brand); font-variant-numeric: tabular-nums; }
 .timer-track { width: 100%; height: 5px; border-radius: 3px; background: var(--line); overflow: hidden; }
 .timer-track i { display: block; height: 100%; width: 0; background: var(--brand); transition: width 1s linear; }
+.media-label { margin: 0 0 4px; color: var(--brand); font-size: 12px; font-weight: 700; letter-spacing: .08em; }
+.media-controls { display: flex; align-items: center; gap: 10px; color: var(--ink-soft); font-size: 12px; }
+.demo-player { display: grid; gap: 12px; }
+.activity-media { display: block; width: 100%; max-height: 55vh; border-radius: 16px; background: #edf3f1; }
+.act-save-status { margin: 0; color: var(--ink-soft); font-size: 13px; }
+.act-outcome { padding: 14px; border-radius: 12px; background: #edf3f1; line-height: 1.7; }
+.act-outcome p { margin: 6px 0; }
+.demo-screen { border-radius: 18px; min-height: 240px; padding: 22px 20px; background: #e7f1ee; display: grid; justify-items: center; align-content: center; gap: 12px; overflow: hidden; }
+.demo-screen.audio { background: #efedf6; }
+.demo-player-title { margin: 0; font-size: 18px; font-weight: 700; }
+.demo-player-caption { margin: 0; text-align: center; line-height: 1.7; min-height: 48px; }
+.demo-player input[type=range] { width: 100%; accent-color: var(--brand); }
+.demo-player-clock { margin-left: auto; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.demo-wave { height: 86px; display: flex; align-items: center; gap: 5px; }
+.demo-wave i { width: 5px; height: calc(20px + var(--bar) * 8px); border-radius: 5px; background: #807499; animation: demo-wave 1.3s ease-in-out infinite; animation-delay: var(--delay); animation-play-state: paused; }
+.demo-figure { width: 140px; height: 125px; position: relative; }
+.demo-figure i { position: absolute; display: block; background: #538d82; border-radius: 10px; }
+.figure-head { width: 24px; height: 24px; top: 0; left: 58px; }
+.figure-body { width: 12px; height: 48px; top: 30px; left: 64px; }
+.figure-arm { width: 50px; height: 8px; top: 35px; animation: demo-arm 3s ease-in-out infinite alternate; animation-play-state: paused; }
+.figure-arm.left { left: 18px; transform-origin: right; }
+.figure-arm.right { left: 72px; transform-origin: left; animation-direction: alternate-reverse; }
+.figure-leg { width: 9px; height: 46px; top: 76px; }
+.figure-leg.left { left: 51px; transform: rotate(22deg); }
+.figure-leg.right { left: 80px; transform: rotate(-22deg); }
+.demo-player.playing .demo-wave i, .demo-player.playing .figure-arm { animation-play-state: running; }
+@keyframes demo-wave { 50% { transform: scaleY(.35); } }
+@keyframes demo-arm { from { transform: rotate(-28deg); } to { transform: rotate(28deg); } }
 
 @media (prefers-reduced-motion: reduce) {
+  .demo-wave i, .figure-arm { animation: none; }
   .breath-orb { transition: none; }
   .timer-track i { transition: none; }
 }
+
+/* 未确认的消息：服务端还没确认收到，视觉上要和已保存的区分开。 */
+.bubble.pending { opacity: .55; }

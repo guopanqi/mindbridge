@@ -44,12 +44,13 @@ test('参与快照不受内容更新影响，重复开始完成不会重复统�
   assert.equal((await post({ action: 'complete' })).status, 409);
   assert.equal((await post({ action: 'start' })).status, 200);
   await post({ action: 'start' });
-  db.exec(activitySql({ ...sample, title: 'New title', contentVersion: 3, stages: [{ type: 'prompt', title: 'Changed' }] }));
-  const progress = await post({ action: 'stage', stageIndex: 1 });
+  db.exec(activitySql({ ...sample, title: 'New title', contentVersion: sample.contentVersion + 1, stages: [{ type: 'prompt', title: 'Changed' }] }));
+  assert.equal(db.prepare("SELECT title FROM activities WHERE id='breathing'").get().title, 'New title');
+  const progress = await post({ action: 'stage', stageIndex: 0 });
   assert.equal(progress.body.activity.title, sample.title);
   assert.equal(progress.body.activity.stages.length, sample.stages.length);
   assert.equal((await post({ action: 'stage', stageIndex: 99 })).status, 409);
-  await post({ action: 'stage', stageIndex: 2 });
+  for (let stageIndex = 1; stageIndex < sample.stages.length; stageIndex++) await post({ action: 'stage', stageIndex });
   // 帮助度留空也照常完成，不写反馈时间；之后可以补评，重复完成不重复统计。
   assert.equal((await post({ action: 'complete' })).status, 200);
   await post({ action: 'complete', helpfulness: '有帮助' });
@@ -66,7 +67,7 @@ test('参与快照不受内容更新影响，重复开始完成不会重复统�
 test('导入不覆盖 HR enabled，未发布活动不能开始', async () => {
   const { db, post } = await fixture();
   db.exec("UPDATE activities SET enabled=0 WHERE id='breathing'");
-  db.exec(activitySql({ ...sample, contentVersion: 3 }));
+  db.exec(activitySql({ ...sample, contentVersion: sample.contentVersion + 1 }));
   assert.equal(db.prepare('SELECT enabled FROM activities').get().enabled, 0);
   assert.equal((await post({ action: 'start' })).status, 404);
   db.exec("UPDATE activities SET enabled=1,content_available=0");
@@ -79,8 +80,35 @@ test('活动只允许所属员工访问，已开始快照在停用后仍能继�
   assert.equal(unauthorized.status, 401);
   await post({ action: 'start' });
   db.exec('UPDATE activities SET content_available=0,enabled=0');
-  assert.equal((await post({ action: 'stage', stageIndex: 1 })).status, 200);
+  assert.equal((await post({ action: 'stage', stageIndex: 0 })).status, 200);
   db.exec("UPDATE resource_events SET anon_id='someone_else'");
   assert.equal((await post({ action: 'stage', stageIndex: 2 })).status, 404);
   db.close();
+});
+
+test('呼吸是单段180秒；媒体和选择内容均可直接进入核心体验', () => {
+  assert.equal(sample.stages.length, 1);
+  const breath = sample.stages[0];
+  assert.equal(breath.type, 'breath');
+  assert.equal((breath.cycle.inhale + breath.cycle.hold + breath.cycle.exhale) * breath.rounds, 180);
+  for (const id of ['pmr', 'bodyscan-text', 'stretch-guide']) {
+    const activity = validateActivity(JSON.parse(readFileSync(new URL(`../content/activities/${id}.json`, import.meta.url))));
+    assert.equal(activity.stages.length, 1);
+    assert.equal(activity.stages[0].type, 'media');
+  }
+  const questions = JSON.parse(readFileSync(new URL('../content/activities/value-anchor.json', import.meta.url)));
+  assert.equal(questions.stages.length, 2);
+  assert.ok(questions.stages.every(stage => stage.type === 'choice'));
+});
+
+test('可拓展媒体配置必须有安全的真实地址或完整演示时间线', () => {
+  const media = { type: 'media', title: '测试视频', presentation: 'video', src: '/media/demo.mp4' };
+  validateActivity({ ...sample, stages: [media] });
+  validateActivity({ ...sample, stages: [{ ...media, src: 'https://media.example/demo.mp4' }] });
+  for (const src of ['javascript:alert(1)', '//other.example/demo.mp4', '/\\other.example/video.mp4']) {
+    assert.throws(() => validateActivity({ ...sample, stages: [{ ...media, src }] }));
+  }
+  const demo = { type: 'media', title: '演示', presentation: 'audio' };
+  assert.throws(() => validateActivity({ ...sample, stages: [demo] }));
+  validateActivity({ ...sample, stages: [{ ...demo, segments: [{ title: '开始', seconds: 3 }] }] });
 });

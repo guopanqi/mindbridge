@@ -25,15 +25,19 @@ export function createFakeCareDb(activities, log = []) {
             first: async () => null, // 实验台不模拟企业HR策略；线上由真实配置决定。
             all: async () => {
               let results;
+              const excludeCount = (sql.match(/id NOT IN \(([^)]+)\)/)?.[1].match(/\?/g) || []).length;
+              const scoreArgs = sql.includes('AS score') ? (sql.match(/title LIKE \?/g) || []).length / 2 * 3 : 0;
+              const excluded = args.slice(scoreArgs, scoreArgs + excludeCount);
+              const candidates = enabled.filter(row => !excluded.includes(row.id));
               if (/id IN \(/.test(sql)) {
-                const byId = new Map(enabled.map((row) => [row.id, row]));
+                const byId = new Map(candidates.map((row) => [row.id, row]));
                 results = args.map((id) => byId.get(id)).filter(Boolean);
               } else if (/LIKE \?/.test(sql)) {
                 // tools.js 把 query 拆成多个词，每个词按 title/description/form 各绑一次；
                 // 这里按命中的词数打分排序，与 SQL 里的 score 表达式等价。
                 const limit = Number(args[args.length - 1]) || 2;
-                const terms = [...new Set(args.slice(0, -1).map((item) => String(item).replace(/%/g, '')))];
-                results = enabled
+                const terms = [...new Set(args.slice(0, scoreArgs).map((item) => String(item).replace(/%/g, '')))];
+                results = candidates
                   .map((row) => {
                     const haystack = `${row.title}${row.description}${row.form}`;
                     return { row, score: terms.filter((term) => term && haystack.includes(term)).length };
@@ -43,7 +47,7 @@ export function createFakeCareDb(activities, log = []) {
                   .slice(0, limit)
                   .map((item) => item.row);
               } else {
-                results = enabled.slice(0, Number(args[args.length - 1]) || 2);
+                results = candidates.slice(0, Number(args[args.length - 1]) || 2);
               }
               log.push({ sql: sql.replace(/\s+/g, ' ').trim().slice(0, 60), args, hits: results.map((row) => row.id) });
               return { results };

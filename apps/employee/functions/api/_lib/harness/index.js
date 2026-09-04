@@ -18,14 +18,31 @@ export async function runConversationHarness({ env, gateway, userState, recentMe
   let totalInputTokens = first.usage.inputTokens;
   let totalOutputTokens = first.usage.outputTokens;
   let totalLatencyMs = first.meta.latencyMs;
+  const explicitRequest = isActivityRequest(currentMessage);
+  const canOffer = decision.supportAssessment.level !== 'red' && userState?.supportLevel !== 'red'
+    && decision.supportAssessment.safetyStatus !== 'needs_clarification'
+    && (userState?.safetyCheck !== 'pending' || decision.supportAssessment.safetyStatus === 'denied');
+  if (explicitRequest && canOffer) {
+    decision = { ...decision, toolCall: { name: 'search_activities', arguments: { query: currentMessage, limit: 3 } } };
+  }
 
   // 红色状态不执行普通资源推荐，即使模型错误地提出了工具调用。
-  if (decision.toolCall && decision.supportAssessment.level !== 'red' && userState?.supportLevel !== 'red') {
-    const toolResult = await executeTool(env, decision.toolCall, { emotion: decision.statePatch.setEmotion, level: decision.supportAssessment.level });
-    toolResult.activities = (toolResult.activities || []).filter(
-      (item) => !(userState?.recentRecommendations || []).includes(item.id)
-    );
+  if (decision.toolCall && canOffer) {
+    const repeatNamed = explicitRequest && /再|重复|重来/.test(currentMessage)
+      && /呼吸|肌肉放松|身体扫描|舒展|三件好事|书写|价值锚点/.test(currentMessage)
+      && !/其他|别的|换/.test(currentMessage);
+    const toolResult = await executeTool(env, decision.toolCall, {
+      emotion: decision.statePatch.setEmotion, level: decision.supportAssessment.level,
+      explicitRequest, excludeIds: repeatNamed ? [] : userState?.recentRecommendations || [],
+    });
     activity = toolResult.activities?.[0] || null;
+    if (explicitRequest || !activity) {
+      // 功能请求的回答来自检索事实，不再耗费第二轮模型把“想要活动”重新解释成心理诉求。
+      const repeated = activity && userState?.recentRecommendations?.includes(activity.id);
+      decision = { ...decision, toolCall: null, reply: { text: activity
+        ? `${repeated ? '这是刚才推荐过的活动，你可以再打开练习：' : '可以参加这个活动：'}${activity.title}。${activity.description || ''}`
+        : activityEmptyReply(toolResult.status) } };
+    } else {
     const second = await generateValidated(gateway, {
       instructions: buildInstructions({ userState: context.userState, toolPhase: true }),
       context,
@@ -50,6 +67,7 @@ export async function runConversationHarness({ env, gateway, userState, recentMe
     totalInputTokens = addUsage(totalInputTokens, second.usage.inputTokens);
     totalOutputTokens = addUsage(totalOutputTokens, second.usage.outputTokens);
     totalLatencyMs += second.meta.latencyMs;
+    }
   } else if (decision.toolCall) {
     decision = { ...decision, toolCall: null };
   }
@@ -76,6 +94,21 @@ export async function runConversationHarness({ env, gateway, userState, recentMe
       createdAt: now,
     },
   };
+}
+
+// 只识别当前明确的功能请求，不把提到“活动”本身当成需要推荐。
+export function isActivityRequest(text) {
+  if (/不(?:想|要|需要)(?:再|做|参加|任何|什么|这些|这个)?(?:活动|练习|音频|视频|呼吸|跟练)|别推荐|不用推荐/.test(text)) return false;
+  return /(?:有什么|还有什么|有没有|哪些|什么样的|推荐|找|来一个|来个|换一个|换个|给我|想要|想做|想参加|再做|再来|重来|重复).{0,24}(?:活动|练习|音频|视频|呼吸|跟练)/.test(text)
+    || /(?:活动|练习|音频|视频).{0,12}(?:有哪些|有吗|推荐|再来|换一个|换个)/.test(text);
+}
+
+function activityEmptyReply(status) {
+  if (status === 'exhausted') return '当前可用的活动都已向你推荐过，暂时没有其他活动。可以从之前的卡片或「我的活动」重新打开。';
+  if (status === 'configured_repeated') return '这次匹配到的活动之前已经推荐过，可以重新打开之前的卡片，或去活动库看看其他活动。';
+  if (status === 'configured_unavailable') return '这次匹配到的活动暂时不可用，可以去活动库查看其他已开放的内容。';
+  if (status === 'policy_disabled') return '当前这类活动推荐暂未开放，你可以到「我的活动」里的活动库查看其他可用内容。';
+  return '目前没有可用的活动内容，暂时无法提供活动卡片。';
 }
 
 async function generateValidated(gateway, request, deadlineAt, clock) {

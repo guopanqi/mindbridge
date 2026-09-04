@@ -14,7 +14,7 @@
 | `apps/employee/` | 员工端 H5 + Care Domain API | Cloudflare Pages `mindbridge-app` |
 | `apps/console/` | HR 看板 + 疗愈师个案台 | Cloudflare Pages `mindbridge-console` |
 | `apps/bot-stream/` | 钉钉 Stream 私聊接收器，共用员工端对话服务 | 常驻 Node 进程 |
-| `prototype/` | **交互原型**，只读参考，不是产品 | Pages `mindbridge-prototype` |
+| `prototype/` | **交互原型**，只读参考，不是产品 | Pages `mindbridge-demo` |
 | `docs/` | 技术债台账、路演需求、产品方案、比赛材料 | — |
 | `assets/` | 截图与图标 | — |
 | `archive/`、`PPT/` | 历史产物，只进不出 | — |
@@ -52,6 +52,26 @@ Staff（D1: mindbridge-staff）
 - 员工端不返回命中的规则说明——规则应对企业可解释，但不该对当事人贴标签
 
 ## 快速开始
+
+### 常用操作（仓库根目录）
+
+```bash
+npm run deploy:console   # 校验、构建、部署管理端及疗愈师页面，并验证线上资源
+npm run deploy:employee  # 同上，部署员工端及 Care API
+npm run deploy:all       # 两端先全部通过检查，再按 employee → console 顺序部署
+npm run check:apps       # 根目录静态检查 + 两端构建和测试，不发布
+npm run build:apps       # 仅构建两端
+npm run health           # 两端线上健康检查，不发布
+npm run dev:console      # 构建并启动本地 8789
+npm run dev:employee     # 构建并启动本地 8788，另开终端
+```
+
+统一入口为 `bash scripts/app.sh <操作> <console|employee|all>`，无参数只显示帮助。
+首次使用需在根目录、`apps/console`、`apps/employee` 分别执行 `npm ci`，部署前需 Wrangler 已登录。
+发布明确使用生产分支 `main`，会包含当前工作区未提交的应用改动；两端发布不是原子事务，失败即停止，不自动回滚已成功的一端。
+脚本按 Cloudflare Pages 的 Direct Upload 流程构建后发布 Functions 和静态资源，随后核对生产地址的健康状态及 HTML/JS/CSS 内容。
+数据库迁移、种子数据、活动内容导入均不会自动执行；它们仍需单独明确操作，避免普通部署意外改数据。
+原型发布继续使用 `bash scripts/deploy-prototype.sh`，不包含在 `deploy:all` 中。
 
 ```bash
 cd apps/employee && npm install && npm run check     # 构建 + 29 项单测

@@ -4,6 +4,8 @@ import { DatabaseSync } from 'node:sqlite';
 import { readFileSync, readdirSync } from 'node:fs';
 import { activitySql, catalogSql } from '../scripts/activity-content.mjs';
 import { executeTool } from '../functions/api/_lib/harness/tools.js';
+import { runConversationHarness } from '../functions/api/_lib/harness/index.js';
+import { emptyUserState } from '../functions/api/_lib/harness/model-contract.js';
 import { onRequestGet as resourcesGet, onRequestPost as resourcesPost } from '../functions/api/resources.js';
 import { onRequestGet as configGet, onRequestPut as configPut } from '../functions/api/internal/config.js';
 import { sha256Base64Url } from '../functions/api/_lib/crypto.js';
@@ -103,6 +105,52 @@ test('配置接口拒绝未授权写入', async t => {
   const { env } = await setup(t);
   const response = await configPut({ env, request: new Request('https://example.test/api/internal/config', { method: 'PUT', body: JSON.stringify({ kind: 'activity', activityId: 'custom-l1', enabled: false }) }) });
   assert.equal(response.status, 401);
+});
+
+test('显式找活动跳出默认映射，先排除重复再取结果，结果耗尽与不可用分别说明', async t => {
+  const { env, db, put } = await setup(t);
+  await put({ kind: 'matrix', emotion: '焦虑', l1ActivityId: 'custom-l1', enabled: true });
+  let calls = 0;
+  const gateway = { async generate() {
+    calls++;
+    return {
+      decision: {
+        reply: { text: '你可能是短暂放松后又低落了？' },
+        supportAssessment: { level: 'blue', confidence: .9, safetyStatus: 'not_indicated', evidence: [] },
+        statePatch: { addTopics: [], removeTopics: [], setEmotion: '焦虑', addOpenLoops: [], closeOpenLoops: [] },
+        toolCall: null,
+      },
+      usage: { inputTokens: 1, outputTokens: 1 }, meta: { provider: 'fixture', model: 'fixture', latencyMs: 1 },
+    };
+  } };
+  let userState = emptyUserState();
+  for (const message of ['有什么活动', '来一个其他活动', '还有什么活动？']) {
+    const result = await runConversationHarness({ env, gateway, userState, recentMessages: [], currentMessage: message });
+    assert.doesNotMatch(result.decision.reply.text, /低落|放手/);
+    if (userState.recentRecommendations.length < 2) {
+      assert.ok(result.activity);
+      assert.ok(!userState.recentRecommendations.includes(result.activity.id));
+    } else {
+      assert.equal(result.activity, null);
+      assert.match(result.decision.reply.text, /都已向你推荐过/);
+    }
+    userState = result.nextState;
+  }
+  assert.equal(calls, 3, '每轮只调用一次模型');
+  db.exec('UPDATE activities SET enabled=0');
+  const none = await runConversationHarness({ env, gateway, userState, recentMessages: [], currentMessage: '有什么活动' });
+  assert.equal(none.activity, null);
+  assert.match(none.decision.reply.text, /没有可用的活动/);
+});
+
+test('显式重做呼吸允许返回同名活动，换其他活动仍排除它', async t => {
+  const { env, db, docs } = await setup(t);
+  db.exec(activitySql({ ...docs[0], id: 'breathing', title: '三分钟呼吸着陆法' }));
+  db.exec(catalogSql({ name: '呼吸资源', activityId: 'breathing' }));
+  const result = await executeTool(env, { name: 'search_activities', arguments: { query: '再来一个三分钟呼吸活动', limit: 1 } }, { explicitRequest: true, excludeIds: [] });
+  assert.equal(result.activities[0].id, 'breathing');
+  const other = await executeTool(env, { name: 'search_activities', arguments: { query: '还有什么活动', limit: 1 } }, { explicitRequest: true, excludeIds: ['breathing', 'custom-l1'] });
+  assert.equal(other.activities[0].id, 'custom-l2');
 });
 
 test('内容更新改变 level 后旧配置不得跨层级推荐', async t => {

@@ -28,7 +28,7 @@ function contextRow(reload) {
     el('button', {
       class: 'link', text: '修改', attrs: { type: 'button' },
       on: { click: () => openSheet('选择你的处境', [
-        el('p', { class: 'panel-sub', text: '可选。它只影响回应里的上下文理解，不改变情绪识别与预警规则。' }),
+        el('p', { class: 'panel-sub', text: '选填。仅用于调整助手沟通时的侧重点，不影响安全评估机制。' }),
         contextPicker(reload),
       ]) },
     }),
@@ -61,8 +61,8 @@ function authorizationPanel(reload) {
   const pending = data.authorizations.filter((r) => r.status === 'pending');
   if (!pending.length) return null;
   return el('section', { class: 'panel urgent' }, [
-    el('h2', { text: '有人请求查看你的对话上下文' }),
-    el('p', { class: 'panel-sub', text: '不同意也不会影响你继续使用，疗愈师仍然可以在不看原文的情况下和你沟通。' }),
+    el('h2', { text: '心理疗愈师申请查阅倾诉记录' }),
+    el('p', { class: 'panel-sub', text: '不同意也不会影响你继续使用，疗愈师仍然可以在不查阅原文的情况下为你提供支持。' }),
     ...pending.map((item) => el('div', { class: 'auth-request' }, [
       el('p', { class: 'auth-reason', text: item.reason }),
       el('p', { class: 'res-meta', text: `个案 ${item.caseCode} · ${timeAgo(item.at)}` }),
@@ -100,6 +100,7 @@ const STATUS_LABEL = {
 };
 
 function appointmentPanel(reload) {
+  const hasOpenAppointment = data.appointments.some((item) => ['requested', 'claimed', 'active'].includes(item.status));
   return el('section', { class: 'panel' }, [
     el('h2', { text: '我的预约' }),
     el('p', { class: 'panel-sub', text: '疗愈师只会看到个案编号和风险级别，看不到你是谁。要查看你的对话内容，必须单独征求你同意。' }),
@@ -114,27 +115,30 @@ function appointmentPanel(reload) {
           class: 'link danger', text: '取消', attrs: { type: 'button' },
           on: {
             click: async () => {
-              if (!window.confirm('撤销这条预约及相关上下文访问权限？已完成的服务和已查看的内容无法收回。')) return;
+              if (!window.confirm('确定取消本次预约吗？已授权的对话查阅权限将一并同步撤销。')) return;
               try { await api.cancelAppointment(item.id); reload(); } catch { toast('取消没有成功。'); }
             },
           },
         }) : null,
       ])))
       : el('p', { class: 'empty', text: '还没有预约。' }),
-    el('button', {
+    !hasOpenAppointment ? el('button', {
       class: 'secondary', text: '我想预约一位疗愈师', attrs: { type: 'button' },
       on: {
-        click: async () => {
+        click: async (event) => {
+          const button = event.currentTarget;
+          button.disabled = true;
           try {
             const result = await api.requestAppointment({ riskLevel: 'yellow', shareContext: false });
             toast(`已提交，个案编号 ${result.caseCode}。`);
             reload();
           } catch (error) {
+            button.disabled = false;
             toast(error instanceof ApiError && error.userMessage ? error.userMessage : '提交没有成功。');
           }
         },
       },
-    }),
+    }) : el('p', { class: 'panel-sub', text: '你已有一条未结束的预约，可以在上方查看进度。这次服务结束或取消后可以再次预约。' }),
   ]);
 }
 
@@ -199,9 +203,9 @@ function consentPanel(reload) {
 
 function privacyNodes() {
   return [
-    el('p', { text: '记录了什么：你在树洞里说的话、你在广场发布的内容，以及被推荐过哪些资源。原文以加密方式保存。' }),
-    el('p', { text: '谁能看到：疗愈师只有在你同意后才会收到必要上下文；HR 只能看到部门层面的聚合趋势，看不到任何一条原文。' }),
-    el('p', { text: '你的钉钉姓名和工号没有进入这套业务系统，它们只在登录那一刻被用于确认你属于本企业。' }),
+    el('p', { text: '你的钉钉姓名与工号不会进入系统。登录仅用于确认在职，在此之后，你全程只代表一个随机的匿名代号。' }),
+    el('p', { text: '你在树洞里的倾诉与广场发帖均经加密保存，除你之外无人能直接翻看。你也可以随时在「我的」里一键清空记录。' }),
+    el('p', { text: '公司与 HR 只能看到多人汇总的宏观走势，看不到任何对话原文；若预约心理疗愈师，也必须经你本人主动同意，对方才能查阅相关内容。' }),
     el('p', { class: 'build-id', text: `版本 ${BUILD_ID}` }),
   ];
 }
@@ -258,10 +262,10 @@ export async function loadMe() {
       }),
       el('button', {
         class: 'ghost wide', text: '查看数据与隐私说明', attrs: { type: 'button' },
-        on: { click: () => openSheet('你的数据在这套系统里怎么走', privacyNodes()) },
+        on: { click: () => openSheet('关于你的隐私与数据', privacyNodes()) },
       }),
     ]),
   ].filter(Boolean));
 }
 
-export const privacySheet = () => openSheet('你的数据在这套系统里怎么走', privacyNodes());
+export const privacySheet = () => openSheet('关于你的隐私与数据', privacyNodes());

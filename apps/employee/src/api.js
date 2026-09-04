@@ -45,6 +45,7 @@ export const api = {
   chatHistory: () => request('/api/chat'),
   sendChat: (text) => post('/api/chat', { text }),
   clearChat: () => request('/api/chat', { method: 'DELETE' }),
+  dismissChatCard: (messageId) => post('/api/chat/card', { messageId, action: 'dismiss' }),
   wall: () => request('/api/wall'),
   createPost: (text) => post('/api/wall', { text }),
   deletePost: (id) => request(`/api/wall?id=${encodeURIComponent(id)}`, { method: 'DELETE' }),

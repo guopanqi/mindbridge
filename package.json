@@ -1,0 +1,22 @@
+{
+  "name": "mindbridge",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc -p tsconfig.json",
+    "check": "npm run lint && npm run typecheck",
+    "check:apps": "bash scripts/app.sh check all",
+    "build:apps": "bash scripts/app.sh build all",
+    "deploy:console": "bash scripts/app.sh deploy console",
+    "deploy:employee": "bash scripts/app.sh deploy employee",
+    "deploy:all": "bash scripts/app.sh deploy all",
+    "health": "bash scripts/app.sh health all",
+    "dev:console": "bash scripts/app.sh dev console",
+    "dev:employee": "bash scripts/app.sh dev employee"
+  },
+  "devDependencies": {
+    "eslint": "^9.39.0",
+    "typescript": "^5.9.3"
+  }
+}

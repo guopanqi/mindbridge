@@ -5,12 +5,41 @@ import { openActivity } from './activity.js';
 let stream;
 let input;
 let sendBtn;
-let sending = false;
-let lastSendTime = 0;
+let supportPending = false;
+let cardRefreshVersion = 0;
+
+async function refreshCards() {
+  const version = ++cardRefreshVersion;
+  const target = stream;
+  const body = await api.chatHistory();
+  if (target !== stream || version !== cardRefreshVersion || supportPending) return;
+  const messages = new Map(body.messages.map(message => [message.id, message]));
+  for (const node of target.querySelectorAll('[data-message-id]')) {
+    const message = messages.get(node.dataset.messageId);
+    if (message) node.replaceWith(bubble(message));
+  }
+}
+
+async function refreshCardsSafely() {
+  try { await refreshCards(); } catch { toast('卡片状态暂时无法确认，请重新进入后查看。'); }
+}
+
+// 发送只有两个业务状态：空闲、发送中。之前这件事分散在 sending 标志、
+// 按钮的 disabled、输入框是否已清空、以及流里那个乐观气泡上，
+// 四处各记一半，出错时对不齐——文本被清掉了但消息其实没发出去。
+let sendState = 'idle';
+
+// 同一次点击在部分 WebView 里会同时派发 touchend 和 click。
+// 这个去重只用于识别「同一次物理点击」，不承担防止重复发送的职责——
+// 那是 sendState 的事。
+let lastTapAt = 0;
 
 function bubble(message) {
-  if (message.role === 'resource') return resourceCard(message.card);
-  if (message.role === 'consent') return consentCard(message.card);
+  if (message.role === 'resource' || message.role === 'consent') {
+    const node = message.role === 'resource' ? resourceCard(message.card) : consentCard(message.card, message.id);
+    if (node && message.id) node.dataset.messageId = message.id;
+    return node;
+  }
   if (message.role === 'crisis') return crisisCard(message.card);
   const mine = message.role === 'user';
   return el('div', { class: `bubble ${mine ? 'mine' : 'bot'}` }, [
@@ -25,31 +54,39 @@ function resourceCard(card) {
     el('div', { class: 'card-main' }, [
       el('p', { class: 'card-title', text: card.name }),
       el('p', { class: 'card-desc', text: card.description }),
-      el('p', { class: 'card-tag', text: card.level === 'L2' ? '进一步支持 · 需要你主动选择是否参加' : '可立即使用的自助资源' }),
+      el('p', { class: 'card-tag', text: card.level === 'L2' ? '专业深层支持 · 依个人意愿自主参与' : '可立即使用的自助资源' }),
       card.eventId ? el('button', {
         class: 'primary small card-cta',
-        text: card.level === 'L2' ? '看看详情' : '现在试试',
-        attrs: { type: 'button' },
-        on: { click: () => void openActivity(card.eventId) },
+        text: ({ joined: '继续活动', completed: '已完成 · 查看结果', declined: '已跳过', unavailable: '活动记录不可用' })[card.progress?.state] || (card.level === 'L2' ? '看看详情' : '现在试试'),
+        attrs: { type: 'button', disabled: ['declined', 'unavailable'].includes(card.progress?.state) },
+        on: { click: () => void openActivity(card.eventId, refreshCardsSafely) },
       }) : null,
     ]),
   ]);
 }
 
-async function requestAppointment(button) {
-  button.disabled = true;
+async function requestAppointment(button, messageId) {
+  if (supportPending) return;
+  supportPending = true;
+  cardRefreshVersion++;
+  for (const node of stream.querySelectorAll('.consent button')) node.disabled = true;
   try {
-    const result = await api.requestAppointment({ riskLevel: 'red', shareContext: true });
+    const result = await api.requestAppointment({ riskLevel: 'red', shareContext: true, messageId });
     button.textContent = `已提交 · 个案编号 ${result.caseCode}`;
     toast('已提交。疗愈师会看到个案编号和风险级别，看不到你是谁。你随时可以在「我的」里取消。');
   } catch (error) {
-    button.disabled = false;
-    toast(error instanceof ApiError && error.userMessage ? error.userMessage : '提交没有成功，请稍后再试。');
+    toast(error instanceof ApiError && error.userMessage ? error.userMessage : '暂时无法确认提交结果，正在重新核对，请勿重复提交。');
+  } finally {
+    supportPending = false;
+    await refreshCardsSafely();
   }
 }
 
-function consentCard(card) {
+function consentCard(card, messageId) {
   if (!card) return null;
+  const status = card.support?.status;
+  const submitted = ['requested', 'claimed', 'active', 'closed', 'done', 'cancelled', 'unavailable'].includes(status);
+  const statusLabel = ({ requested: '已提交 · 等待接单', claimed: '疗愈师已接单', active: '正在跟进', closed: '本次服务已结束', done: '本次服务已结束', cancelled: '本次预约已取消', unavailable: '预约记录不可用' })[status];
   return el('div', { class: 'card consent' }, [
     el('p', { class: 'card-title', text: card.title }),
     el('p', { class: 'card-desc', text: card.body }),
@@ -58,12 +95,18 @@ function consentCard(card) {
       const action = typeof item === 'string' ? null : item.action;
       const button = el('button', {
         class: index === 0 ? 'primary small' : 'secondary small',
-        text: label,
+        text: action === 'request_appointment' && submitted ? `${card.support.linked === false ? '已有预约 · ' : ''}${statusLabel}${card.support.caseCode ? ` · ${card.support.caseCode}` : ''}` : action === 'dismiss' && status === 'dismissed' ? '已选择暂时不用' : label,
         attrs: { type: 'button' },
       });
+      button.disabled = supportPending || submitted || (action === 'dismiss' && status === 'dismissed');
       button.addEventListener('click', () => {
-        if (action === 'request_appointment') return void requestAppointment(button);
-        toast('好，我们继续说。你随时可以改主意。');
+        if (action === 'request_appointment') return void requestAppointment(button, messageId);
+        if (action === 'dismiss') {
+          button.disabled = true;
+          void api.dismissChatCard(messageId).then(() => {
+            toast('好，我们继续说。你随时可以改主意。');
+          }, () => toast('暂时无法确认选择，正在重新核对。')).finally(refreshCardsSafely);
+        }
       });
       return button;
     })),
@@ -74,7 +117,7 @@ function consentCard(card) {
 function crisisCard(card) {
   if (!card) return null;
   return el('div', { class: 'card crisis' }, [
-    el('p', { class: 'card-title', text: '如果现在很危险，可以直接打这个电话' }),
+    el('p', { class: 'card-title', text: '如果当下感到难以承受，请随时拨打援助热线' }),
     el('ul', { class: 'crisis-list' }, (card.resources || []).map((item) => el('li', {}, [
       el('a', { class: 'crisis-tel', text: item.contact, attrs: { href: `tel:${item.contact}` } }),
       el('span', { class: 'crisis-name', text: item.name }),
@@ -92,45 +135,74 @@ function append(messages) {
   stream.scrollTop = stream.scrollHeight;
 }
 
+// 状态只有一个来源，界面是它的呈现。按钮的可用性不再是另一处独立的事实。
+function setSendState(next) {
+  sendState = next;
+  if (sendBtn) sendBtn.disabled = next === 'sending';
+}
+
 async function send(text) {
-  if (sending) {
+  if (sendState !== 'idle') {
     toast('上一条还在回复中，请稍等一下…');
     return;
   }
-  if (!text || !text.trim()) return;
-  sending = true;
-  if (sendBtn) sendBtn.disabled = true;
+  const trimmed = (text || '').trim();
+  if (!trimmed) return;
+
+  setSendState('sending');
+  // 输入框先清空是为了手感，但这份文本必须留着：
+  // 一旦确认没有发出去，要原样放回去，而不是让人重打一遍。
   input.value = '';
-  append([{ role: 'user', text: text.trim() }]);
+  const pending = bubble({ role: 'user', text: trimmed });
+  pending.classList.add('pending');
+  stream.append(pending);
   // 双轮调用可能要 4 秒。静态文字在手机上会被当成卡死，给一个呼吸态。
   const typing = el('div', { class: 'bubble bot typing' }, [
     el('span', { text: '正在听' }), el('i'), el('i'), el('i'),
   ]);
   stream.append(typing);
   stream.scrollTop = stream.scrollHeight;
+
+  // 确认没有写入服务端：把气泡撤掉、文本放回输入框。
+  // 留着一个服务端并不存在的气泡，等于让界面替服务端撒谎。
+  const rollback = () => {
+    pending.remove();
+    if (!input.value) input.value = trimmed;
+  };
+
   try {
-    const body = await api.sendChat(text.trim());
+    const body = await api.sendChat(trimmed);
     typing.remove();
+    pending.classList.remove('pending');
     append(body.messages.filter((m) => m.role !== 'user'));
+    await refreshCardsSafely();
   } catch (error) {
     typing.remove();
-    if (error instanceof ApiError && ['SERVER_TIMEOUT', 'NETWORK_ERROR'].includes(error.code)) {
-      // 超时不是写入失败的证明；仅同步服务端事实，不自动重发或按相同文本猜测成功。
+    const code = error instanceof ApiError ? error.code : '';
+    if (code === 'SERVER_TIMEOUT' || code === 'NETWORK_ERROR') {
+      // 结果未知：超时不是写入失败的证明。不重发、不猜，回服务端取事实，
+      // 用「这条消息在不在记录里」把未知收敛成确定的成功或失败。
       try {
         const body = await api.chatHistory();
+        const saved = body.messages.some((m) => m.role === 'user' && m.text === trimmed);
         clear(stream);
         append(body.messages);
-        toast('连接中断，已同步最新记录。若这条消息尚未出现，请稍后刷新确认，避免重复发送。');
+        if (saved) {
+          toast('连接中断，但这条消息已经发出去了。');
+        } else {
+          input.value = input.value || trimmed;
+          toast('连接中断，这条没有发出去，内容已经放回输入框。');
+        }
       } catch {
-        toast('连接中断，暂时无法确认是否已保存。请稍后刷新记录确认，避免重复发送。');
+        // 连记录都读不到，才是真正的未知。此时不动界面，也不谎称失败。
+        toast('连接中断，暂时无法确认这条是否已保存。请稍后刷新记录确认，避免重复发送。');
       }
       return;
     }
-    const message = error instanceof ApiError && error.userMessage ? error.userMessage : '消息没有发送成功，请稍后重试。';
-    toast(message);
+    rollback();
+    toast(error instanceof ApiError && error.userMessage ? error.userMessage : '消息没有发送成功，请稍后重试。');
   } finally {
-    sending = false;
-    if (sendBtn) sendBtn.disabled = false;
+    setSendState('idle');
   }
 }
 
@@ -142,8 +214,8 @@ export function renderChat(root) {
   const triggerSend = (event) => {
     if (event) event.preventDefault();
     const now = Date.now();
-    if (now - lastSendTime < 300) return;
-    lastSendTime = now;
+    if (now - lastTapAt < 300) return;
+    lastTapAt = now;
     void send(input.value);
   };
 
@@ -177,6 +249,13 @@ export function renderChat(root) {
     triggerSend(event);
   });
 
+  // 触摸/滑动历史消息区域时自动失焦收起键盘，恢复底部 TAB 栏
+  stream.addEventListener('pointerdown', () => {
+    if (document.activeElement === input) {
+      input.blur();
+    }
+  });
+
   root.append(
     stream,
     el('div', { class: 'composer' }, [
@@ -197,7 +276,7 @@ async function renderFollowup() {
   }
   if (!due) return;
   const card = el('div', { class: 'card followup' }, [
-    el('p', { class: 'card-title', text: '回访一下' }),
+    el('p', { class: 'card-title', text: '轻触感受' }),
     el('p', { class: 'card-desc', text: due.question }),
   ]);
   const actions = el('div', { class: 'card-actions' }, [
@@ -235,7 +314,7 @@ export async function loadChat() {
     const body = await api.chatHistory();
     clear(stream);
     if (!body.messages.length) {
-      append([{ role: 'assistant', text: '我是 MindBridge，一个匿名的心理支持助手。\n有什么想说的，随时发给我。' }]);
+      append([{ role: 'assistant', text: '你好，我是你的倾诉伙伴 MindBridge。\n这里是一处完全属于你的私密树洞，有什么压力或想法，随时跟我聊聊。' }]);
       await renderFollowup();
       return;
     }
@@ -259,3 +338,11 @@ export function focusComposer() {
 
 export const chatStreamReady = () => Boolean(stream);
 export const chatRoot = () => $('#view-chat');
+
+// WebView 回前台时业务状态可能已被疗愈师或另一个页面更新。
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && stream?.isConnected && sendState === 'idle' && !supportPending) void refreshCardsSafely();
+});
+window.addEventListener('pageshow', event => {
+  if (event.persisted && stream?.isConnected && !supportPending) void refreshCardsSafely();
+});

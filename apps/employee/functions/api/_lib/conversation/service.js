@@ -1,4 +1,5 @@
 import { withConversationLock } from './lock.js';
+import { hydrateCards } from './card-state.js';
 // 倾诉树洞：员工原文与 UserState 只以密文进入 care D1；模型输出必须经过 Harness 校验。
 import {
   ApiError, aggregateStatement, ensureProfile, newId,
@@ -125,7 +126,7 @@ export async function loadMessages(env, anonId, limit = HISTORY_LIMIT) {
     if (text === null) continue;
     out.push(shape(row, text));
   }
-  return out;
+  return hydrateCards(env, anonId, out);
 }
 
 function shape(row, text) {

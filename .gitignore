@@ -41,3 +41,6 @@ scratch/
 
 # 对话实验台的本地会话存档
 apps/employee/.lab-sessions/
+
+# 根级工具链依赖（lint / typecheck）
+/node_modules/
