@@ -25,10 +25,21 @@ function authorize(request, env) {
   return header.startsWith('Bearer ') && timingSafeEqual(header.slice(7), expected);
 }
 
-// 压力分 1（很好）～5（快撑不住）换算成 10 分制情绪温度，越高越好。
-const toTemperature = (avgStress) => (
-  avgStress === null || avgStress === undefined ? null : Math.round(((5 - avgStress) / 4 * 9 + 1) * 10) / 10
+// 情绪温度改由对话的风险等级构成得出：10 分 = 全部对话都是绿色。
+//
+// 原口径来自每日心情打卡，那个入口已经下线。这里不改用对话情绪词换算，
+// 因为情绪是词不是量表，把「紧张/低落/疲惫」折算成分数需要一套自己发明的权重，
+// 那等于凭空造一个心理量表。绿/黄/红是产品本来就在用的真实分级，直接用它。
+//
+// share 为非绿对话占比（0～1）。
+const toTemperature = (share) => (
+  share === null || share === undefined ? null : Math.round((10 - 9 * share) * 10) / 10
 );
+
+const nonGreenShare = (row) => {
+  const total = (row?.green || 0) + (row?.non_green || 0);
+  return total ? (row.non_green || 0) / total : null;
+};
 
 const deltaLabel = (current, previous) => {
   if (current === null || previous === null || previous === undefined || current === undefined) return null;
@@ -37,10 +48,11 @@ const deltaLabel = (current, previous) => {
   return `${diff > 0 ? '+' : ''}${diff}`;
 };
 
+// 阈值按新口径重新标定：8.5 分 ≈ 非绿对话不超过 1/6，7.0 分 ≈ 不超过 1/3。
 const deptStatus = (temp) => {
   if (temp === null) return { status: null, level: null };
-  if (temp >= 6.5) return { status: '良好', level: 'g' };
-  if (temp >= 5.5) return { status: '需关注', level: 'y' };
+  if (temp >= 8.5) return { status: '良好', level: 'g' };
+  if (temp >= 7) return { status: '需关注', level: 'y' };
   return { status: '需干预', level: 'r' };
 };
 
@@ -51,7 +63,7 @@ function originClause(origin) {
 async function summarize(env, since, origin) {
   const o = originClause(origin);
   const [users, events, risks] = await Promise.all([
-    env.CARE_DB.prepare(`SELECT COUNT(DISTINCT anon_id) AS n FROM mood_checkins WHERE created_at > ?${o.sql}`)
+    env.CARE_DB.prepare(`SELECT COUNT(DISTINCT anon_id) AS n FROM messages WHERE role = 'user' AND created_at > ?${o.sql}`)
       .bind(since, ...o.binds).first(),
     env.CARE_DB.prepare(`SELECT COUNT(*) AS n FROM aggregate_events WHERE created_at > ?${o.sql}`)
       .bind(since, ...o.binds).first(),
@@ -61,8 +73,9 @@ async function summarize(env, since, origin) {
   const byLevel = Object.fromEntries((risks.results || []).map((r) => [r.level, r.people]));
   return {
     activeUsers: suppress(users?.n || 0, users?.n || 0),
-    eventCount: events?.n || 0,
-    riskBands: { yellow: riskBand(byLevel.yellow || 0), red: riskBand(byLevel.red || 0) },
+    eventCount: origin === 'demo_seed' ? events?.n || 0 : null,
+    eventCountSuppressed: origin !== 'demo_seed',
+    riskBands: { suppressed: (users?.n || 0) < MIN_SAMPLE, yellow: (byLevel.yellow || 0) >= MIN_SAMPLE ? riskBand(byLevel.yellow) : null, red: (byLevel.red || 0) >= MIN_SAMPLE ? riskBand(byLevel.red) : null },
   };
 }
 
@@ -81,7 +94,10 @@ export async function onRequestGet({ request, env }) {
     const since = now - days * 86400000;
     const prevSince = since - days * 86400000;
 
-    const q = (sql, ...binds) => env.CARE_DB.prepare(sql).bind(...binds);
+    // 不混合模拟与真实样本来凑k，避免通过已知基线相减推算真实小样本。
+    const origin = url.searchParams.get('origin') === 'demo_seed' ? 'demo_seed' : 'live';
+    const scoped = /\b(FROM|JOIN) (mood_checkins|messages|aggregate_events|risk_events|resource_events|posts|profiles|appointments)\b/g;
+    const q = (sql, ...binds) => env.CARE_DB.prepare(sql.replace(scoped, (_m, op, table) => `${op} (SELECT * FROM ${table} WHERE data_origin='${origin}')`)).bind(...binds);
 
     const [
       tenant, trend, active, prevActive, stress, prevStress, riskRows, greenRow,
@@ -89,27 +105,46 @@ export async function onRequestGet({ request, env }) {
       rhythmRows, sensingRows, redCases, ctxRows, activityOverallRow, perfRows,
     ] = await Promise.all([
       q('SELECT display_name, headcount, industry, data_origin FROM tenant_profile WHERE id = ?', 'demo').first(),
-      q('SELECT bucket_day AS bucket, AVG(stress_score) AS value, COUNT(DISTINCT anon_id) AS n FROM mood_checkins WHERE created_at > ? GROUP BY bucket_day ORDER BY bucket_day', since).all(),
-      q('SELECT COUNT(DISTINCT anon_id) AS n FROM mood_checkins WHERE created_at > ?', since).first(),
-      q('SELECT COUNT(DISTINCT anon_id) AS n FROM mood_checkins WHERE created_at > ? AND created_at <= ?', prevSince, since).first(),
-      q('SELECT AVG(stress_score) AS v, COUNT(DISTINCT anon_id) AS n FROM mood_checkins WHERE created_at > ?', since).first(),
-      q('SELECT AVG(stress_score) AS v, COUNT(DISTINCT anon_id) AS n FROM mood_checkins WHERE created_at > ? AND created_at <= ?', prevSince, since).first(),
+      // 趋势按天统计对话的绿/非绿构成；样本量用当天对话条数，低于阈值的点单独抑制。
+      q(`SELECT bucket_day AS bucket,
+                SUM(CASE WHEN level = 'green' THEN 1 ELSE 0 END) AS green,
+                SUM(CASE WHEN level IN ('yellow','red') THEN 1 ELSE 0 END) AS non_green,
+                COUNT(*) AS n
+         FROM aggregate_events WHERE event_type = 'chat_message' AND created_at > ?
+         GROUP BY bucket_day ORDER BY bucket_day`, since).all(),
+      q("SELECT COUNT(DISTINCT anon_id) AS n FROM messages WHERE role = 'user' AND created_at > ?", since).first(),
+      q("SELECT COUNT(DISTINCT anon_id) AS n FROM messages WHERE role = 'user' AND created_at > ? AND created_at <= ?", prevSince, since).first(),
+      q(`SELECT SUM(CASE WHEN level = 'green' THEN 1 ELSE 0 END) AS green,
+                SUM(CASE WHEN level IN ('yellow','red') THEN 1 ELSE 0 END) AS non_green,
+                COUNT(*) AS n
+         FROM aggregate_events WHERE event_type = 'chat_message' AND created_at > ?`, since).first(),
+      q(`SELECT SUM(CASE WHEN level = 'green' THEN 1 ELSE 0 END) AS green,
+                SUM(CASE WHEN level IN ('yellow','red') THEN 1 ELSE 0 END) AS non_green,
+                COUNT(*) AS n
+         FROM aggregate_events WHERE event_type = 'chat_message' AND created_at > ? AND created_at <= ?`, prevSince, since).first(),
       q('SELECT level, COUNT(*) AS events, COUNT(DISTINCT anon_id) AS people FROM risk_events WHERE created_at > ? GROUP BY level', since).all(),
       q("SELECT COUNT(*) AS n FROM aggregate_events WHERE event_type = 'chat_message' AND level = 'green' AND created_at > ?", since).first(),
       q("SELECT emotion, COUNT(*) AS n FROM aggregate_events WHERE event_type = 'chat_message' AND emotion IS NOT NULL AND created_at > ? GROUP BY emotion ORDER BY n DESC LIMIT 6", since).all(),
       q(`SELECT resource_name AS name, resource_level AS level, COUNT(*) AS offered, COUNT(DISTINCT anon_id) AS people,
                 SUM(CASE WHEN state IN ('joined','completed') THEN 1 ELSE 0 END) AS joined,
-                SUM(CASE WHEN state = 'completed' THEN 1 ELSE 0 END) AS completed
+                SUM(CASE WHEN state = 'completed' THEN 1 ELSE 0 END) AS completed,
+                COUNT(DISTINCT CASE WHEN state IN ('joined','completed') THEN anon_id END) AS joined_people,
+                COUNT(DISTINCT CASE WHEN state='completed' THEN anon_id END) AS completed_people
          FROM resource_events WHERE created_at > ? GROUP BY resource_name, resource_level ORDER BY offered DESC LIMIT 8`, since).all(),
       q("SELECT SUM(CASE WHEN event_type = 'wall_post' THEN 1 ELSE 0 END) AS posts, SUM(CASE WHEN event_type = 'wall_hug' THEN 1 ELSE 0 END) AS hugs FROM aggregate_events WHERE created_at > ?", since).first(),
       q("SELECT COUNT(*) AS n FROM aggregate_events WHERE data_origin = 'live' AND created_at > ?", since).first(),
       // 组织议题：发帖时已分类，这里只计数，不接触原文。
-      q('SELECT topic, COUNT(*) AS n FROM posts WHERE topic IS NOT NULL AND deleted_at IS NULL AND created_at > ? GROUP BY topic ORDER BY n DESC LIMIT 6', since).all(),
+      q('SELECT topic, COUNT(*) AS n, COUNT(DISTINCT anon_id) AS people FROM posts WHERE topic IS NOT NULL AND deleted_at IS NULL AND created_at > ? GROUP BY topic ORDER BY n DESC LIMIT 6', since).all(),
       q("SELECT department AS name, COUNT(*) AS headcount FROM profiles WHERE department IS NOT NULL GROUP BY department ORDER BY headcount DESC").all(),
-      q(`SELECT p.department AS name, AVG(m.stress_score) AS avg_stress, COUNT(DISTINCT m.anon_id) AS people
-         FROM mood_checkins m JOIN profiles p ON p.anon_id = m.anon_id
-         WHERE m.created_at > ? AND p.department IS NOT NULL GROUP BY p.department`, since).all(),
-      q(`SELECT p.department AS name, po.topic, COUNT(*) AS n
+      // 部门温度必须和全员温度同一个口径：都按对话条数的绿/非绿构成算。
+      // 换成「触发过黄红的人数 ÷ 说过话的人数」会让一次黄色就把这个人整段时间算进去，
+      // 部门分数系统性偏低，几乎所有部门都显示需干预。
+      q(`SELECT p.department AS name, COUNT(DISTINCT m.anon_id) AS people,
+                SUM(CASE WHEN m.risk_level = 'green' THEN 1 ELSE 0 END) AS green,
+                SUM(CASE WHEN m.risk_level IN ('yellow','red') THEN 1 ELSE 0 END) AS non_green
+         FROM messages m JOIN profiles p ON p.anon_id = m.anon_id
+         WHERE m.role = 'user' AND m.created_at > ? AND p.department IS NOT NULL GROUP BY p.department`, since).all(),
+      q(`SELECT p.department AS name, po.topic, COUNT(*) AS n, COUNT(DISTINCT po.anon_id) AS people
          FROM posts po JOIN profiles p ON p.anon_id = po.anon_id
          WHERE po.created_at > ? AND po.deleted_at IS NULL AND po.topic IS NOT NULL AND p.department IS NOT NULL
          GROUP BY p.department, po.topic`, since).all(),
@@ -124,28 +159,36 @@ export async function onRequestGet({ request, env }) {
       q(`SELECT COALESCE(p.context_tag,'none') AS tag, COUNT(*) AS recommended,
                 SUM(CASE WHEN e.state IN ('joined','completed') THEN 1 ELSE 0 END) AS participated,
                 SUM(CASE WHEN e.state = 'completed' THEN 1 ELSE 0 END) AS completed,
-                COUNT(e.rating) AS feedback, AVG(e.rating) AS avg_rating,
-                COUNT(DISTINCT e.anon_id) AS people
+                COUNT(e.helpfulness) AS feedback,
+                SUM(CASE WHEN e.helpfulness = '有帮助' THEN 1 ELSE 0 END) AS helpful,
+                COUNT(DISTINCT e.anon_id) AS people,
+                COUNT(DISTINCT CASE WHEN e.state IN ('joined','completed') THEN e.anon_id END) AS joined_people,
+                COUNT(DISTINCT CASE WHEN e.state='completed' THEN e.anon_id END) AS completed_people
          FROM resource_events e LEFT JOIN profiles p ON p.anon_id = e.anon_id
          WHERE e.created_at > ? GROUP BY COALESCE(p.context_tag,'none')`, since).all(),
       q(`SELECT COUNT(*) AS recommended,
                 SUM(CASE WHEN state IN ('joined','completed') THEN 1 ELSE 0 END) AS participated,
                 SUM(CASE WHEN state = 'completed' THEN 1 ELSE 0 END) AS completed,
-                COUNT(rating) AS feedback, AVG(rating) AS avg_rating,
-                COUNT(DISTINCT anon_id) AS people
-         FROM resource_events WHERE created_at > ?`, since).first(),
+                COUNT(helpfulness) AS feedback,
+                SUM(CASE WHEN helpfulness = '有帮助' THEN 1 ELSE 0 END) AS helpful,
+                COUNT(DISTINCT anon_id) AS people,
+                COUNT(DISTINCT CASE WHEN state IN ('joined','completed') THEN anon_id END) AS joined_people,
+                COUNT(DISTINCT CASE WHEN state='completed' THEN anon_id END) AS completed_people,
+                -- 复用率：做完还愿意再做一次，是比任何自评都硬的信号，而且不用问任何人。
+                (SELECT COUNT(DISTINCT anon_id) FROM (
+                   SELECT anon_id FROM resource_events
+                   WHERE state = 'completed' AND created_at > ?
+                   GROUP BY anon_id, activity_id HAVING COUNT(*) > 1)) AS repeat_people
+         FROM resource_events WHERE created_at > ?`, since, since).first(),
       q(`SELECT e.resource_name AS label, e.resource_level AS level, COUNT(*) AS recommended,
                 SUM(CASE WHEN e.state IN ('joined','completed') THEN 1 ELSE 0 END) AS participated,
                 SUM(CASE WHEN e.state = 'completed' THEN 1 ELSE 0 END) AS completed,
-                COUNT(e.rating) AS feedback, AVG(e.rating) AS avg_rating,
+                COUNT(e.helpfulness) AS feedback,
+                SUM(CASE WHEN e.helpfulness = '有帮助' THEN 1 ELSE 0 END) AS helpful,
                 COUNT(DISTINCT e.anon_id) AS people,
-                -- 效果 = 前后自评差值，只统计两次自评都留下的记录。
-                AVG(CASE WHEN e.pre_score IS NOT NULL AND e.post_score IS NOT NULL
-                         THEN e.pre_score - e.post_score END) AS effect_delta,
-                SUM(CASE WHEN e.pre_score IS NOT NULL AND e.post_score IS NOT NULL THEN 1 ELSE 0 END) AS effect_samples,
-                MAX(a.score_label) AS score_label, MAX(a.direction) AS direction
-         FROM resource_events e LEFT JOIN resource_catalog c ON c.name = e.resource_name
-              LEFT JOIN activities a ON a.id = COALESCE(e.activity_id, c.activity_id)
+                COUNT(DISTINCT CASE WHEN e.state IN ('joined','completed') THEN e.anon_id END) AS joined_people,
+                COUNT(DISTINCT CASE WHEN e.state='completed' THEN e.anon_id END) AS completed_people
+         FROM resource_events e LEFT JOIN activities a ON a.id = e.activity_id
          WHERE e.created_at > ? GROUP BY e.resource_name, e.resource_level ORDER BY recommended DESC LIMIT 8`, since)
         .all()
         // 活动效果依赖 0012 迁移。迁移未应用时如实上报 schemaPending，
@@ -160,11 +203,11 @@ export async function onRequestGet({ request, env }) {
     const totalChat = greenCount + (byLevel.yellow?.events || 0) + (byLevel.red?.events || 0);
     const emotionTotal = (emotions.results || []).reduce((sum, row) => sum + row.n, 0);
 
-    const temperature = (stress?.n || 0) >= MIN_SAMPLE ? toTemperature(stress.v) : null;
-    const prevTemperature = (prevStress?.n || 0) >= MIN_SAMPLE ? toTemperature(prevStress.v) : null;
+    const temperature = (stress?.n || 0) >= MIN_SAMPLE ? toTemperature(nonGreenShare(stress)) : null;
+    const prevTemperature = (prevStress?.n || 0) >= MIN_SAMPLE ? toTemperature(nonGreenShare(prevStress)) : null;
 
-    const coverageRate = headcount ? Math.min(100, percentage(activeUsers, headcount)) : null;
-    const prevCoverageRate = headcount && prevActive?.n ? Math.min(100, percentage(prevActive.n, headcount)) : null;
+    const coverageRate = headcount && activeUsers >= MIN_SAMPLE ? Math.min(100, percentage(activeUsers, headcount)) : null;
+    const prevCoverageRate = headcount && prevActive?.n >= MIN_SAMPLE ? Math.min(100, percentage(prevActive.n, headcount)) : null;
 
     // 部门概览：人数、参与率、情绪温度、主导议题全部真算，样本不足的部门自动被抑制。
     const moodByDept = Object.fromEntries((deptMood.results || []).map((r) => [r.name, r]));
@@ -178,11 +221,11 @@ export async function onRequestGet({ request, env }) {
       const people = mood?.people || 0;
       if (people < MIN_SAMPLE) {
         return {
-          name: dept.name, headcount: dept.headcount, sampleSize: people, suppressed: true,
+          name: dept.name, headcount: dept.headcount, sampleSize: null, suppressed: true,
           participationRate: null, moodTemp: null, mainTopic: null, status: null, level: null,
         };
       }
-      const temp = toTemperature(mood.avg_stress);
+      const temp = toTemperature(nonGreenShare(mood));
       return {
         name: dept.name,
         headcount: dept.headcount,
@@ -190,7 +233,7 @@ export async function onRequestGet({ request, env }) {
         suppressed: false,
         participationRate: percentage(people, dept.headcount),
         moodTemp: temp,
-        mainTopic: topTopicByDept[dept.name]?.topic || null,
+        mainTopic: topTopicByDept[dept.name]?.people >= MIN_SAMPLE ? topTopicByDept[dept.name].topic : null,
         ...deptStatus(temp),
       };
     });
@@ -211,14 +254,15 @@ export async function onRequestGet({ request, env }) {
       return {
         key, label, note, state,
         value: state === 'ok' ? format(row.value) : null,
-        sampleSize: state === 'suppressed' || state === 'ok' ? row?.sample_size ?? null : null,
+        sampleSize: state === 'ok' ? row?.sample_size ?? null : null,
         syncedAt: row?.bucket_day || null,
       };
     };
     const pad = (n) => String(n).padStart(2, '0');
 
-    return json({
+    const report = {
       ok: true,
+      origin,
       minSample: MIN_SAMPLE,
       window: { days, since },
       tenant: {
@@ -234,7 +278,7 @@ export async function onRequestGet({ request, env }) {
       },
       temperature: { value: temperature, delta: deltaLabel(temperature, prevTemperature) },
       moodTrend: suppressSeries((trend.results || []).map((r) => ({
-        bucket: r.bucket, value: Math.round(r.value * 100) / 100, sampleSize: r.n,
+        bucket: r.bucket, value: toTemperature(nonGreenShare(r)), sampleSize: r.n,
       }))),
       risk: {
         greenShare: totalChat ? percentage(greenCount, totalChat) : null,
@@ -252,7 +296,7 @@ export async function onRequestGet({ request, env }) {
         redBreached: redCases?.breached || 0,
         redCases: redCases?.total || 0,
       },
-      topics: (topicRows.results || []).map((r) => ({ topic: r.topic, count: r.n })),
+      topics: (topicRows.results || []).filter(r => r.people >= MIN_SAMPLE).map((r) => ({ topic: r.topic, count: r.n })),
       departments,
       rhythm: {
         connected: Boolean(rhythmRows.results?.length),
@@ -267,16 +311,24 @@ export async function onRequestGet({ request, env }) {
             (v) => `${Math.round(v)} 项`),
         ],
       },
-      // 活动整体效果：满意度与有效反馈来自员工真实提交的评分，没有评分就返回 null。
+      // 活动效果不再声称测到了状态改善：没有前测，能报告的只有参与、完成、复用和评价。
+      // 帮助度是选填的，所以「有帮助占比」必须和「评价率」一起给——
+      // 只给占比会让一小撮愿意评价的人看起来像全体。
       activityOverall: {
         ...suppress({
           recommended: activityOverallRow?.recommended || 0,
-          participationRate: percentage(activityOverallRow?.participated || 0, activityOverallRow?.recommended || 0),
-          completionRate: percentage(activityOverallRow?.completed || 0, activityOverallRow?.participated || 0),
+          participationRate: activityOverallRow?.joined_people >= MIN_SAMPLE ? percentage(activityOverallRow.participated, activityOverallRow.recommended) : null,
+          completionRate: activityOverallRow?.completed_people >= MIN_SAMPLE ? percentage(activityOverallRow.completed, activityOverallRow.participated) : null,
+          repeatRate: activityOverallRow?.completed_people >= MIN_SAMPLE
+            ? percentage(activityOverallRow.repeat_people || 0, activityOverallRow.completed_people)
+            : null,
         }, activityOverallRow?.people || 0),
-        feedbackCount: activityOverallRow?.feedback || 0,
-        avgRating: activityOverallRow?.feedback >= MIN_SAMPLE
-          ? Math.round((activityOverallRow.avg_rating || 0) * 10) / 10
+        feedbackCount: null,
+        helpfulRate: activityOverallRow?.feedback >= MIN_SAMPLE
+          ? percentage(activityOverallRow.helpful || 0, activityOverallRow.feedback)
+          : null,
+        feedbackRate: activityOverallRow?.feedback >= MIN_SAMPLE
+          ? percentage(activityOverallRow.feedback, activityOverallRow.completed || 0)
           : null,
       },
       activityByAudience: (ctxRows.results || []).map((r) => ({
@@ -284,9 +336,10 @@ export async function onRequestGet({ request, env }) {
         label: CONTEXT_LABELS[r.tag] || r.tag,
         ...suppress({
           recommended: r.recommended,
-          participationRate: percentage(r.participated, r.recommended),
-          completionRate: percentage(r.completed, r.participated),
-          avgRating: r.feedback >= 3 ? Math.round((r.avg_rating || 0) * 10) / 10 : null,
+          participationRate: r.joined_people >= MIN_SAMPLE ? percentage(r.participated, r.recommended) : null,
+          completionRate: r.completed_people >= MIN_SAMPLE ? percentage(r.completed, r.participated) : null,
+          helpfulRate: r.feedback >= MIN_SAMPLE && r.people >= MIN_SAMPLE ? percentage(r.helpful || 0, r.feedback) : null,
+          feedbackRate: r.feedback >= MIN_SAMPLE && r.people >= MIN_SAMPLE ? percentage(r.feedback, r.completed || 0) : null,
           feedback: r.feedback,
         }, r.people),
       })),
@@ -298,17 +351,11 @@ export async function onRequestGet({ request, env }) {
         level: r.level,
         ...suppress({
           recommended: r.recommended,
-          participationRate: percentage(r.participated, r.recommended),
-          completionRate: percentage(r.completed, r.participated),
-          avgRating: r.feedback >= 3 ? Math.round((r.avg_rating || 0) * 10) / 10 : null,
+          participationRate: r.joined_people >= MIN_SAMPLE ? percentage(r.participated, r.recommended) : null,
+          completionRate: r.completed_people >= MIN_SAMPLE ? percentage(r.completed, r.participated) : null,
+          helpfulRate: r.feedback >= MIN_SAMPLE && r.people >= MIN_SAMPLE ? percentage(r.helpful || 0, r.feedback) : null,
+          feedbackRate: r.feedback >= MIN_SAMPLE && r.people >= MIN_SAMPLE ? percentage(r.feedback, r.completed || 0) : null,
           feedback: r.feedback,
-          // 改善幅度已按 direction 归一：正数一律表示变好，前端不需要再推理方向。
-          // 至少 3 份前后自评才展示，避免个位数样本被当成结论。
-          improvement: r.effect_samples >= 3
-            ? Math.round(((r.direction === 'up' ? -1 : 1) * (r.effect_delta || 0)) * 10) / 10
-            : null,
-          effectSamples: r.effect_samples || 0,
-          scoreLabel: r.score_label || null,
         }, r.people),
       })),
       topEmotions: emotionTotal >= MIN_SAMPLE
@@ -318,8 +365,8 @@ export async function onRequestGet({ request, env }) {
         name: r.name, level: r.level,
         ...suppress({
           offered: r.offered,
-          joinRate: percentage(r.joined, r.offered),
-          completeRate: percentage(r.completed, r.offered),
+          joinRate: r.joined_people >= MIN_SAMPLE ? percentage(r.joined, r.offered) : null,
+          completeRate: r.completed_people >= MIN_SAMPLE ? percentage(r.completed, r.offered) : null,
         }, r.people),
       })),
       activity: { posts: wall?.posts || 0, hugs: wall?.hugs || 0 },
@@ -327,8 +374,20 @@ export async function onRequestGet({ request, env }) {
         demo_seed: await summarize(env, since, 'demo_seed'),
         live: await summarize(env, since, 'live'),
       },
-      liveEventCount: liveEvents?.n || 0,
-    });
+      liveEventCount: null,
+    };
+    // 无法从不含主体的aggregate_events证明每个情绪/事件分组达到k，真实侧保守不出数。
+    if (origin === 'live') {
+      report.topEmotions = [];
+      report.activity = { posts: null, hugs: null };
+      report.risk = Object.fromEntries(Object.keys(report.risk).map(key => [key, null]));
+      report.activityOverall.helpfulRate = null;
+      report.activityOverall.feedbackRate = null;
+      for (const item of [...report.activityByAudience, ...report.activityPerformance]) {
+        if (item.value) { item.value.helpfulRate = null; item.value.feedbackRate = null; item.value.feedback = null; }
+      }
+    }
+    return json(report);
   } catch {
     console.error(JSON.stringify({ event: 'metrics_failed', reasonCode: 'INTERNAL_ERROR' }));
     return json({ ok: false, reasonCode: 'INTERNAL_ERROR' }, 500);

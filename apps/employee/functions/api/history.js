@@ -10,12 +10,14 @@ export async function onRequestGet({ request, env }) {
       env.CARE_DB.prepare("SELECT COUNT(*) AS n FROM messages WHERE anon_id = ? AND role = 'user'").bind(anonId).first(),
       env.CARE_DB.prepare('SELECT COUNT(*) AS n FROM posts WHERE anon_id = ? AND deleted_at IS NULL').bind(anonId).first(),
       env.CARE_DB.prepare(
-        `SELECT e.id, e.resource_name, e.resource_level, e.state, e.rating, e.created_at,
+        `SELECT e.id, e.resource_name, e.resource_level, e.state, e.helpfulness, e.created_at,
+                e.source, e.offer_reason, e.updated_at,
+                COALESCE(e.activity_id, c.activity_id) AS activity_id,
                 COALESCE(a.kind, 'online') AS activity_kind
          FROM resource_events e
          LEFT JOIN resource_catalog c ON c.name = e.resource_name
          LEFT JOIN activities a ON a.id = COALESCE(e.activity_id, c.activity_id)
-         WHERE e.anon_id = ? ORDER BY e.created_at DESC LIMIT 20`
+         WHERE e.anon_id = ? ORDER BY e.created_at DESC LIMIT 50`
       ).bind(anonId).all(),
       env.CARE_DB.prepare('SELECT COUNT(*) AS n FROM mood_checkins WHERE anon_id = ?').bind(anonId).first(),
       env.CARE_DB.prepare("SELECT COUNT(*) AS n FROM appointments WHERE anon_id = ? AND status = 'requested'").bind(anonId).first(),
@@ -30,7 +32,10 @@ export async function onRequestGet({ request, env }) {
       },
       resources: (resources.results || []).map((r) => ({
         id: r.id, name: r.resource_name, level: r.resource_level, state: r.state,
-        rating: r.rating, at: r.created_at, kind: r.activity_kind,
+        helpfulness: r.helpfulness, at: r.created_at, updatedAt: r.updated_at, kind: r.activity_kind,
+        source: r.source, reason: r.offer_reason,
+        // 「再做一次」要新建一条参与记录，不能复用已完成的旧记录。
+        activityId: r.activity_id,
       })),
       retentionDays: 180,
     });

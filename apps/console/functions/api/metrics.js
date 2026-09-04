@@ -11,8 +11,9 @@ export async function onRequestGet({ request, env }) {
       throw new ApiError('APP_CONFIGURATION_MISSING', 503, '管理后台配置不完整');
     }
     const days = new URL(request.url).searchParams.get('days') || '90';
+    const origin = new URL(request.url).searchParams.get('origin') === 'demo_seed' ? 'demo_seed' : 'live';
     const upstream = await fetch(
-      `${env.CARE_API_ORIGIN}/api/internal/metrics?days=${encodeURIComponent(days)}`,
+      `${env.CARE_API_ORIGIN}/api/internal/metrics?days=${encodeURIComponent(days)}&origin=${origin}`,
       { headers: { authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(10000) }
     ).catch(() => null);
     if (!upstream || !upstream.ok) {

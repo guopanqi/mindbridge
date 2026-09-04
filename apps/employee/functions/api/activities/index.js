@@ -4,32 +4,37 @@
 // HR 端的活动效果因此有真实承载物，而不是只有一个参与计数。
 import { json } from '../_lib/http.js';
 import { followupQuestion } from '../_lib/followup-data.js';
+import { activityAvailableSql } from '../_lib/activity-availability.js';
 import {
-  ApiError, aggregateStatement, handleError, newId, readJson, requireSession, requireText,
+  ApiError, handleError, newId, readJson, requireSession, requireText, dayBucket,
 } from '../_lib/care.js';
 
 // 活动完成后隔多少天回访。真实自然日，不加速。
 const FOLLOWUP_DELAY_DAYS = 3;
 
-const score = (value, field) => {
-  if (!Number.isInteger(value) || value < 1 || value > 10) {
-    throw new ApiError(`${field}_INVALID`, 400, '自评分需要在 1-10 之间');
-  }
+// 帮助度是可选的主观反馈，措辞与 3 天回访保持一致，都是一次点击。
+// 不填是正常情况，不能当成低分：看板只统计填了的人，并同时给出评价率。
+export const HELPFULNESS = ['有帮助', '说不好', '没什么用'];
+
+const helpfulnessOf = (value) => {
+  if (value === undefined || value === null || value === '') return null;
+  if (!HELPFULNESS.includes(value)) throw new ApiError('HELPFULNESS_INVALID', 400, '未知的评价选项');
   return value;
 };
 
 async function loadContext(env, anonId, eventId) {
   const event = await env.CARE_DB.prepare(
-    `SELECT e.id, e.resource_name, e.resource_level, e.state, e.pre_score, e.post_score,
-            e.stage_index, e.rating, e.activity_id, c.activity_id AS catalog_activity_id
-     FROM resource_events e LEFT JOIN resource_catalog c ON c.name = e.resource_name
+    `SELECT e.id, e.resource_name, e.resource_level, e.state,
+            e.stage_index, e.helpfulness, e.activity_id, e.content_version, e.activity_snapshot_json
+     FROM resource_events e
      WHERE e.id = ? AND e.anon_id = ?`
   ).bind(eventId, anonId).first();
   if (!event) throw new ApiError('RESOURCE_NOT_FOUND', 404, '这条推荐不存在或不属于你');
-  const activityId = event.activity_id || event.catalog_activity_id;
+  const activityId = event.activity_id;
   if (!activityId) throw new ApiError('ACTIVITY_UNAVAILABLE', 409, '这个资源还没有配置可参与的引导流程');
+  if (event.activity_snapshot_json) return { event, activity: JSON.parse(event.activity_snapshot_json) };
   const activity = await env.CARE_DB
-    .prepare('SELECT * FROM activities WHERE id = ? AND enabled = 1').bind(activityId).first();
+    .prepare(`SELECT * FROM activities WHERE id = ? AND ${activityAvailableSql('activities')}`).bind(activityId).first();
   if (!activity) throw new ApiError('ACTIVITY_UNAVAILABLE', 404, '活动内容暂时不可用');
   return { event, activity };
 }
@@ -43,27 +48,22 @@ function shapeActivity(activity, event) {
   }
   return {
     id: activity.id,
+    contentVersion: activity.content_version,
     title: activity.title,
     kind: activity.kind,
     form: activity.form,
     duration: activity.duration,
     description: activity.description,
-    preLabel: activity.pre_label,
-    lowLabel: activity.low_label,
-    highLabel: activity.high_label,
-    direction: activity.direction,
-    scoreLabel: activity.score_label,
     schedule: activity.schedule,
     location: activity.location,
     stages,
     progress: {
       eventId: event.id,
       state: event.state,
-      preScore: event.pre_score,
-      postScore: event.post_score,
       stageIndex: event.stage_index || 0,
-      rating: event.rating,
+      helpfulness: event.helpfulness,
     },
+    helpfulnessOptions: HELPFULNESS,
   };
 }
 
@@ -88,41 +88,57 @@ export async function onRequestPost({ request, env }) {
     const { event, activity } = await loadContext(env, anonId, eventId);
     const now = Date.now();
     const statements = [];
+    const unchanged = () => json({ ok: true, activity: shapeActivity(activity, event) });
+    const aggregate = (type) => env.CARE_DB.prepare(
+      `INSERT INTO aggregate_events (id, event_type, level, bucket_day, created_at, data_origin)
+       SELECT ?, ?, 'green', ?, ?, 'live' WHERE changes() = 1`
+    ).bind(newId('agg'), type, dayBucket(now), now);
 
     if (body.action === 'start') {
-      const pre = score(body.preScore, 'PRE_SCORE');
+      if (event.state === 'joined' || event.state === 'completed') return unchanged();
+      if (event.state !== 'offered') throw new ApiError('ACTIVITY_STATE_INVALID', 409, '这条活动不能开始');
       statements.push(env.CARE_DB.prepare(
-        "UPDATE resource_events SET state = 'joined', pre_score = ?, stage_index = 0, activity_id = ?, updated_at = ? WHERE id = ? AND anon_id = ?"
-      ).bind(pre, activity.id, now, eventId, anonId));
-      statements.push(aggregateStatement(env, { eventType: 'activity_started', level: 'green', at: now }));
+        "UPDATE resource_events SET state = 'joined', stage_index = 0, activity_id = ?, content_version = ?, activity_snapshot_json = ?, updated_at = ? WHERE id = ? AND anon_id = ? AND state = 'offered'"
+      ).bind(activity.id, activity.content_version, JSON.stringify(activity), now, eventId, anonId));
+      statements.push(aggregate('activity_started'));
     } else if (body.action === 'stage') {
-      const index = Number.isInteger(body.stageIndex) ? Math.max(0, body.stageIndex) : 0;
+      const index = body.stageIndex;
+      const stages = JSON.parse(activity.stages_json);
+      if (event.state !== 'joined' || !Number.isInteger(index) || index < 0 || index >= stages.length || index > event.stage_index + 1) throw new ApiError('STAGE_INVALID', 409, '活动步骤无效');
       statements.push(env.CARE_DB.prepare(
-        'UPDATE resource_events SET stage_index = ?, updated_at = ? WHERE id = ? AND anon_id = ?'
+        "UPDATE resource_events SET stage_index = MAX(stage_index, ?), updated_at = ? WHERE id = ? AND anon_id = ? AND state = 'joined'"
       ).bind(index, now, eventId, anonId));
     } else if (body.action === 'complete') {
-      const post = score(body.postScore, 'POST_SCORE');
-      const rating = body.rating === undefined || body.rating === null
-        ? null
-        : (Number.isInteger(body.rating) && body.rating >= 1 && body.rating <= 5
-          ? body.rating
-          : (() => { throw new ApiError('RATING_INVALID', 400, '评分需要在 1-5 之间'); })());
+      if (event.state === 'completed') return unchanged();
+      if (event.state !== 'joined' || event.stage_index < JSON.parse(activity.stages_json).length - 1) throw new ApiError('ACTIVITY_STATE_INVALID', 409, '请先完成活动步骤');
+      // 帮助度选填：留空照常完成，不影响完成状态，也不写反馈时间。
+      const helpfulness = helpfulnessOf(body.helpfulness);
       statements.push(env.CARE_DB.prepare(
-        "UPDATE resource_events SET state = 'completed', post_score = ?, rating = COALESCE(?, rating), feedback_at = ?, updated_at = ? WHERE id = ? AND anon_id = ?"
-      ).bind(post, rating, rating ? now : null, now, eventId, anonId));
-      statements.push(aggregateStatement(env, { eventType: 'activity_completed', level: 'green', at: now }));
+        "UPDATE resource_events SET state = 'completed', helpfulness = COALESCE(?, helpfulness), feedback_at = ?, updated_at = ? WHERE id = ? AND anon_id = ? AND state = 'joined'"
+      ).bind(helpfulness, helpfulness ? now : null, now, eventId, anonId));
+      statements.push(aggregate('activity_completed'));
       // 回访按真实自然日间隔排期，不做演示加速。
       const dueAt = now + FOLLOWUP_DELAY_DAYS * 86400000;
       statements.push(env.CARE_DB.prepare(
         `INSERT INTO follow_ups (id, anon_id, resource_event_id, activity_id, activity_title, question, due_at, state, created_at, data_origin)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 'scheduled', ?, 'live')`
+         SELECT ?, ?, ?, ?, ?, ?, ?, 'scheduled', ?, 'live' WHERE changes() = 1`
       ).bind(
         newId('fup'), anonId, eventId, activity.id, activity.title,
         followupQuestion(activity.id, activity.title), dueAt, now
       ));
-    } else if (body.action === 'skip') {
+    } else if (body.action === 'rate') {
+      // 补评：完成当时跳过了帮助度，之后在结果页再填。只允许已完成的记录补。
+      if (event.state !== 'completed') throw new ApiError('ACTIVITY_STATE_INVALID', 409, '活动还没有完成');
+      const helpfulness = helpfulnessOf(body.helpfulness);
+      if (!helpfulness) throw new ApiError('HELPFULNESS_INVALID', 400, '请选择一个评价');
       statements.push(env.CARE_DB.prepare(
-        "UPDATE resource_events SET state = 'declined', updated_at = ? WHERE id = ? AND anon_id = ?"
+        "UPDATE resource_events SET helpfulness = ?, feedback_at = ?, updated_at = ? WHERE id = ? AND anon_id = ? AND state = 'completed'"
+      ).bind(helpfulness, now, now, eventId, anonId));
+    } else if (body.action === 'skip') {
+      if (event.state === 'declined') return unchanged();
+      if (event.state === 'completed') throw new ApiError('ACTIVITY_STATE_INVALID', 409, '已完成活动不能跳过');
+      statements.push(env.CARE_DB.prepare(
+        "UPDATE resource_events SET state = 'declined', updated_at = ? WHERE id = ? AND anon_id = ? AND state IN ('offered', 'joined')"
       ).bind(now, eventId, anonId));
     } else {
       throw new ApiError('ACTION_INVALID', 400, '未知的操作');

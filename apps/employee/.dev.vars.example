@@ -13,3 +13,6 @@ INTERNAL_SERVICE_TOKEN=""
 # 对话 Harness：Responses API（当前使用 DeepSeek）。MODEL_API_KEY 必须作为 secret 配置。
 MODEL_API_KEY=""
 MODEL_NAME="deepseek-v4-flash"
+# Stream relay 专用令牌，与 INTERNAL_SERVICE_TOKEN 分离。未配置则机器人入口关闭。
+BOT_RELAY_TOKEN=""
+DINGTALK_ROBOT_CODE=""

@@ -71,7 +71,12 @@ main { flex: 1; min-height: 0; }
 .bubble-text { margin: 0; white-space: pre-wrap; }
 .bubble.bot { align-self: flex-start; background: #fff; border: 1px solid var(--line); border-bottom-left-radius: 5px; }
 .bubble.mine { align-self: flex-end; background: var(--brand); color: #fff; border-bottom-right-radius: 5px; }
-.bubble.typing { color: var(--ink-soft); font-size: 13px; }
+.bubble.typing { color: var(--ink-soft); font-size: 13px; display: flex; align-items: center; gap: 7px; }
+.bubble.typing i { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .3; animation: typing-dot 1.25s ease-in-out infinite; }
+.bubble.typing i:nth-of-type(2) { animation-delay: .18s; }
+.bubble.typing i:nth-of-type(3) { animation-delay: .36s; }
+@keyframes typing-dot { 0%, 65%, 100% { opacity: .25; transform: translateY(0); } 30% { opacity: .95; transform: translateY(-3px); } }
+@media (prefers-reduced-motion: reduce) { .bubble.typing i { animation: none; opacity: .5; } }
 .card { align-self: flex-start; max-width: 88%; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 13px; display: flex; gap: 11px; }
 .card.consent { display: block; border-color: #e7c39a; background: #fffaf3; }
 .card-icon { font-size: 22px; }
@@ -183,12 +188,12 @@ main { flex: 1; min-height: 0; }
 .act-desc { margin: 0; font-size: 15px; line-height: 1.75; color: var(--ink-soft); }
 .act-info { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px; display: grid; gap: 4px; }
 .act-info p { margin: 0; font-size: 14px; }
-.act-scale { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 10px; }
-.act-q { margin: 0; font-size: 14px; font-weight: 600; }
-.act-dots { display: flex; gap: 5px; }
-.act-dot { flex: 1; border: 1px solid var(--line); background: #fff; color: var(--ink-soft); border-radius: 8px; padding: 9px 0; font-size: 13px; }
-.act-dot.on { border-color: var(--brand); background: var(--brand); color: #fff; font-weight: 700; }
-.act-ends { display: flex; justify-content: space-between; font-size: 11px; color: var(--ink-soft); }
+.act-q { margin: 0 0 10px; font-size: 14px; font-weight: 600; }
+/* 帮助度选填：三个等宽选项，一次点击；与「提交并完成」留出间距，
+   让人一眼看出不选也能提交。 */
+.act-help { display: flex; gap: 8px; margin-bottom: 22px; }
+.act-help-opt { flex: 1; border: 1px solid var(--line); background: #fff; color: var(--ink-soft); border-radius: 10px; padding: 12px 4px; font-size: 13px; }
+.act-help-opt.on { border-color: var(--brand); background: var(--brand); color: #fff; font-weight: 700; }
 .act-progress { display: flex; gap: 5px; }
 .act-progress i { flex: 1; height: 3px; border-radius: 3px; background: var(--line); }
 .act-progress i.on { background: var(--brand); }
@@ -205,9 +210,6 @@ main { flex: 1; min-height: 0; }
 .act-note { margin: 0; font-size: 11px; color: var(--ink-soft); }
 .act-cta { width: 100%; margin-top: 4px; }
 .act-skip { align-self: center; }
-.act-stars { display: flex; gap: 4px; justify-content: center; }
-.act-stars .star { border: 0; background: none; font-size: 30px; color: #d6e2df; padding: 0 4px; line-height: 1; }
-.act-stars .star.on { color: #e8a72c; }
 .card-main { display: grid; gap: 4px; }
 .card-cta { margin-top: 8px; justify-self: start; }
 .act-booked{background:var(--brand-soft);border-radius:14px;padding:14px;display:grid;gap:6px;margin-bottom:4px}
@@ -235,3 +237,31 @@ main { flex: 1; min-height: 0; }
 .lib-core { margin: 0; font-size: 12px; color: var(--brand); }
 .lib-meta { display: flex; flex-wrap: wrap; gap: 8px; font-size: 11px; color: #92a8a3; }
 .lib-card button { justify-self: start; margin-top: 4px; }
+
+/* ---- 我的活动 ---- */
+.act-section { display: grid; gap: 8px; margin-bottom: 20px; }
+.act-section-title { margin: 0; font-size: 15px; font-weight: 700; }
+.act-section-sub { margin: 0; font-size: 12px; color: var(--ink-soft); line-height: 1.5; }
+.act-card-list { display: grid; gap: 10px; }
+.act-card { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 13px; display: grid; gap: 6px; }
+.act-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.act-card-title { font-size: 15px; font-weight: 600; }
+.act-card-state { font-size: 12px; color: var(--ink-soft); white-space: nowrap; }
+/* 推荐理由要读起来像一句解释，不像一个标签。 */
+.act-card-reason { margin: 0; font-size: 13px; color: var(--brand); line-height: 1.5; }
+.act-card-meta { margin: 0; font-size: 12px; color: var(--ink-soft); }
+.act-card-actions { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
+.act-library-entry { width: 100%; background: #fff; border: 1px solid var(--line); border-radius: 16px;
+  padding: 15px 14px; display: flex; align-items: center; justify-content: space-between;
+  font-size: 15px; color: var(--ink); }
+.act-library-arrow { color: var(--ink-soft); font-size: 20px; line-height: 1; }
+
+/* ---- 活动库（二级页）---- */
+.lib-overlay { position: fixed; inset: 0; background: var(--bg); z-index: 40; overflow-y: auto; }
+.lib-sheet { max-width: 640px; margin: 0 auto; min-height: 100%; display: flex; flex-direction: column; }
+.lib-body { padding: 12px 14px 28px; display: grid; gap: 12px; }
+
+/* ---- 处境标签 ---- */
+.context-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.context-pill { background: var(--bg); border: 1px solid var(--line); border-radius: 999px;
+  padding: 6px 12px; font-size: 13px; }

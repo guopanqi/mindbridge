@@ -1,0 +1,195 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "contentVersion",
+    "title",
+    "kind",
+    "level",
+    "available",
+    "description",
+    "tags",
+    "scale",
+    "stages"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9-]{0,63}$"
+    },
+    "contentVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 120
+    },
+    "kind": {
+      "enum": [
+        "online",
+        "offline"
+      ]
+    },
+    "level": {
+      "enum": [
+        "L1",
+        "L2"
+      ]
+    },
+    "available": {
+      "type": "boolean"
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "form": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "duration": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "scoreLabel": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "suitedFor": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "coreMethod": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "schedule": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "location": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2000
+    },
+    "tags": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 40
+      }
+    },
+    "scale": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "preLabel",
+        "low",
+        "high",
+        "direction"
+      ],
+      "properties": {
+        "preLabel": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "low": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "high": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "direction": {
+          "enum": [
+            "up",
+            "down"
+          ]
+        }
+      }
+    },
+    "stages": {
+      "type": "array",
+      "maxItems": 50,
+      "items": {
+        "type": "object",
+        "required": [
+          "type",
+          "title"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 40
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "hint": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "fallbackHint": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          "options": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 20,
+            "items": {
+              "type": "object",
+              "required": [
+                "label"
+              ],
+              "properties": {
+                "label": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "icon": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "desc": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                },
+                "reflection": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 2000
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

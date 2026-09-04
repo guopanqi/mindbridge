@@ -48,7 +48,8 @@ test('工具查询时间与第二次生成也计入同一预算', async () => {
     return { results: [] };
   } }; } }; } } };
   await runConversationHarness({ env, gateway, userState: emptyUserState(), recentMessages: [], currentMessage: '活动', clock: () => time });
-  assert.deepEqual(budgets, [8000, 5000]);
+  // 首选无结果后还有词级检索与通用检索，三次查询均消耗共享预算。
+  assert.deepEqual(budgets, [8000, 3000]);
 });
 
 test('Gateway 在读取响应正文期间超时仍归类为 MODEL_TIMEOUT', async () => {
@@ -61,12 +62,12 @@ test('Gateway 在读取响应正文期间超时仍归类为 MODEL_TIMEOUT', asyn
   await assert.rejects(gateway.generate({}), /MODEL_TIMEOUT/);
 });
 
-test('Model-visible Context 只保留最近十条有效对话', () => {
-  const recentMessages = Array.from({ length: 14 }, (_, index) => ({ role: index % 2 ? 'assistant' : 'user', text: `m${index}` }));
+test('Model-visible Context 只保留最近二十条有效对话', () => {
+  const recentMessages = Array.from({ length: 26 }, (_, index) => ({ role: index % 2 ? 'assistant' : 'user', text: `m${index}` }));
   recentMessages.push({ role: 'resource', text: '不应直接进入模型' });
   const context = buildModelVisibleContext({ userState: null, recentMessages, currentMessage: '现在', profileContext: 'manager' });
-  assert.equal(context.recentMessages.length, 10);
-  assert.equal(context.recentMessages[0].text, 'm4');
+  assert.equal(context.recentMessages.length, 20);
+  assert.equal(context.recentMessages[0].text, 'm6');
   assert.equal(context.currentMessage, '现在');
   assert.equal(context.profileContext, 'manager');
 });
@@ -369,4 +370,42 @@ test('红色状态下用户否认风险是合法组合，不能当作契约违�
   assert.equal(decided.supportAssessment.safetyStatus, 'denied');
   const next = applyStatePatch({ ...emptyUserState(), supportLevel: 'red', safetyCheck: 'pending' }, decided, 1);
   assert.equal(next.supportLevel, 'yellow');
+});
+
+test('文字没提到活动时不挂卡片，避免图文各说各话', async () => {
+  const gateway = {
+    async generate(request) {
+      return {
+        decision: request.toolResult
+          // 工具查到了活动，但措辞轮完全没提它——此时不应该再挂卡片。
+          ? decision({ reply: { text: '这种涣散是最近才开始的，还是一直这样？' } })
+          : decision({ toolCall: { name: 'search_activities', arguments: { query: '专注', limit: 1 } } }),
+        usage: { inputTokens: 1, outputTokens: 1 }, meta: { provider: 'f', model: 'f', latencyMs: 1 },
+      };
+    },
+  };
+  const env = { CARE_DB: { prepare() { return { bind() { return { all: async () => ({ results: [{ id: 'art-group', title: '心流插花艺术疗愈' }] }) }; } }; } } };
+  const result = await runConversationHarness({
+    env, gateway, userState: emptyUserState(), recentMessages: [], currentMessage: '有什么能帮我专注', now: 1,
+  });
+  assert.equal(result.activity, null);
+  assert.ok(!result.nextState.recentRecommendations.includes('art-group'));
+});
+
+test('文字点名了活动时正常挂卡片', async () => {
+  const gateway = {
+    async generate(request) {
+      return {
+        decision: request.toolResult
+          ? decision({ reply: { text: '可以试试「心流插花艺术疗愈」，把注意力放回手上的动作。' } })
+          : decision({ toolCall: { name: 'search_activities', arguments: { query: '专注', limit: 1 } } }),
+        usage: { inputTokens: 1, outputTokens: 1 }, meta: { provider: 'f', model: 'f', latencyMs: 1 },
+      };
+    },
+  };
+  const env = { CARE_DB: { prepare() { return { bind() { return { all: async () => ({ results: [{ id: 'art-group', title: '心流插花艺术疗愈' }] }) }; } }; } } };
+  const result = await runConversationHarness({
+    env, gateway, userState: emptyUserState(), recentMessages: [], currentMessage: '有什么能帮我专注', now: 1,
+  });
+  assert.equal(result.activity.id, 'art-group');
 });

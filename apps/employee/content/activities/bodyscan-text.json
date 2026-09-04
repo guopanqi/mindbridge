@@ -1,0 +1,36 @@
+{
+  "id": "bodyscan-text",
+  "contentVersion": 2,
+  "title": "工间身体扫描文字练习",
+  "description": "通过简短的文字练习，给自己一点停留的空间。",
+  "kind": "online",
+  "level": "L1",
+  "available": true,
+  "tags": [
+    "疲惫"
+  ],
+  "duration": "3–5 分钟",
+  "scale": {
+    "preLabel": "此刻的疲惫程度是多少？",
+    "low": "很低",
+    "high": "很高",
+    "direction": "down"
+  },
+  "stages": [
+    {
+      "type": "prompt",
+      "title": "双脚和座椅",
+      "hint": "感受双脚落地和座椅的支撑。"
+    },
+    {
+      "type": "prompt",
+      "title": "肩颈与双手",
+      "hint": "留意这些部位，不需要改变任何感觉。"
+    },
+    {
+      "type": "prompt",
+      "title": "回到周围",
+      "hint": "看看周围的颜色和物品，按自己的节奏结束。"
+    }
+  ]
+}

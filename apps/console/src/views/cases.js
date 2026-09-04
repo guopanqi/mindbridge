@@ -64,7 +64,7 @@ function renderCaseCard(item, onReload) {
       el('span', { text: item.caseCode }),
       el('span', { class: `lvl ${isDone ? 'g' : 'r'}`, text: isDone ? '已闭环' : (RISK_LABEL[item.riskLevel] || item.riskLevel) }),
     ]),
-    el('div', { class: 'meta', text: `${item.dept || '研发中心'} · 触发 ${formatTime(item.at)} · ${isDone ? '已完成处置' : '员工已授权转接'}` }),
+    el('div', { class: 'meta', text: `${item.dept || '未提供部门'} · 触发 ${formatTime(item.at)} · ${isDone ? '已完成处置' : '员工已授权转接'}` }),
   );
 
   // 情绪标签
@@ -86,7 +86,7 @@ function renderCaseCard(item, onReload) {
   const slaBox = el('div', { class: 'sla' }, [
     el('div', { class: 'lb', text: isDone ? '响应用时' : 'SLA 剩余' }),
     isDone
-      ? el('div', { class: 'tm gr', text: `${item.resp || 18} 分钟` })
+      ? el('div', { class: 'tm gr', text: item.resp == null ? '暂无记录' : `${item.resp} 分钟` })
       : el('div', { class: 'tm', attrs: { 'data-sla': String(item.sla) }, text: '--:--:--' }),
   ]);
   card.append(slaBox);
@@ -96,7 +96,7 @@ function renderCaseCard(item, onReload) {
     if (item.contextStatus === 'approved') {
       // 员工原文一律用 textContent 渲染，绝不拼进 innerHTML。
       const grantedBox = el('div', { class: 'locked granted' }, [
-        el('span', { text: '🛡️ 员工已在进入人工服务时一次性授权本次必要上下文' }),
+        el('span', { text: '🛡️ 员工已单独批准本次上下文申请；每次读取仍校验有效期与撤销状态' }),
         ...(item.textSnippets || []).map((snippet) => el('p', { class: 'snippet', text: `「${snippet}」` })),
       ]);
 
@@ -104,6 +104,8 @@ function renderCaseCard(item, onReload) {
         class: 'bt small', text: '查看完整解密对话', style: 'margin-top:8px;', attrs: { type: 'button' },
         on: {
           click: () => {
+            const previous = card.querySelector(`[data-ctx-host="${item.caseCode}"]`);
+            if (previous) clear(previous);
             handleAction({ action: 'read_context', caseCode: item.caseCode }, (res) => {
               const msgs = res.messages || [];
               const box = el('div', { class: 'context-box', style: 'margin-top:10px; padding:10px; background:#f9fbfb; border:1px dashed var(--line); border-radius:6px;' }, [

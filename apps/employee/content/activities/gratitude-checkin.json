@@ -1,0 +1,36 @@
+{
+  "id": "gratitude-checkin",
+  "contentVersion": 2,
+  "title": "每日三件好事打卡",
+  "description": "通过简短的文字练习，给自己一点停留的空间。",
+  "kind": "online",
+  "level": "L1",
+  "available": true,
+  "tags": [
+    "低落"
+  ],
+  "duration": "3–5 分钟",
+  "scale": {
+    "preLabel": "此刻的低落程度是多少？",
+    "low": "很低",
+    "high": "很高",
+    "direction": "down"
+  },
+  "stages": [
+    {
+      "type": "input",
+      "title": "第一件小事",
+      "hint": "写一件今天还不错的小事，想不到也可以跳过。"
+    },
+    {
+      "type": "input",
+      "title": "第二件小事",
+      "hint": "也许是一顿饭、一句问候。"
+    },
+    {
+      "type": "input",
+      "title": "第三件小事",
+      "hint": "不需要强迫自己积极，记下真实发生的事。"
+    }
+  ]
+}

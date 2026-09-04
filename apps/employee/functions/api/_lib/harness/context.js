@@ -1,6 +1,8 @@
 import { emptyUserState } from './model-contract.js';
 
-const MAX_RECENT_MESSAGES = 10;
+// 10 条（5 轮）会把第一轮交代的背景挤出视线。20 条覆盖十轮，配合 ongoingTopics 里
+// 长期沉淀的背景事实，跨天重入时不至于失忆。
+const MAX_RECENT_MESSAGES = 20;
 
 function cleanMessage(message) {
   if (!message || !['user', 'assistant'].includes(message.role) || typeof message.text !== 'string') return null;

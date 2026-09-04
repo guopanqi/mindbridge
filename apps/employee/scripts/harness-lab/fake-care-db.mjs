@@ -1,44 +1,16 @@
-// 测试替身：把 seed/activities.sql 读成内存表，只回答 harness/tools.js 实际发出的三种查询。
+// 测试替身：把最终内容 JSON 读成内存表，不依赖旧 prototype seed。
 // 目的是让对话实验不依赖 wrangler / D1；不是通用 SQL 引擎，加新查询要同步扩展这里。
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { validateActivity } from '../activity-content.mjs';
 
-const COLUMNS = ['id', 'title', 'kind', 'form', 'duration', 'description', 'pre_label', 'low_label',
-  'high_label', 'direction', 'score_label', 'schedule', 'location', 'stages_json', 'enabled', 'data_origin'];
-
-function splitValues(raw) {
-  const out = [];
-  let i = 0;
-  while (i < raw.length) {
-    while (raw[i] === ' ' || raw[i] === ',') i++;
-    if (i >= raw.length) break;
-    if (raw[i] === "'") {
-      let value = '';
-      i++;
-      while (i < raw.length) {
-        if (raw[i] === "'" && raw[i + 1] === "'") { value += "'"; i += 2; continue; }
-        if (raw[i] === "'") { i++; break; }
-        value += raw[i++];
-      }
-      out.push(value);
-    } else {
-      let token = '';
-      while (i < raw.length && raw[i] !== ',') token += raw[i++];
-      token = token.trim();
-      out.push(token === 'NULL' ? null : Number(token));
-    }
-  }
-  return out;
-}
-
-export function loadActivities(sqlPath) {
-  const sql = readFileSync(sqlPath, 'utf8');
-  const rows = [];
-  for (const match of sql.matchAll(/INSERT OR REPLACE INTO activities \([^)]*\) VALUES \(([\s\S]*?)\);\n/g)) {
-    const values = splitValues(match[1]);
-    rows.push(Object.fromEntries(COLUMNS.map((name, index) => [name, values[index] ?? null])));
-  }
-  if (!rows.length) throw new Error(`没有从 ${sqlPath} 解析出活动，检查 seed 格式`);
-  return rows;
+export function loadActivities(directory) {
+  return readdirSync(directory).filter(f => f.endsWith('.json')).sort().map(f => {
+    const a = validateActivity(JSON.parse(readFileSync(join(directory, f), 'utf8')));
+    return { id: a.id, title: a.title, kind: a.kind, form: a.form || '文字自助', duration: a.duration || '',
+      description: a.description, level: a.level, enabled: Number(a.available), content_available: Number(a.available),
+      content_version: a.contentVersion, stages_json: JSON.stringify(a.stages) };
+  });
 }
 
 // 记录每次检索，实验里可以直接看到模型的 query 命中了什么。
@@ -50,17 +22,26 @@ export function createFakeCareDb(activities, log = []) {
       return {
         bind(...args) {
           return {
+            first: async () => null, // 实验台不模拟企业HR策略；线上由真实配置决定。
             all: async () => {
               let results;
               if (/id IN \(/.test(sql)) {
                 const byId = new Map(enabled.map((row) => [row.id, row]));
                 results = args.map((id) => byId.get(id)).filter(Boolean);
               } else if (/LIKE \?/.test(sql)) {
-                const needle = String(args[0]).replace(/%/g, '');
+                // tools.js 把 query 拆成多个词，每个词按 title/description/form 各绑一次；
+                // 这里按命中的词数打分排序，与 SQL 里的 score 表达式等价。
                 const limit = Number(args[args.length - 1]) || 2;
+                const terms = [...new Set(args.slice(0, -1).map((item) => String(item).replace(/%/g, '')))];
                 results = enabled
-                  .filter((row) => `${row.title}${row.description}${row.form}`.includes(needle))
-                  .slice(0, limit);
+                  .map((row) => {
+                    const haystack = `${row.title}${row.description}${row.form}`;
+                    return { row, score: terms.filter((term) => term && haystack.includes(term)).length };
+                  })
+                  .filter((item) => item.score > 0)
+                  .sort((a, b) => b.score - a.score || String(a.row.title).localeCompare(b.row.title))
+                  .slice(0, limit)
+                  .map((item) => item.row);
               } else {
                 results = enabled.slice(0, Number(args[args.length - 1]) || 2);
               }

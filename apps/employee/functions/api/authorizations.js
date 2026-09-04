@@ -19,7 +19,7 @@ export async function onRequestGet({ request, env }) {
         caseCode: r.case_code,
         riskLevel: r.risk_level,
         reason: r.reason,
-        status: r.status === 'pending' && r.expires_at < now ? 'expired' : r.status,
+        status: ['pending', 'approved'].includes(r.status) && r.expires_at <= now ? 'expired' : r.status,
         at: r.created_at,
       })),
     });
@@ -34,10 +34,11 @@ export async function onRequestPost({ request, env }) {
     const body = await readJson(request);
     const id = body?.id;
     const approve = body?.approve === true;
+    if (typeof body?.approve !== 'boolean') throw new ApiError('DECISION_REQUIRED', 400, '请选择是否同意');
     if (typeof id !== 'string' || !id) throw new ApiError('REQUEST_ID_REQUIRED', 400, '缺少请求标识');
     const now = Date.now();
     const result = await env.CARE_DB.prepare(
-      "UPDATE context_requests SET status = ?, decided_at = ? WHERE id = ? AND anon_id = ? AND status = 'pending' AND expires_at > ?"
+      "UPDATE context_requests SET status = ?, decided_at = ? WHERE id = ? AND anon_id = ? AND status = 'pending' AND expires_at > ? AND EXISTS (SELECT 1 FROM appointments a WHERE a.id=context_requests.appointment_id AND a.status!='cancelled')"
     ).bind(approve ? 'approved' : 'denied', now, id, anonId, now).run();
     if (!result.meta?.changes) throw new ApiError('REQUEST_NOT_PENDING', 404, '这条请求已经处理过或已过期');
     await env.CARE_DB.batch([

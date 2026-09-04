@@ -1,0 +1,36 @@
+{
+  "id": "breathing",
+  "contentVersion": 2,
+  "title": "三分钟呼吸着陆法",
+  "description": "通过简短的文字练习，给自己一点停留的空间。",
+  "kind": "online",
+  "level": "L1",
+  "available": true,
+  "tags": [
+    "紧张"
+  ],
+  "duration": "3–5 分钟",
+  "scale": {
+    "preLabel": "此刻的紧张程度是多少？",
+    "low": "很低",
+    "high": "很高",
+    "direction": "down"
+  },
+  "stages": [
+    {
+      "type": "prompt",
+      "title": "找到稳定姿势",
+      "hint": "双脚接触地面，让肩膀放松。"
+    },
+    {
+      "type": "prompt",
+      "title": "自然呼吸",
+      "hint": "按舒服的节奏呼吸，无需屏息。若不适，停止练习。"
+    },
+    {
+      "type": "prompt",
+      "title": "留意当下",
+      "hint": "看看身体有没有微小变化，没有变化也没关系。"
+    }
+  ]
+}

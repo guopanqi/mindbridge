@@ -53,7 +53,7 @@ export async function onRequestPost({ request, env }) {
     const riskLevel = ['green', 'yellow', 'red'].includes(body?.riskLevel) ? body.riskLevel : 'yellow';
 
     const open = await env.CARE_DB
-      .prepare("SELECT COUNT(*) AS n FROM appointments WHERE anon_id = ? AND status = 'requested'")
+      .prepare("SELECT COUNT(*) AS n FROM appointments WHERE anon_id = ? AND status IN ('requested','claimed','active')")
       .bind(anonId).first();
     if ((open?.n || 0) >= MAX_OPEN) {
       throw new ApiError('APPOINTMENT_LIMIT', 429, '你已经有待处理的预约了，先等疗愈师联系你。');
@@ -96,10 +96,13 @@ export async function onRequestDelete({ request, env }) {
     const id = new URL(request.url).searchParams.get('id');
     if (!id) throw new ApiError('APPOINTMENT_ID_REQUIRED', 400, '缺少预约标识');
     const now = Date.now();
-    const result = await env.CARE_DB.prepare(
-      "UPDATE appointments SET status = 'cancelled', cancelled_at = ?, updated_at = ? WHERE id = ? AND anon_id = ? AND status = 'requested'"
-    ).bind(now, now, id, anonId).run();
-    if (!result.meta?.changes) throw new ApiError('APPOINTMENT_NOT_FOUND', 404, '这条预约不存在或已经处理过了');
+    const [result] = await env.CARE_DB.batch([
+      env.CARE_DB.prepare(
+        "UPDATE appointments SET status = 'cancelled', share_context=0, cancelled_at = COALESCE(cancelled_at, ?), updated_at = ? WHERE id = ? AND anon_id = ?"
+      ).bind(now, now, id, anonId),
+      env.CARE_DB.prepare("UPDATE context_requests SET status='revoked', decided_at=? WHERE appointment_id=? AND anon_id=? AND status IN ('pending','approved')").bind(now, id, anonId),
+    ]);
+    if (!result.meta?.changes) throw new ApiError('APPOINTMENT_NOT_FOUND', 404, '这条预约不存在');
     return json({ ok: true });
   } catch (error) {
     return handleError(error, 'appointment_cancel_failed');

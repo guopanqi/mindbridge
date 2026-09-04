@@ -1,0 +1,31 @@
+{
+  "id": "writing-practice",
+  "contentVersion": 2,
+  "title": "情绪书写练习",
+  "description": "通过简短的文字练习，给自己一点停留的空间。",
+  "kind": "online",
+  "level": "L1",
+  "available": true,
+  "tags": [
+    "委屈"
+  ],
+  "duration": "3–5 分钟",
+  "scale": {
+    "preLabel": "此刻的委屈程度是多少？",
+    "low": "很低",
+    "high": "很高",
+    "direction": "down"
+  },
+  "stages": [
+    {
+      "type": "input",
+      "title": "写下此刻",
+      "hint": "写下最近让你不容易的一件事，不必通顺。"
+    },
+    {
+      "type": "input",
+      "title": "给自己一句回应",
+      "hint": "如果朋友遇到同样的事，你想对他说什么？"
+    }
+  ]
+}

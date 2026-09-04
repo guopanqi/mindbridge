@@ -1,7 +1,6 @@
 import { api, ApiError } from '../api.js';
 import { BUILD_ID } from '../build-id.js';
-import { openActivity } from './activity.js';
-import { clear, el, openSheet, timeAgo, toast } from '../dom.js';
+import { clear, closeSheet, el, openSheet, timeAgo, toast } from '../dom.js';
 
 export const CONTEXT_LABELS = {
   none: '未选择',
@@ -16,11 +15,25 @@ export const CONTEXT_LABELS = {
 let root;
 let state = { contextTag: 'none' };
 let data = {
-  counts: { messages: 0, posts: 0, checkins: 0, openAppointments: 0 },
-  resources: [], retentionDays: 180,
-  checkin: { moods: [], today: null }, appointments: [], consents: [], authorizations: [],
+  resources: [], retentionDays: 180, appointments: [], consents: [], authorizations: [],
 };
 let onClearChat = async () => {};
+
+// 标签平铺在一级页面，等于把「面临技术焦虑/转型」这类身份常驻在屏幕上，
+// 每次进来提醒一遍自己被归了哪一类，还可能被旁边的人瞥见。
+// 只显示当前值，选择放进弹层。
+function contextRow(reload) {
+  return el('div', { class: 'context-row' }, [
+    el('span', { class: 'context-pill', text: CONTEXT_LABELS[state.contextTag] || '未选择' }),
+    el('button', {
+      class: 'link', text: '修改', attrs: { type: 'button' },
+      on: { click: () => openSheet('选择你的处境', [
+        el('p', { class: 'panel-sub', text: '可选。它只影响回应里的上下文理解，不改变情绪识别与预警规则。' }),
+        contextPicker(reload),
+      ]) },
+    }),
+  ]);
+}
 
 function contextPicker(reload) {
   return el('div', { class: 'chip-row' }, Object.entries(CONTEXT_LABELS).map(([tag, label]) => el('button', {
@@ -32,6 +45,7 @@ function contextPicker(reload) {
         try {
           await api.setContext(tag);
           state.contextTag = tag;
+          closeSheet();
           reload();
           toast('已更新。这只影响回应的措辞，不会改变风险判定。');
         } catch {
@@ -76,33 +90,11 @@ function authorizationPanel(reload) {
   ]);
 }
 
-function checkinPanel(reload) {
-  const today = data.checkin.today;
-  return el('section', { class: 'panel' }, [
-    el('h2', { text: '今天怎么样' }),
-    el('p', { class: 'panel-sub', text: today ? `今天已打卡：${today.mood}。可以改。` : '一天一次，只记录心情本身，不记录原因。' }),
-    el('div', { class: 'chip-row' }, (data.checkin.moods || []).map((mood) => el('button', {
-      class: `chip${today?.mood === mood ? ' on' : ''}`,
-      text: mood,
-      attrs: { type: 'button', 'aria-pressed': today?.mood === mood },
-      on: {
-        click: async () => {
-          try {
-            await api.submitCheckin(mood);
-            toast('记下了。');
-            reload();
-          } catch {
-            toast('打卡没有成功，请稍后再试。');
-          }
-        },
-      },
-    }))),
-  ]);
-}
-
 const STATUS_LABEL = {
   requested: '已提交 · 等待疗愈师接单',
   claimed: '疗愈师已接单',
+  active: '疗愈师正在跟进',
+  done: '已闭环',
   closed: '已结束',
   cancelled: '已取消',
 };
@@ -118,11 +110,11 @@ function appointmentPanel(reload) {
           el('span', { class: 'apt-status', text: STATUS_LABEL[item.status] || item.status }),
         ]),
         el('span', { class: 'res-meta', text: timeAgo(item.at) }),
-        item.status === 'requested' ? el('button', {
+        item.status !== 'cancelled' ? el('button', {
           class: 'link danger', text: '取消', attrs: { type: 'button' },
           on: {
             click: async () => {
-              if (!window.confirm('取消这条预约？')) return;
+              if (!window.confirm('撤销这条预约及相关上下文访问权限？已完成的服务和已查看的内容无法收回。')) return;
               try { await api.cancelAppointment(item.id); reload(); } catch { toast('取消没有成功。'); }
             },
           },
@@ -171,54 +163,10 @@ function consentPanel(reload) {
   ]);
 }
 
-// 线下活动报名后到参加之间是「已报名」，线上活动是「进行中」，两者含义不同。
-const stateLabel = (item) => ({
-  offered: '待尝试',
-  joined: item.kind === 'offline' ? '已报名' : '进行中',
-  completed: '已完成',
-  declined: '不适合我',
-}[item.state] || item.state);
-
-// 员工的反馈是「活动效果」看板唯一的真实数据来源；HR 只看聚合，看不到是谁给的分。
-function resourceActions(item, reload) {
-  const mark = async (state, rating) => {
-    try {
-      await api.resourceFeedback(item.id, state, rating);
-      toast(rating ? '谢谢你的反馈。' : '已更新。');
-      reload();
-    } catch {
-      toast('没有保存成功，请稍后再试。');
-    }
-  };
-  const openLabel = {
-    offered: item.kind === 'offline' ? '报名' : '开始',
-    joined: item.kind === 'offline' ? '去评价' : '继续',
-    completed: '再做一次',
-    declined: '再看看',
-  };
-  const stateRow = el('div', { class: 'res-actions' }, [
-    el('span', { class: 'res-state', text: stateLabel(item) }),
-    el('button', {
-      class: 'link', text: openLabel[item.state] || '打开', attrs: { type: 'button' },
-      on: { click: () => void openActivity(item.id, reload) },
-    }),
-    item.state === 'offered' ? el('button', {
-      class: 'link mut', text: '不适合我', attrs: { type: 'button' }, on: { click: () => void mark('declined') },
-    }) : null,
-  ]);
-  if (!item.rating) return stateRow;
-  // 已经评过分的直接展示结果，重新评分在活动流程里做。
-  const stars = el('div', { class: 'res-stars' }, [1, 2, 3, 4, 5].map((n) => el('span', {
-    class: `star${item.rating >= n ? ' on' : ''}`, text: '★',
-  })));
-  return el('div', {}, [stateRow, stars]);
-}
-
 function privacyNodes() {
   return [
     el('p', { text: '记录了什么：你在树洞里说的话、你在广场发布的内容，以及被推荐过哪些资源。原文以加密方式保存。' }),
     el('p', { text: '谁能看到：疗愈师只有在你同意后才会收到必要上下文；HR 只能看到部门层面的聚合趋势，看不到任何一条原文。' }),
-    el('p', { text: '保留多久：倾诉原文默认保留 180 天，你也可以随时在「我的」里一键清空。' }),
     el('p', { text: '你的钉钉姓名和工号没有进入这套业务系统，它们只在登录那一刻被用于确认你属于本企业。' }),
     el('p', { class: 'build-id', text: `版本 ${BUILD_ID}` }),
   ];
@@ -232,13 +180,12 @@ export function renderMe(container, options = {}) {
 export async function loadMe() {
   const reload = () => void loadMe();
   try {
-    const [me, history, checkin, appointments, consents, authorizations] = await Promise.all([
-      api.me(), api.history(), api.checkin(), api.appointments(), api.consents(), api.authorizations(),
+    const [me, history, appointments, consents, authorizations] = await Promise.all([
+      api.me(), api.history(), api.appointments(), api.consents(), api.authorizations(),
     ]);
     state.contextTag = me.contextTag;
     data = {
       ...history,
-      checkin: { moods: checkin.moods, today: checkin.today },
       appointments: appointments.appointments,
       consents: consents.consents,
       authorizations: authorizations.requests,
@@ -251,37 +198,15 @@ export async function loadMe() {
   // append(null) 会插入字面量 "null" 文本节点，这里必须过滤。
   clear(root).append(...[
     authorizationPanel(reload),
-    checkinPanel(reload),
     el('section', { class: 'panel' }, [
       el('h2', { text: '我的处境标签' }),
-      el('p', { class: 'panel-sub', text: '可选。它只影响回应里的上下文理解，不改变情绪识别与预警规则。' }),
-      contextPicker(reload),
-    ]),
-    el('section', { class: 'panel' }, [
-      el('h2', { text: '我的记录' }),
-      el('div', { class: 'stat-row' }, [
-        el('div', { class: 'stat' }, [el('b', { text: String(body.counts.messages) }), el('span', { text: '条倾诉' })]),
-        el('div', { class: 'stat' }, [el('b', { text: String(body.counts.posts) }), el('span', { text: '条广场发布' })]),
-        el('div', { class: 'stat' }, [el('b', { text: String(body.counts.checkins) }), el('span', { text: '次打卡' })]),
-        el('div', { class: 'stat' }, [el('b', { text: String(body.retentionDays) }), el('span', { text: '天后过期' })]),
-      ]),
+      contextRow(reload),
     ]),
     appointmentPanel(reload),
     consentPanel(reload),
     el('section', { class: 'panel' }, [
-      el('h2', { text: '收到过的支持资源' }),
-      body.resources.length
-        ? el('ul', { class: 'res-list' }, body.resources.map((item) => el('li', { class: 'res-item' }, [
-          el('div', { class: 'res-row' }, [
-            el('span', { class: 'res-name', text: item.name }),
-            el('span', { class: 'res-meta', text: `${item.level === 'L2' ? '进一步支持' : '自助资源'} · ${timeAgo(item.at)}` }),
-          ]),
-          resourceActions(item, reload),
-        ])))
-        : el('p', { class: 'empty', text: '还没有推荐记录。' }),
-    ]),
-    el('section', { class: 'panel' }, [
-      el('h2', { text: '我的控制权' }),
+      el('h2', { text: '你的数据' }),
+      el('p', { class: 'panel-sub', text: `倾诉原文默认保留 ${body.retentionDays} 天，到期自动删除。你也可以随时在这里全部清空。` }),
       el('button', {
         class: 'secondary', text: '清空我的倾诉记录', attrs: { type: 'button' },
         on: {

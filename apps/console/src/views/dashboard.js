@@ -3,10 +3,13 @@ import { clear, el, toast } from '../dom.js';
 
 let root;
 let days = 90;
+let dataOrigin = 'live';
 let currentPane = 'dash';
 let cachedData = null;
 
 const SUPPRESSED_TEXT = (min) => `样本不足 ${min} 人，不予展示`;
+const numberText = (value, suffix = '') => value === null || value === undefined ? '不予展示' : `${value}${suffix}`;
+const originNote = (data) => data.origin === 'demo_seed' ? '当前为模拟基线，不代表真实员工使用；不与真实事件混合计算。' : '当前仅统计真实事件；小于 10 人或无法验证独立样本量的指标不予展示。';
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 // 8 行业 Benchmark 常模库（取自 Demo）
@@ -85,7 +88,7 @@ function originCard(title, summary, note) {
     el('h3', { text: title }),
     el('p', { class: 'origin-note', text: note }),
     el('dl', {}, [
-      el('div', {}, [el('dt', { text: '事件总数' }), el('dd', { text: String(summary.eventCount) })]),
+      el('div', {}, [el('dt', { text: '事件总数' }), el('dd', { text: summary.eventCount === null ? '隐私遮蔽 · 独立样本量未验证' : String(summary.eventCount) })]),
       el('div', {}, [
         el('dt', { text: '活跃人数' }),
         el('dd', { text: summary.activeUsers.suppressed ? '不予展示' : String(summary.activeUsers.value) }),
@@ -95,7 +98,7 @@ function originCard(title, summary, note) {
         el('dd', {
           text: summary.riskBands.suppressed
             ? '不予展示'
-            : `黄 ${summary.riskBands.yellow} · 红 ${summary.riskBands.red}`,
+            : `黄 ${numberText(summary.riskBands.yellow)} · 红 ${numberText(summary.riskBands.red)}`,
         }),
       ]),
     ]),
@@ -111,24 +114,26 @@ function renderDashPane(data) {
   return el('div', { class: 'inner' }, [
     el('div', { class: 'demo-banner' }, [
       el('b', { text: '⚠ 演示数据说明：' }),
-      el('span', { text: '本页以预置样本为基线，并叠加当前 Demo 产生的活动事件；不代表真实组织数据。真实部署中，不足 10 人的结果不予展示。' }),
+      el('span', { text: originNote(data) }),
     ]),
     el('div', { class: 'kpis' }, [
-      kpi(`${data.coverage.rate}<small>%</small>`, '员工覆盖率', data.coverage.delta ? `较上月 ${data.coverage.delta}` : '暂无环比'),
+      kpi(numberText(data.coverage.rate, '%'), '员工覆盖率', data.coverage.delta ? `较上月 ${data.coverage.delta} · 说过话的人` : '说过话的人占全员'),
       kpi(
         data.temperature?.value === null || data.temperature?.value === undefined
           ? '<span class="na">样本不足</span>'
           : `${data.temperature.value}<small>/10</small>`,
         '全员情绪温度',
-        data.temperature?.delta ? `较上周 ${data.temperature.delta}` : '暂无环比',
+        // 口径已从每日心情打卡改为对话的绿/黄/红构成，这里必须写清楚，
+        // 否则同一个数字在两套口径之间被当成可比的趋势。
+        data.temperature?.delta ? `较上周 ${data.temperature.delta} · 按对话分级` : '按对话绿黄红构成',
       ),
-      kpi(`${data.risk.greenShare}<small>%</small>`, '绿色 · 日常占比', '多为轻量情绪'),
+      kpi(numberText(data.risk.greenShare, '%'), '绿色 · 日常占比', '多为轻量情绪'),
       kpi(
         data.risk.redOnTimeRate === null || data.risk.redOnTimeRate === undefined
-          ? '<span class="na">暂无个案</span>'
+          ? '<span class="na">不予展示</span>'
           : `${data.risk.redOnTimeRate}<small>%</small>`,
         '红色个案 SLA 内响应率',
-        data.risk.redBreached
+        data.risk.redCases === null ? '样本不足或口径未验证' : data.risk.redBreached
           ? `${data.risk.redBreached} 例超时`
           : `${data.risk.redCases} 例建案中，无超时`,
       ),
@@ -154,26 +159,26 @@ function renderDashPane(data) {
         el('h4', {}, [el('span', { text: '情绪分布 · 本周' }), el('span', { class: 'src', text: '来源：私密通道' })]),
         el('div', { class: 'cs', text: '聚合后的风险等级 —— 回答「人怎么样了」' }),
         el('div', { class: 'dl' }, [
-          el('div', { class: 'dr' }, [el('span', { class: 'sq', style: 'background:#2d8a5e' }), el('span', { text: '绿色 · 日常' }), el('span', { class: 'dv', text: `${data.risk.greenShare}%` })]),
-          el('div', { class: 'dr' }, [el('span', { class: 'sq', style: 'background:#c07a2c' }), el('span', { text: '黄色 · 需关注' }), el('span', { class: 'dv', text: `${data.risk.yellowPeople}` })]),
-          el('div', { class: 'dr' }, [el('span', { class: 'sq', style: 'background:#c9503a' }), el('span', { text: '红色 · 已转疗愈师' }), el('span', { class: 'dv', text: `${data.risk.redPeople}` })]),
+          el('div', { class: 'dr' }, [el('span', { class: 'sq', style: 'background:#2d8a5e' }), el('span', { text: '绿色 · 日常' }), el('span', { class: 'dv', text: numberText(data.risk.greenShare, '%') })]),
+          el('div', { class: 'dr' }, [el('span', { class: 'sq', style: 'background:#c07a2c' }), el('span', { text: '黄色 · 需关注' }), el('span', { class: 'dv', text: numberText(data.risk.yellowPeople) })]),
+          el('div', { class: 'dr' }, [el('span', { class: 'sq', style: 'background:#c9503a' }), el('span', { text: '红色 · 需专业支持' }), el('span', { class: 'dv', text: numberText(data.risk.redPeople) })]),
         ]),
         // 红色信号不等于个案：必须员工本人同意才会建案并转给疗愈师。
         // 把这个漏斗写清楚，否则「信号 9 次、个案 5 例」看起来像漏接了 4 次。
         el('div', { class: 'redbox' }, [
           el('div', { class: 'funnel' }, [
             el('div', { class: 'fn' }, [
-              el('b', { text: String(data.risk.redCount ?? 0) }),
+              el('b', { text: numberText(data.risk.redCount) }),
               el('span', { text: '次红色信号' }),
             ]),
             el('span', { class: 'fn-arrow', text: '→' }),
             el('div', { class: 'fn' }, [
-              el('b', { text: String(data.risk.redCases ?? 0) }),
+              el('b', { text: numberText(data.risk.redCases) }),
               el('span', { text: '例员工同意建案' }),
             ]),
             el('span', { class: 'fn-arrow', text: '→' }),
             el('div', { class: 'fn' }, [
-              el('b', { text: `${data.risk.redHandledRate ?? 0}%` }),
+              el('b', { text: numberText(data.risk.redHandledRate, '%') }),
               el('span', { text: '已被疗愈师接管' }),
             ]),
           ]),
@@ -231,7 +236,8 @@ function renderDashPane(data) {
       el('div', { class: 'rhynote', html: '<b>本系统未申请「会话内容存档」权限。</b> 消息条数、@次数、夜间消息占比这类数据，我们拿不到，也不打算拿。<br>以上指标按 ≥10 人聚合，不落个人档案，不与绩效、晋升、续聘挂钩。' }),
     ]),
     el('div', { class: 'cardC' }, [
-      el('h4', { text: '压力指数趋势' }),
+      el('h4', { text: '情绪温度趋势' }),
+      el('div', { class: 'cs', text: '每日对话中绿色的占比越高，温度越高。10 分表示当天全部对话都是绿色。心情打卡入口已下线，这条曲线不再依赖员工额外填写。' }),
       trendChart(data.moodTrend, min),
     ]),
     el('div', { class: 'cardC' }, [
@@ -239,7 +245,7 @@ function renderDashPane(data) {
       el('div', { class: 'cs', text: '模拟基线与真实事件分别统计，可分别清理。真实事件样本不足时同样受阈值保护，这不是故障。' }),
       el('div', { class: 'origin-grid' }, [
         originCard('模拟基线', data.origins.demo_seed, '预置演示数据，用于呈现 200 人规模下的形态'),
-        originCard('本次真实事件', data.origins.live, '现场真实钉钉员工产生，已并入上方聚合'),
+        originCard('真实数据', data.origins.live, '与模拟基线分开统计；无法验证独立样本量的事件计数不展示'),
       ]),
     ]),
     el('div', { class: 'blind' }, [
@@ -270,16 +276,17 @@ function renderActivitiesPane(data) {
   return el('div', { class: 'inner' }, [
     el('div', { class: 'demo-banner' }, [
       el('b', { text: '数据说明：' }),
-      el('span', { text: '本页数值来自真实聚合（模拟基线人群 + 现场真实事件）。满意度只统计员工主动提交的评分。样本不足的行不予展示。跨行业对照见「行业洞察」页。' }),
+      el('span', { text: originNote(data) }),
     ]),
     el('div', { class: 'kpis' }, [
-      kpi(ov.participationRate === undefined ? '<span class="na">样本不足</span>' : `${ov.participationRate}<small>%</small>`,
+      kpi(ov.participationRate == null ? '<span class="na">样本不足</span>' : `${ov.participationRate}<small>%</small>`,
         '综合参与率', '已参与 ÷ 已推荐'),
-      kpi(ov.completionRate === undefined ? '<span class="na">样本不足</span>' : `${ov.completionRate}<small>%</small>`,
+      kpi(ov.completionRate == null ? '<span class="na">样本不足</span>' : `${ov.completionRate}<small>%</small>`,
         '综合完成率', '已完成 ÷ 已参与'),
-      kpi(overall.avgRating === null || overall.avgRating === undefined ? '<span class="na">反馈不足</span>' : `${overall.avgRating}<small>/5</small>`,
-        '综合满意度', `需至少 ${data.minSample} 份反馈`),
-      kpi(`${overall.feedbackCount ?? 0}<small>份</small>`, '有效反馈', '员工主动提交的评分'),
+      kpi(ov.repeatRate == null ? '<span class="na">样本不足</span>' : `${ov.repeatRate}<small>%</small>`,
+        '复用率', '完成过的人里再做一次的比例'),
+      kpi(overall.helpfulRate === null || overall.helpfulRate === undefined ? '<span class="na">反馈不足</span>' : `${overall.helpfulRate}<small>%</small>`,
+        '说有帮助的比例', overall.feedbackRate == null ? `需至少 ${data.minSample} 份评价` : `评价率 ${overall.feedbackRate}%`),
     ]),
 
     el('div', { class: 'cardC' }, [
@@ -288,30 +295,31 @@ function renderActivitiesPane(data) {
       el('table', {}, [
         el('thead', {}, [el('tr', {}, [
           el('th', { text: '身份标签' }), el('th', { text: '推荐次数' }), el('th', { text: '参与率' }),
-          el('th', { text: '完成率' }), el('th', { text: '满意度' }),
+          el('th', { text: '完成率' }), el('th', { text: '有帮助占比' }), el('th', { text: '评价率' }),
         ])]),
         el('tbody', {}, (data.activityByAudience || []).map((row) => (row.suppressed
           ? el('tr', { class: 'masked' }, [
             el('td', { text: row.label }),
-            el('td', { attrs: { colspan: 4 }, text: `有效样本少于 ${data.minSample} 人 · 按隐私规则不予展示` }),
+            el('td', { attrs: { colspan: 5 }, text: `有效样本少于 ${data.minSample} 人 · 按隐私规则不予展示` }),
           ])
           : el('tr', {}, [
             el('td', { text: row.label }),
             metricCell(row, 'recommended'),
             metricCell(row, 'participationRate', '%'),
             metricCell(row, 'completionRate', '%'),
-            metricCell(row, 'avgRating'),
+            metricCell(row, 'helpfulRate', '%'),
+            metricCell(row, 'feedbackRate', '%'),
           ])))),
       ]),
     ]),
     el('div', { class: 'cardC' }, [
       el('h4', {}, [el('span', { text: '单项活动表现' }), el('span', { class: 'src', text: '按推荐次数排序' })]),
-      el('div', { class: 'cs', text: '「自评改善」是员工在活动开始前与结束后各自评一次的差值，已按方向归一：正数表示变好。至少 3 份前后自评才出数。' }),
+      el('div', { class: 'cs', text: '这里没有「效果」指标：活动不再做前后自评，能报告的只有参与、完成和员工主动给出的评价。「有帮助占比」只统计填了评价的人，所以必须连同「评价率」一起看——评价率低时，占比不能代表全体。' }),
       el('table', {}, [
         el('thead', {}, [el('tr', {}, [
           el('th', { text: '活动' }), el('th', { text: '层级' }), el('th', { text: '推荐次数' }),
-          el('th', { text: '参与率' }), el('th', { text: '完成率' }), el('th', { text: '满意度' }),
-          el('th', { text: '自评改善' }),
+          el('th', { text: '参与率' }), el('th', { text: '完成率' }),
+          el('th', { text: '有帮助占比' }), el('th', { text: '评价率' }),
         ])]),
         el('tbody', {}, (data.activityPerformance || []).map((row) => (row.suppressed
           ? el('tr', { class: 'masked' }, [
@@ -325,18 +333,8 @@ function renderActivitiesPane(data) {
             metricCell(row, 'recommended'),
             metricCell(row, 'participationRate', '%'),
             metricCell(row, 'completionRate', '%'),
-            metricCell(row, 'avgRating'),
-            (() => {
-              // 改善幅度已由接口按方向归一，正数即变好。
-              const v = row.value || {};
-              if (v.improvement === null || v.improvement === undefined) {
-                return el('td', { class: 'mut', text: '样本不足' });
-              }
-              return el('td', {}, [
-                el('span', { class: `pill ${v.improvement > 0 ? 'g' : 'y'}`, text: `${v.improvement > 0 ? '+' : ''}${v.improvement}` }),
-                el('span', { class: 'eff-note', text: `${v.scoreLabel || '自评'} · ${v.effectSamples} 份` }),
-              ]);
-            })(),
+            metricCell(row, 'helpfulRate', '%'),
+            metricCell(row, 'feedbackRate', '%'),
           ])))),
       ]),
     ]),
@@ -414,12 +412,8 @@ function renderIndustryPane(data) {
               el('td', { class: 'mono', text: own?.completionRate === null || own?.completionRate === undefined ? '—' : `${own.completionRate}%` }),
               cmp(ov.completionRate, own?.completionRate),
             ]),
-            industryRow([
-              el('td', { text: '活动满意度' }),
-              el('td', { class: 'mono', text: data.activityOverall?.avgRating ? `${data.activityOverall.avgRating} / 5` : '—' }),
-              el('td', { class: 'mono', text: own?.avgRating ? `${own.avgRating} / 5` : '—' }),
-              cmp(data.activityOverall?.avgRating, own?.avgRating, ''),
-            ]),
+            // 「活动满意度」这一行已移除：本企业改用「说有帮助的比例」，
+            // 行业基准池仍是旧的 5 分制，两者不是同一个量，并排显示会得出错误结论。
           ]),
         ]),
         el('div', { class: 'privacy-rule', text: `行业基准需至少 ${ind.thresholds.minCompanies} 家企业且合计 ${ind.thresholds.minEmployees} 人以上才形成；企业无法查看其他企业名称或单家明细。本企业数据以去标识化形式进入统计池。` }),
@@ -486,9 +480,10 @@ function renderIndustryPane(data) {
 
 function levelSelect(catalog, level, current, onChange) {
   const select = el('select', { class: 'cfg-select' });
+  select.append(el('option', { text: '未指定 · 按活动检索', attrs: { value: '' } }));
   for (const item of catalog.filter((c) => c.level === level)) {
-    const option = el('option', { text: `${item.icon || ''} ${item.name}`.trim(), attrs: { value: item.name } });
-    if (item.name === current) option.selected = true;
+    const option = el('option', { text: `${item.icon || ''} ${item.name}`.trim(), attrs: { value: item.activityId } });
+    if (item.activityId === current) option.selected = true;
     select.append(option);
   }
   select.addEventListener('change', () => onChange(select.value));
@@ -525,8 +520,19 @@ function renderCfgPane() {
     clear(container);
     container.append(
       el('div', { class: 'cardC' }, [
+        el('h4', { text: '活动库启停' }),
+        el('p', { class: 'cs', text: '内容由版本化文件维护；这里控制是否向员工开放新的参与。已开始的活动保留原版本。' }),
+        ...(config.activityCatalog || []).map(item => {
+          const box = el('input', { attrs: { type: 'checkbox', 'aria-label': item.title } });
+          box.checked = item.enabled === 1;
+          box.disabled = item.content_available !== 1;
+          box.addEventListener('change', () => void save({ kind: 'activity', activityId: item.id, enabled: box.checked }, '活动开放状态已保存'));
+          return el('label', { class: 'cs' }, [box, el('span', { text: `${item.title}${item.content_available !== 1 ? '（内容未发布）' : ''}` })]);
+        }),
+      ]),
+      el('div', { class: 'cardC' }, [
         el('h4', { text: '干预内容矩阵' }),
-        el('div', { class: 'cs', text: `这是生效中的配置，不是示意图。改动保存后，员工端下一次触发该情绪信号时拿到的就是新资源。命中次数为最近 ${config.windowDays} 天的真实统计。` }),
+        el('div', { class: 'cs', text: '当用户请求推荐时，按情绪优先检索已配置活动；停用会阻止对应情绪的普通推荐。命中数未具备可验证的独立样本量，暂不展示。' }),
         el('div', { class: 'mx-wrap' }, [
           el('table', { class: 'mx' }, [
             el('thead', {}, [el('tr', {}, [
@@ -539,13 +545,13 @@ function renderCfgPane() {
             ])]),
             el('tbody', {}, config.matrix.map((row) => el('tr', { class: row.enabled ? '' : 'row-off' }, [
               el('td', { text: `${row.icon} ${row.emotion}` }),
-              el('td', { class: 'mono', text: String(row.hits) }),
-              el('td', {}, [levelSelect(config.catalog, 'L1', row.l1.name, (value) => save(
-                { kind: 'matrix', emotion: row.emotion, l1Name: value },
+              el('td', { class: 'mono', text: row.hits === null ? '隐私遮蔽' : String(row.hits) }),
+              el('td', {}, [levelSelect(config.catalog, 'L1', row.l1.activityId, (value) => save(
+                { kind: 'matrix', emotion: row.emotion, l1ActivityId: value },
                 `「${row.emotion}」的一级资源已改为「${value}」`,
               ))]),
-              el('td', {}, [levelSelect(config.catalog, 'L2', row.l2.name, (value) => save(
-                { kind: 'matrix', emotion: row.emotion, l2Name: value },
+              el('td', {}, [levelSelect(config.catalog, 'L2', row.l2.activityId, (value) => save(
+                { kind: 'matrix', emotion: row.emotion, l2ActivityId: value },
                 `「${row.emotion}」的二级资源已改为「${value}」`,
               ))]),
               el('td', { class: 'mut', text: row.l3 }),
@@ -742,6 +748,14 @@ function switchPane(pane) {
   const container = root.querySelector('.pane-container');
   if (!container || !cachedData) return;
   clear(container);
+  const source = el('select', { attrs: { 'aria-label': '数据来源' } });
+  for (const [value, label] of [['live', '真实数据（小样本遮蔽）'], ['demo_seed', '模拟基线（非真实使用）']]) {
+    const option = el('option', { text: label, attrs: { value } });
+    option.selected = value === dataOrigin;
+    source.append(option);
+  }
+  source.addEventListener('change', () => { dataOrigin = source.value; void loadDashboard(); });
+  container.append(source);
   if (pane === 'dash') container.append(renderDashPane(cachedData));
   if (pane === 'activities') container.append(renderActivitiesPane(cachedData));
   if (pane === 'industry') container.append(renderIndustryPane(cachedData));
@@ -751,7 +765,7 @@ function switchPane(pane) {
 
 export async function loadDashboard() {
   try {
-    cachedData = await api.metrics(days);
+    cachedData = await api.metrics(days, dataOrigin);
   } catch (error) {
     clear(root).append(el('p', { class: 'empty', text: error.userMessage || '数据暂时取不到。' }));
     return null;

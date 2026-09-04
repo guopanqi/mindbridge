@@ -1,0 +1,26 @@
+[
+  {
+    "name": "三分钟呼吸着陆法",
+    "activityId": "breathing"
+  },
+  {
+    "name": "情绪书写练习",
+    "activityId": "writing-practice"
+  },
+  {
+    "name": "每日三件好事打卡",
+    "activityId": "gratitude-checkin"
+  },
+  {
+    "name": "职业价值锚点练习",
+    "activityId": "value-anchor"
+  },
+  {
+    "name": "工间身体扫描文字练习",
+    "activityId": "bodyscan-text"
+  },
+  {
+    "name": "返岗节奏重建练习",
+    "activityId": "return-rhythm"
+  }
+]

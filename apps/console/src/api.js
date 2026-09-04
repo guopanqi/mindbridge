@@ -42,7 +42,7 @@ export const api = {
     body: JSON.stringify({ key }),
   }),
   signOut: () => request('/api/session', { method: 'DELETE' }),
-  metrics: (days) => request(`/api/metrics?days=${encodeURIComponent(days)}`),
+  metrics: (days, origin = 'live') => request(`/api/metrics?days=${encodeURIComponent(days)}&origin=${encodeURIComponent(origin)}`),
   config: () => request('/api/config'),
   industry: () => request('/api/industry'),
   saveConfig: (payload) => request('/api/config', {

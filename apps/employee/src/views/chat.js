@@ -2,11 +2,11 @@ import { api, ApiError } from '../api.js';
 import { $, clear, el, toast } from '../dom.js';
 import { openActivity } from './activity.js';
 
-const PRESETS = ['最近一直睡不好', '感觉自己撑不住了', '在这里说话安全吗？', '就是想有个人听听'];
-
 let stream;
 let input;
+let sendBtn;
 let sending = false;
+let lastSendTime = 0;
 
 function bubble(message) {
   if (message.role === 'resource') return resourceCard(message.card);
@@ -93,11 +93,19 @@ function append(messages) {
 }
 
 async function send(text) {
-  if (sending || !text.trim()) return;
+  if (sending) {
+    toast('上一条还在回复中，请稍等一下…');
+    return;
+  }
+  if (!text || !text.trim()) return;
   sending = true;
+  if (sendBtn) sendBtn.disabled = true;
   input.value = '';
   append([{ role: 'user', text: text.trim() }]);
-  const typing = el('div', { class: 'bubble bot typing' }, [el('span', { text: '正在听…' })]);
+  // 双轮调用可能要 4 秒。静态文字在手机上会被当成卡死，给一个呼吸态。
+  const typing = el('div', { class: 'bubble bot typing' }, [
+    el('span', { text: '正在听' }), el('i'), el('i'), el('i'),
+  ]);
   stream.append(typing);
   stream.scrollTop = stream.scrollHeight;
   try {
@@ -122,6 +130,7 @@ async function send(text) {
     toast(message);
   } finally {
     sending = false;
+    if (sendBtn) sendBtn.disabled = false;
   }
 }
 
@@ -129,24 +138,50 @@ export function renderChat(root) {
   clear(root);
   stream = el('div', { class: 'stream' });
   input = el('textarea', { attrs: { rows: 1, placeholder: '说点心里话…', 'aria-label': '倾诉内容' } });
+
+  const triggerSend = (event) => {
+    if (event) event.preventDefault();
+    const now = Date.now();
+    if (now - lastSendTime < 300) return;
+    lastSendTime = now;
+    void send(input.value);
+  };
+
   input.addEventListener('keydown', (event) => {
     if (event.key === 'Enter' && !event.shiftKey) {
+      if (event.isComposing) return;
       event.preventDefault();
-      void send(input.value);
+      triggerSend(event);
     }
   });
 
+  sendBtn = el('button', {
+    class: 'primary send',
+    text: '发送',
+    attrs: { type: 'button' },
+  });
+
+  // 关键：阻止 pointerdown / mousedown 导致输入框失焦 (blur) 和虚拟键盘收起。
+  // 在移动端/钉钉 WebView 中，若输入框失焦收起键盘，页面高度剧烈重排会导致触控坐标偏移，
+  // 浏览器的 click 事件被取消，造成“必须点第二次才能发送”的问题。
+  sendBtn.addEventListener('pointerdown', (event) => {
+    event.preventDefault();
+  });
+  sendBtn.addEventListener('mousedown', (event) => {
+    event.preventDefault();
+  });
+  sendBtn.addEventListener('touchend', (event) => {
+    triggerSend(event);
+  });
+  sendBtn.addEventListener('click', (event) => {
+    triggerSend(event);
+  });
+
   root.append(
-    el('div', { class: 'privacy-note' }, [
-      el('span', { text: '这里只有一个匿名编号。原文加密保存，HR 只能看到部门层面的整体趋势。' }),
-    ]),
     stream,
-    el('div', { class: 'presets' }, PRESETS.map((text) => el('button', {
-      class: 'preset', text, attrs: { type: 'button' }, on: { click: () => void send(text) },
-    }))),
     el('div', { class: 'composer' }, [
       input,
-      el('button', { class: 'primary send', text: '发送', attrs: { type: 'button' }, on: { click: () => void send(input.value) } }),
+      sendBtn,
     ]),
   );
 }

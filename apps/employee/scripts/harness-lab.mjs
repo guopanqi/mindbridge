@@ -37,7 +37,7 @@ function loadEnv() {
 
 function createLab(env, overrides = {}) {
   const toolLog = [];
-  const activities = loadActivities(join(ROOT, 'seed/activities.sql'));
+  const activities = loadActivities(join(ROOT, 'content/activities'));
   return {
     env: { ...env, ...overrides, CARE_DB: createFakeCareDb(activities, toolLog) },
     gateway: createModelGateway({ ...env, ...overrides }),
@@ -157,14 +157,25 @@ function printTurn(text, outcome, { verbose = false } = {}) {
 }
 
 // ---- 断言 ----------------------------------------------------------------
+// 断言失败时要报出可读的实际值。布尔型断言直接说"false"没有信息量，
+// 这里给它们各自补一个真正有用的观测量。
+const ACTUALS = {
+  replyMaxChars: (o) => `${o.run.decision.reply.text.length} 字`,
+  tool: (o) => (o.tools.length ? `调用了 ${o.tools.length} 次` : '未调用'),
+  replyMatch: (o) => JSON.stringify(o.run.decision.reply.text.slice(0, 40)),
+  replyNotMatch: (o) => JSON.stringify(o.run.decision.reply.text.slice(0, 40)),
+  activity: (o) => o.run.activity?.id ?? 'null',
+};
+
 const CHECKS = {
   level: (o, want) => [o.run.nextState.supportLevel, want],
   assessedLevel: (o, want) => [o.run.decision.supportAssessment.level, want],
   safetyStatus: (o, want) => [o.run.decision.supportAssessment.safetyStatus, want],
   safetyCheck: (o, want) => [o.run.nextState.safetyCheck, want],
   emotion: (o, want) => [o.run.nextState.emotion, want],
-  activity: (o, want) => [o.run.activity?.id ?? null, want],
+  activity: (o, want) => (want === '*' ? [Boolean(o.run.activity), true] : [o.run.activity?.id ?? null, want]),
   tool: (o, want) => [o.tools.length > 0, want],
+  replyMaxChars: (o, want) => [o.run.decision.reply.text.length <= want, true],
   replyMatch: (o, want) => [new RegExp(want).test(o.run.decision.reply.text), true],
   replyNotMatch: (o, want) => [new RegExp(want).test(o.run.decision.reply.text), false],
 };
@@ -177,9 +188,10 @@ function checkTurn(outcome, expect) {
     if (!CHECKS[key]) { failures.push(`未知断言 ${key}`); continue; }
     // 数组 = 任意一个满足即可，用于表达"blue 或 yellow 都能接受"这类合理区间。
     const options = Array.isArray(want) ? want : [want];
-    const [actual] = CHECKS[key](outcome, options[0]);
+    const [raw] = CHECKS[key](outcome, options[0]);
+    const actual = ACTUALS[key] ? ACTUALS[key](outcome) : raw;
     if (!options.some((option) => { const [got, target] = CHECKS[key](outcome, option); return got === target; })) {
-      failures.push(`${key}: 期望 ${JSON.stringify(want)}，实际 ${JSON.stringify(actual)}`);
+      failures.push(`${key}: 期望 ${JSON.stringify(want)}，实际 ${typeof actual === 'string' ? actual : JSON.stringify(actual)}`);
     }
   }
   return failures;
@@ -463,7 +475,8 @@ const HELP = `对话 Harness 实验台 —— 直接驱动真实模型跑 Harnes
        { "say": "...", "expect": { "level": "red", "activity": null } }
      ]}]
 
-  断言键：level assessedLevel safetyStatus safetyCheck emotion activity tool replyMatch replyNotMatch
+  断言键：level assessedLevel safetyStatus safetyCheck emotion activity tool
+         replyMaxChars（回复不超过 N 字）replyMatch / replyNotMatch（正则）
   值可写成数组表示"任一满足即通过"，例如 "level": ["blue", "yellow"]
   replyMatch / replyNotMatch 的值是正则。写否定式断言时注意否定词未必紧邻：
   "建议你吃" 会误伤"我不能建议你吃药"这种正确回复。

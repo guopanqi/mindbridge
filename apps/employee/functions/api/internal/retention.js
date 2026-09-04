@@ -28,6 +28,12 @@ function authorize(request, env) {
 function plan(now) {
   return [
     {
+      table: 'inbound_messages',
+      reason: '机器人结果超过七天保留期',
+      sql: 'DELETE FROM inbound_messages WHERE request_key IN (SELECT request_key FROM inbound_messages WHERE expires_at < ? LIMIT ?)',
+      binds: [now, BATCH],
+    },
+    {
       table: 'messages',
       reason: '倾诉原文超过保留期',
       sql: 'DELETE FROM messages WHERE id IN (SELECT id FROM messages WHERE expires_at IS NOT NULL AND expires_at < ? LIMIT ?)',

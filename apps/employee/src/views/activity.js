@@ -1,7 +1,8 @@
-// 活动参与浮层：前测自评 → 逐步引导 → 后测自评 → 评分。
+// 活动参与浮层：开始 → 逐步引导 → 提交页 → 完成。
 //
-// 效果度量靠前后自评差值，所以前测必须在开始引导之前完成，后测必须在结束之后。
-// 中途退出不会留下任何效果值，避免伪造出「做完就变好」的结论。
+// 没有前测和后测。开始前拦一道打分，会在人最没耐心的时刻筛掉最需要的那批人；
+// 做完立刻自评又只测得到几分钟就消退的即时反应。两者都不足以支撑「效果」结论。
+// 提交页只留一个可选的帮助度，不选也照常完成；留存效果由完成 3 天后的回访承担。
 import { api, ApiError } from '../api.js';
 import { clear, el, toast } from '../dom.js';
 
@@ -9,6 +10,9 @@ let overlay;
 let onClose = () => {};
 let state = null;
 let showingPost = false;
+// 选中但还没提交的评价。必须和 state.progress.helpfulness（服务端已保存的值）分开：
+// 用同一个变量的话，一点选项就会被判定成「已评价」，提交按钮当场消失，请求根本发不出去。
+let helpfulnessDraft = null;
 
 function ensureOverlay() {
   if (overlay) return overlay;
@@ -16,22 +20,6 @@ function ensureOverlay() {
   overlay.hidden = true;
   document.body.append(overlay);
   return overlay;
-}
-
-function scoreScale(label, low, high, current, onPick) {
-  return el('div', { class: 'act-scale' }, [
-    el('p', { class: 'act-q', text: label }),
-    el('div', { class: 'act-dots' }, Array.from({ length: 10 }, (_, i) => el('button', {
-      class: `act-dot${current === i + 1 ? ' on' : ''}`,
-      text: String(i + 1),
-      attrs: { type: 'button', 'aria-label': `${i + 1} 分` },
-      on: { click: () => onPick(i + 1) },
-    }))),
-    el('div', { class: 'act-ends' }, [
-      el('span', { text: `1 · ${low}` }),
-      el('span', { text: `10 · ${high}` }),
-    ]),
-  ]);
 }
 
 function header() {
@@ -62,28 +50,14 @@ function renderIntro() {
         el('p', { text: `地点：${state.location || '待定'}` }),
       ])
       : null,
-    scoreScale(
-      state.preLabel || '现在的状态打几分？',
-      state.lowLabel || '很轻',
-      state.highLabel || '很重',
-      state.progress.preScore,
-      (value) => {
-        state.progress.preScore = value;
-        render();
-      },
-    ),
     el('button', {
       class: 'primary act-cta',
       text: state.kind === 'offline' ? '我要报名' : '开始',
       attrs: { type: 'button' },
       on: {
         click: async () => {
-          if (!state.progress.preScore) {
-            toast('先给现在的状态打个分吧。');
-            return;
-          }
           try {
-            await send({ action: 'start', preScore: state.progress.preScore });
+            await send({ action: 'start' });
           } catch (error) {
             toast(error instanceof ApiError && error.userMessage ? error.userMessage : '没能开始，请稍后再试。');
           }
@@ -107,6 +81,26 @@ function renderIntro() {
   ]);
 }
 
+const STAGE_RENDERERS = {
+  prompt: () => [],
+  note: () => [],
+  input: stage => [
+    el('textarea', { class: 'act-input', attrs: { rows: 5, placeholder: stage.hint || '写点什么…' } }),
+    el('p', { class: 'act-note', text: '写下的内容只留在这个页面，不会上传，也不会被保存。' }),
+  ],
+  choice: stage => {
+    const reflection = el('p', { class: 'act-reflection', text: '' });
+    return [el('div', { class: 'act-choices' }, (stage.options || []).map(option => el('button', {
+      class: 'act-choice', text: option.label, attrs: { type: 'button' },
+      on: { click: event => {
+        for (const node of event.currentTarget.parentElement.children) node.classList.remove('on');
+        event.currentTarget.classList.add('on');
+        reflection.textContent = option.reflection || option.desc || '';
+      } },
+    }))), reflection];
+  },
+};
+
 function renderStage() {
   const index = state.progress.stageIndex || 0;
   const stage = state.stages[index];
@@ -118,33 +112,13 @@ function renderStage() {
     stage?.hint ? el('p', { class: 'act-step-hint', text: stage.hint }) : null,
   ];
 
-  if (stage?.type === 'choice') {
-    const reflection = el('p', { class: 'act-reflection', text: '' });
-    nodes.push(el('div', { class: 'act-choices' }, (stage.options || []).map((option) => el('button', {
-      class: 'act-choice', attrs: { type: 'button' },
-      on: {
-        click: (event) => {
-          const box = event.currentTarget.parentElement;
-          for (const node of box.querySelectorAll('.act-choice')) node.classList.remove('on');
-          event.currentTarget.classList.add('on');
-          reflection.textContent = option.reflection || '';
-        },
-      },
-    }, [
-      el('span', { class: 'act-choice-ico', text: option.icon || '·' }),
-      el('span', { class: 'act-choice-body' }, [
-        el('b', { text: option.label }),
-        option.desc ? el('span', { class: 'act-choice-desc', text: option.desc }) : null,
-      ]),
-    ]))));
-    nodes.push(reflection);
+  const renderer = Object.hasOwn(STAGE_RENDERERS, stage?.type) ? STAGE_RENDERERS[stage.type] : null;
+  if (renderer) nodes.push(...renderer(stage));
+  else if (stage?.fallbackHint) nodes.push(el('p', { class: 'act-note', text: stage.fallbackHint }));
+  else {
+    nodes.push(el('p', { class: 'act-note', text: '当前版本暂不支持这个活动步骤，请更新后再继续。' }));
+    return el('div', { class: 'act-body' }, nodes);
   }
-
-  if (stage?.type === 'input') {
-    nodes.push(el('textarea', { class: 'act-input', attrs: { rows: 5, placeholder: stage.hint || '写点什么…' } }));
-    nodes.push(el('p', { class: 'act-note', text: '写下的内容只留在这个页面，不会上传，也不会被保存。' }));
-  }
-
   nodes.push(el('button', {
     class: 'primary act-cta',
     text: isLast ? '做完了' : '下一步',
@@ -168,61 +142,81 @@ function renderStage() {
   return el('div', { class: 'act-body' }, nodes);
 }
 
-function renderPostBody() {
-  return el('div', { class: 'act-body' }, [
-    el('p', { class: 'act-step-title', text: '做完了。现在感觉怎么样？' }),
-    scoreScale(
-      state.preLabel || '现在的状态打几分？',
-      state.lowLabel || '很轻',
-      state.highLabel || '很重',
-      state.progress.postScore,
-      (value) => {
-        state.progress.postScore = value;
-        render();
-      },
-    ),
-    el('p', { class: 'act-q', text: '这个活动对你有帮助吗？' }),
-    el('div', { class: 'act-stars' }, [1, 2, 3, 4, 5].map((n) => el('button', {
-      class: `star${(state.progress.rating || 0) >= n ? ' on' : ''}`,
-      text: '★',
-      attrs: { type: 'button', 'aria-label': `${n} 分` },
+// 提交页：帮助度选填。「提交并完成」和评价在视觉上分开，
+// 不选直接提交是正常路径，不做任何拦截，也不把留空当成低分。
+function helpfulnessPicker() {
+  const options = state.helpfulnessOptions || [];
+  return el('div', {}, [
+    el('p', { class: 'act-q', text: '这个活动对你有帮助吗？（可以不选）' }),
+    el('div', { class: 'act-help' }, options.map((option) => el('button', {
+      class: `act-help-opt${helpfulnessDraft === option ? ' on' : ''}`,
+      text: option,
+      attrs: { type: 'button', 'aria-pressed': helpfulnessDraft === option },
       on: {
         click: () => {
-          state.progress.rating = n;
+          // 再点一次取消选择，避免误触后无法回到「不评价」。
+          helpfulnessDraft = helpfulnessDraft === option ? null : option;
           render();
         },
       },
     }))),
+  ]);
+}
+
+function renderPostBody() {
+  return el('div', { class: 'act-body' }, [
+    el('p', { class: 'act-step-title', text: '做完了。' }),
+    helpfulnessPicker(),
     el('button', {
-      class: 'primary act-cta', text: '提交', attrs: { type: 'button' },
+      class: 'primary act-cta', text: '提交并完成', attrs: { type: 'button' },
       on: {
         click: async () => {
-          if (!state.progress.postScore) {
-            toast('先给现在的状态打个分。');
-            return;
-          }
-          const pre = state.progress.preScore || 0;
-          const post = state.progress.postScore;
-          const direction = state.direction;
-          const label = state.scoreLabel || '状态';
           try {
             await api.activityProgress({
               eventId: state.progress.eventId,
               action: 'complete',
-              postScore: post,
-              rating: state.progress.rating || null,
+              helpfulness: helpfulnessDraft || null,
             });
-            const delta = pre - post;
-            const better = direction === 'down' ? delta > 0 : delta < 0;
-            toast(better
-              ? `记下了。${label}比开始时${direction === 'down' ? '低' : '高'}了 ${Math.abs(delta)} 分。`
-              : '记下了。谢谢你完成它。');
+            toast('记下了。谢谢你完成它。');
             close();
           } catch (error) {
             toast(error instanceof ApiError && error.userMessage ? error.userMessage : '提交没有成功。');
           }
         },
       },
+    }),
+  ]);
+}
+
+// 完成之后再打开：展示结果，并允许当时跳过的人在这里补评。
+function renderDoneBody() {
+  return el('div', { class: 'act-body' }, [
+    el('p', { class: 'act-step-title', text: '已完成' }),
+    state.progress.helpfulness
+      ? el('p', { class: 'act-note', text: `你的评价：${state.progress.helpfulness}` })
+      : el('div', {}, [
+        helpfulnessPicker(),
+        el('button', {
+          class: 'secondary act-cta', text: '提交评价', attrs: { type: 'button' },
+          on: {
+            click: async () => {
+              if (!helpfulnessDraft) {
+                close();
+                return;
+              }
+              try {
+                await send({ action: 'rate', helpfulness: helpfulnessDraft });
+                toast('谢谢你的反馈。');
+              } catch (error) {
+                toast(error instanceof ApiError && error.userMessage ? error.userMessage : '提交没有成功。');
+              }
+            },
+          },
+        }),
+      ]),
+    el('button', {
+      class: 'link act-skip', text: '关闭', attrs: { type: 'button' },
+      on: { click: () => close() },
     }),
   ]);
 }
@@ -236,10 +230,15 @@ function renderBooked() {
       el('p', { class: 'act-step-hint', text: `时间：${state.schedule || '待企业安排'}` }),
       el('p', { class: 'act-step-hint', text: `地点：${state.location || '待企业安排'}` }),
     ]),
-    el('p', { class: 'act-note', text: `报名时你给「${state.scoreLabel || '状态'}」打了 ${state.progress.preScore} 分。参加完再回来打一次，就能看到变化。` }),
+    el('p', { class: 'act-note', text: '报名成功不算参与。等你真的到场参加完，再回来这里确认。' }),
     el('button', {
-      class: 'primary act-cta', text: '我已参加，现在评价', attrs: { type: 'button' },
-      on: { click: () => renderPost() },
+      class: 'primary act-cta', text: '我已参加', attrs: { type: 'button' },
+      on: {
+        click: () => {
+          showingPost = true;
+          render();
+        },
+      },
     }),
     el('button', {
       class: 'link act-skip', text: '还没参加，先关掉', attrs: { type: 'button' },
@@ -253,7 +252,8 @@ function render() {
   clear(node);
   if (!state) return;
   let body;
-  if (showingPost) body = renderPostBody();
+  if (state.progress.state === 'completed') body = renderDoneBody();
+  else if (showingPost) body = renderPostBody();
   else if (state.progress.state === 'joined' && state.stages.length) body = renderStage();
   else if (state.progress.state === 'joined' && state.kind === 'offline') body = renderBooked();
   else if (state.progress.state === 'joined') body = renderPostBody();
@@ -264,6 +264,7 @@ function render() {
 
 export function close() {
   showingPost = false;
+  helpfulnessDraft = null;
   state = null;
   if (overlay) {
     overlay.hidden = true;
@@ -279,7 +280,8 @@ export async function openActivity(eventId, afterClose) {
   try {
     const result = await api.activity(eventId);
     state = result.activity;
-    showingPost = state.progress.state === 'completed';
+    showingPost = false;
+    helpfulnessDraft = null;
     render();
   } catch (error) {
     toast(error instanceof ApiError && error.userMessage ? error.userMessage : '活动内容打不开，请稍后再试。');

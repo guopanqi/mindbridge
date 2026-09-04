@@ -109,9 +109,9 @@ export function handleError(error, event) {
 }
 
 // 聚合埋点：只写事件类型、情绪、级别与日期分桶，供 HR 看板使用。
-export function aggregateStatement(env, { eventType, emotion = null, level = null, at }) {
+export function aggregateStatement(env, { eventType, emotion = null, level = null, at, ifChanged = false }) {
   return env.CARE_DB.prepare(
-    'INSERT INTO aggregate_events (id, event_type, emotion, level, bucket_day, created_at, data_origin) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    `INSERT INTO aggregate_events (id, event_type, emotion, level, bucket_day, created_at, data_origin) SELECT ?, ?, ?, ?, ?, ?, ?${ifChanged ? ' WHERE changes()=1' : ''}`
   ).bind(newId('agg'), eventType, emotion, level, dayBucket(at), at, 'live');
 }
 

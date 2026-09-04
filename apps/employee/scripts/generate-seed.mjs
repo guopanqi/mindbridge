@@ -4,13 +4,6 @@
 // 不得伪造钉钉考勤、病假或聊天接口返回。这里只生成本系统自己会产生的事件。
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { classifyTopic } from '../functions/api/_lib/topics.js';
-import { ACTIVITIES } from '../functions/api/_lib/activities-data.js';
-
-// 活动名 → 自评方向。down 表示分数越低越好（紧张、疲惫），up 表示越高越好（可控感）。
-const DIRECTION_BY_TITLE = Object.fromEntries(
-  Object.values(ACTIVITIES).map((a) => [a.title, a.direction || 'down'])
-);
-
 const DAYS = 180;  // 需要两个完整周期，看板的环比才有意义
 const HEADCOUNT = 200;
 const TENANT = { name: '星原科技', industry: '互联网/IT' };
@@ -25,7 +18,6 @@ function rnd() {
 const pick = (arr) => arr[Math.floor(rnd() * arr.length)];
 const between = (min, max) => min + Math.floor(rnd() * (max - min + 1));
 
-const MOODS = [['很好', 1], ['还行', 2], ['有点累', 3], ['很低落', 4], ['快撑不住', 5]];
 const EMOTIONS = ['焦虑', '疲惫', '烦躁', '低落', '紧张', '孤独', '委屈', '愤怒', '迷茫'];
 const RESOURCES = [
   ['三分钟呼吸着陆法', 'L1'], ['工间身体扫描音频', 'L1'], ['情绪暂停提醒卡片', 'L1'],
@@ -144,30 +136,22 @@ for (let d = DAYS - 1; d >= 0; d--) {
   const day = bucket(ts);
   const weekday = new Date(ts).getUTCDay();
   const workday = weekday !== 0 && weekday !== 6;
-  // 压力随迭代周期起伏：月末与周中偏高，周末回落。
-  const cycle = Math.sin((DAYS - d) / 9) * 0.35 + (workday ? 0.25 : -0.35);
-  const checkins = workday ? between(38, 62) : between(8, 18);
-
-  for (let i = 0; i < checkins; i++) {
-    const anonId = pick(activePeople);
-    const base = 2.4 + cycle + (DEPT_META[deptOf[anonId]]?.bias ?? 0) + (rnd() - 0.5) * 1.6;
-    const index = Math.max(0, Math.min(4, Math.round(base) - 1));
-    const [mood, score] = MOODS[index];
-    const at = ts + between(8, 21) * 3600000;
-    emit(`INSERT INTO mood_checkins (id, anon_id, mood, stress_score, created_at, bucket_day, data_origin) VALUES ('${id('mood')}', '${anonId}', '${esc(mood)}', ${score}, ${at}, '${day}', '${ORIGIN}');`);
-    emit(`INSERT INTO aggregate_events (id, event_type, emotion, level, bucket_day, created_at, data_origin) VALUES ('${id('agg')}', 'mood_checkin', '${esc(mood)}', NULL, '${day}', ${at}, '${ORIGIN}');`);
-  }
-
   const chats = workday ? between(14, 30) : between(3, 9);
   for (let i = 0; i < chats; i++) {
     const emotion = pick(EMOTIONS);
+    const at = ts + between(9, 23) * 3600000;
+    const anonId = pick(activePeople);
+    // 部门差异体现在对话的黄色占比上（情绪温度就是这么算的），
+    // 而不是另造一套打卡分数——打卡入口已经下线。
+    const bias = (DEPT_META[deptOf[anonId]]?.bias ?? 0) * 0.06;
     const roll = rnd();
     // 危机级表达在真实企业里是低频事件。原先 3.5% 会让 90 天累计出现 60+ 次红色，
     // 与「个案需本人同意才建立」的实际转化量对不上，看板上像是大量漏接。
-    const level = roll > 0.9955 ? 'red' : roll > 0.86 ? 'yellow' : 'green';
-    const at = ts + between(9, 23) * 3600000;
-    const anonId = pick(activePeople);
+    const level = roll > 0.9955 ? 'red' : roll > 0.86 - bias ? 'yellow' : 'green';
     emit(`INSERT INTO aggregate_events (id, event_type, emotion, level, bucket_day, created_at, data_origin) VALUES ('${id('agg')}', 'chat_message', '${esc(emotion)}', '${level}', '${day}', ${at}, '${ORIGIN}');`);
+    // 覆盖率与部门温度以「真的开口说过话的人」为分母，所以演示数据也要落到 messages。
+    // body_cipher 是占位值：演示租户没有真实会话密钥，指标侧也从不解密正文。
+    emit(`INSERT INTO messages (id, conversation_id, anon_id, role, body_cipher, content_key_version, risk_level, created_at, data_origin) VALUES ('${id('msg')}', 'demo_conv', '${anonId}', 'user', 'demo_seed_placeholder', 'demo', '${level}', ${at}, '${ORIGIN}');`);
     if (level !== 'green') {
       emit(`INSERT INTO risk_events (id, anon_id, conversation_id, level, rule, emotion, engine, created_at, data_origin) VALUES ('${id('risk')}', '${anonId}', NULL, '${level}', '演示数据 · 规则命中', '${esc(emotion)}', 'rules-v1', ${at}, '${ORIGIN}');`);
       emit(`INSERT INTO aggregate_events (id, event_type, emotion, level, bucket_day, created_at, data_origin) VALUES ('${id('agg')}', 'risk_flagged', '${esc(emotion)}', '${level}', '${day}', ${at}, '${ORIGIN}');`);
@@ -175,17 +159,11 @@ for (let d = DAYS - 1; d >= 0; d--) {
     if (rnd() > 0.55) {
       const [name, resLevel] = pick(RESOURCES);
       const state = rnd() > 0.45 ? (rnd() > 0.5 ? 'completed' : 'joined') : 'offered';
-      // 只有真的参加过的人才会留下评分；分布偏正面但不是满分。
-      const rated = state !== 'offered' && rnd() > 0.35;
-      const rating = rated ? [3, 4, 4, 4, 5, 5, 5, 2][Math.floor(rnd() * 8)] : null;
-      // 完成过的活动留下前后自评；多数人有改善，但不是所有人，避免看起来像编的。
+      // 帮助度选填：完成的人里只有一部分会评，评价率因此低于 100%，这是真实形态。
       const done = state === 'completed';
-      // 按活动自身的自评方向生成前后分，让「改善」在两种方向上都成立。
-      const up = DIRECTION_BY_TITLE[name] === 'up';
-      const pre = done ? (up ? between(2, 6) : between(5, 9)) : null;
-      const shift = rnd() > 0.18 ? between(1, 3) : -between(0, 1);
-      const post = done ? Math.max(1, Math.min(10, up ? pre + shift : pre - shift)) : null;
-      emit(`INSERT INTO resource_events (id, anon_id, conversation_id, resource_name, resource_level, risk_level, state, rating, feedback_at, pre_score, post_score, created_at, updated_at, data_origin) VALUES ('${id('res')}', '${anonId}', NULL, '${esc(name)}', '${resLevel}', '${level}', '${state}', ${rating ?? 'NULL'}, ${rated ? at + 3600000 : 'NULL'}, ${pre ?? 'NULL'}, ${post ?? 'NULL'}, ${at}, ${at}, '${ORIGIN}');`);
+      const rated = done && rnd() > 0.4;
+      const helpfulness = rated ? ['有帮助', '有帮助', '有帮助', '说不好', '没什么用'][Math.floor(rnd() * 5)] : null;
+      emit(`INSERT INTO resource_events (id, anon_id, conversation_id, resource_name, resource_level, risk_level, state, helpfulness, feedback_at, created_at, updated_at, data_origin) VALUES ('${id('res')}', '${anonId}', NULL, '${esc(name)}', '${resLevel}', '${level}', '${state}', ${helpfulness ? `'${helpfulness}'` : 'NULL'}, ${rated ? at + 3600000 : 'NULL'}, ${at}, ${at}, '${ORIGIN}');`);
       emit(`INSERT INTO aggregate_events (id, event_type, emotion, level, bucket_day, created_at, data_origin) VALUES ('${id('agg')}', 'resource_offered', '${esc(emotion)}', '${level}', '${day}', ${at}, '${ORIGIN}');`);
     }
   }

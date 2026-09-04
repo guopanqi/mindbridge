@@ -1,0 +1,31 @@
+{
+  "id": "value-anchor",
+  "contentVersion": 2,
+  "title": "职业价值锚点练习",
+  "description": "通过简短的文字练习，给自己一点停留的空间。",
+  "kind": "online",
+  "level": "L1",
+  "available": true,
+  "tags": [
+    "可控感"
+  ],
+  "duration": "3–5 分钟",
+  "scale": {
+    "preLabel": "此刻的可控感程度是多少？",
+    "low": "很低",
+    "high": "很高",
+    "direction": "up"
+  },
+  "stages": [
+    {
+      "type": "input",
+      "title": "看见在意的东西",
+      "hint": "成长、自主、关系、意义，哪一个对你最重要？"
+    },
+    {
+      "type": "input",
+      "title": "一个小行动",
+      "hint": "写下一件本周可以尝试的小事。"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "id": "return-rhythm",
+  "contentVersion": 2,
+  "title": "返岗节奏重建练习",
+  "description": "通过简短的文字练习，给自己一点停留的空间。",
+  "kind": "online",
+  "level": "L1",
+  "available": true,
+  "tags": [
+    "可控感"
+  ],
+  "duration": "3–5 分钟",
+  "scale": {
+    "preLabel": "此刻的可控感程度是多少？",
+    "low": "很低",
+    "high": "很高",
+    "direction": "up"
+  },
+  "stages": [
+    {
+      "type": "prompt",
+      "title": "找到最消耗的部分",
+      "hint": "工作、照护或对自己的要求，哪一个更占精力？"
+    },
+    {
+      "type": "input",
+      "title": "缩小清单",
+      "hint": "今天只保留一两件必须做的事。"
+    },
+    {
+      "type": "input",
+      "title": "表达需要",
+      "hint": "选一个可以向可信任的人提出的具体帮助。"
+    }
+  ]
+}

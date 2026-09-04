@@ -1,3 +1,4 @@
+import { activityAvailableSql } from '../_lib/activity-availability.js';
 // 干预阶梯与办公数据感知的配置读写。
 //
 // 这是真实配置，不是展示表：intervention_matrix 会被员工端 chat 流程读取，
@@ -27,7 +28,7 @@ export async function onRequestGet({ request, env }) {
   const since = Date.now() - WINDOW_DAYS * 86400000;
   const [matrix, catalog, signals, hits, rhythm] = await Promise.all([
     env.CARE_DB.prepare('SELECT * FROM intervention_matrix ORDER BY sort_order').all(),
-    env.CARE_DB.prepare("SELECT name, level, description, icon FROM resource_catalog WHERE enabled = 1 ORDER BY level, name").all(),
+    env.CARE_DB.prepare(`SELECT a.id AS activityId, a.title AS name, a.level, a.description, '🌿' AS icon FROM activities a WHERE ${activityAvailableSql('a')} ORDER BY a.level, a.title`).all(),
     env.CARE_DB.prepare('SELECT * FROM sensing_signals ORDER BY sort_order').all(),
     // 命中次数来自真实聚合事件，不是常量。
     env.CARE_DB.prepare(
@@ -46,15 +47,18 @@ export async function onRequestGet({ request, env }) {
     matrix: (matrix.results || []).map((row) => ({
       emotion: row.emotion,
       icon: row.icon,
-      l1: { name: row.l1_name, description: row.l1_desc },
-      l2: { name: row.l2_name, description: row.l2_desc },
+      l1: { activityId: row.l1_activity_id, name: row.l1_name, description: row.l1_desc },
+      l2: { activityId: row.l2_activity_id, name: row.l2_name, description: row.l2_desc },
       l3: row.l3_action,
       enabled: row.enabled === 1,
-      hits: hitMap[row.emotion] || 0,
+      // 聚合事件无独立主体计数，不能用事件条数冒充匿名样本量。
+      hits: null,
+      hitsSuppressed: true,
       updatedAt: row.updated_at,
       updatedBy: row.updated_by,
     })),
     catalog: catalog.results || [],
+    activityCatalog: (await env.CARE_DB.prepare('SELECT id, title, enabled, content_available FROM activities ORDER BY title').all()).results || [],
     sensing: (signals.results || []).map((row) => ({
       key: row.key,
       label: row.label,
@@ -68,7 +72,7 @@ export async function onRequestGet({ request, env }) {
       updatedAt: row.updated_at,
       updatedBy: row.updated_by,
     })),
-    rhythmSamples: rhythm.results || [],
+    rhythmSamples: (rhythm.results || []).map(row => ({ metric: row.metric, unit: row.unit, created_at: row.created_at, suppressed: row.sample_size < MIN_SAMPLE, value: row.sample_size >= MIN_SAMPLE ? row.value : null, sample_size: row.sample_size >= MIN_SAMPLE ? row.sample_size : null })),
   });
 }
 
@@ -83,30 +87,33 @@ export async function onRequestPut({ request, env }) {
   const actor = typeof body?.actor === 'string' ? body.actor.slice(0, 64) : null;
   const now = Date.now();
 
+  if (body?.kind === 'activity') {
+    if (typeof body.activityId !== 'string' || typeof body.enabled !== 'boolean') return json({ ok: false, reasonCode: 'ACTIVITY_INVALID' }, 400);
+    const result = await env.CARE_DB.prepare('UPDATE activities SET enabled=? WHERE id=?').bind(body.enabled ? 1 : 0, body.activityId).run();
+    return json({ ok: result.meta.changes === 1 }, result.meta.changes === 1 ? 200 : 404);
+  }
+
   if (body?.kind === 'matrix') {
-    const { emotion, l1Name, l2Name, enabled } = body;
+    const { emotion, l1ActivityId, l2ActivityId, enabled } = body;
     if (typeof emotion !== 'string' || !emotion) return json({ ok: false, reasonCode: 'EMOTION_REQUIRED' }, 400);
-    const known = await env.CARE_DB.prepare('SELECT emotion FROM intervention_matrix WHERE emotion = ?').bind(emotion).first();
+    const known = await env.CARE_DB.prepare('SELECT emotion FROM intervention_matrix WHERE emotion=?').bind(emotion).first();
     if (!known) return json({ ok: false, reasonCode: 'EMOTION_UNKNOWN' }, 404);
-    // 资源必须来自目录，避免配置出一个员工端根本发不出去的名字。
-    const lookup = async (name) => (name
-      ? env.CARE_DB.prepare('SELECT name, description FROM resource_catalog WHERE name = ? AND enabled = 1').bind(name).first()
-      : null);
-    const [l1, l2] = await Promise.all([lookup(l1Name), lookup(l2Name)]);
-    if (l1Name && !l1) return json({ ok: false, reasonCode: 'L1_NOT_IN_CATALOG' }, 400);
-    if (l2Name && !l2) return json({ ok: false, reasonCode: 'L2_NOT_IN_CATALOG' }, 400);
-    await env.CARE_DB.prepare(
-      `UPDATE intervention_matrix SET
-         l1_name = COALESCE(?, l1_name), l1_desc = COALESCE(?, l1_desc),
-         l2_name = COALESCE(?, l2_name), l2_desc = COALESCE(?, l2_desc),
-         enabled = COALESCE(?, enabled), updated_at = ?, updated_by = ?
-       WHERE emotion = ?`
-    ).bind(
-      l1?.name ?? null, l1?.description ?? null,
-      l2?.name ?? null, l2?.description ?? null,
-      typeof enabled === 'boolean' ? (enabled ? 1 : 0) : null,
-      now, actor, emotion
-    ).run();
+    const lookup = async (id, level) => {
+      if (id === undefined || id === null || id === '') return null;
+      if (typeof id !== 'string') return null;
+      return env.CARE_DB.prepare(`SELECT id,title,description FROM activities WHERE id=? AND level=? AND ${activityAvailableSql('activities')}`).bind(id, level).first();
+    };
+    const [l1, l2] = await Promise.all([lookup(l1ActivityId, 'L1'), lookup(l2ActivityId, 'L2')]);
+    if ((l1ActivityId && !l1) || (l2ActivityId && !l2)) return json({ ok: false, reasonCode: 'ACTIVITY_UNAVAILABLE' }, 400);
+    await env.CARE_DB.prepare(`UPDATE intervention_matrix SET
+      l1_activity_id=CASE WHEN ? THEN ? ELSE l1_activity_id END,
+      l2_activity_id=CASE WHEN ? THEN ? ELSE l2_activity_id END,
+      l1_name=COALESCE(?,l1_name), l1_desc=COALESCE(?,l1_desc),
+      l2_name=COALESCE(?,l2_name), l2_desc=COALESCE(?,l2_desc),
+      enabled=COALESCE(?,enabled), updated_at=?, updated_by=? WHERE emotion=?`
+    ).bind(l1ActivityId !== undefined ? 1 : 0, l1?.id ?? null, l2ActivityId !== undefined ? 1 : 0, l2?.id ?? null,
+      l1?.title ?? null, l1?.description ?? null, l2?.title ?? null, l2?.description ?? null,
+      typeof enabled === 'boolean' ? Number(enabled) : null, now, actor, emotion).run();
     return json({ ok: true, emotion });
   }
 

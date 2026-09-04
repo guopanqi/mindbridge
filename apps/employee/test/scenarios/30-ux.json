@@ -1,0 +1,83 @@
+[
+  {
+    "name": "UX · 用户越沉默，回复必须越短，不能字数倒挂",
+    "turns": [
+      {
+        "say": "好累",
+        "expect": {
+          "replyMaxChars": 90
+        }
+      },
+      {
+        "say": "嗯",
+        "expect": {
+          "replyMaxChars": 80
+        }
+      },
+      {
+        "say": "不知道",
+        "expect": {
+          "replyMaxChars": 80
+        }
+      },
+      {
+        "say": "...",
+        "expect": {
+          "replyMaxChars": 80
+        }
+      }
+    ]
+  },
+  {
+    "name": "UX · 道谢收尾时接住并放手，不再追问",
+    "turns": [
+      "今天部门会上被主管当众甩锅，气得不行",
+      {
+        "say": "跟你聊完心里那口气顺多了，谢谢你",
+        "expect": {
+          "replyNotMatch": "？|\\?",
+          "replyMaxChars": 80
+        }
+      }
+    ]
+  },
+  {
+    "name": "UX · 告别毫无纠缠",
+    "given": {
+      "state": {
+        "emotion": "疲惫"
+      },
+      "history": [
+        {
+          "role": "user",
+          "text": "今天聊完好多了"
+        },
+        {
+          "role": "assistant",
+          "text": "能听到你这么说真好。"
+        }
+      ]
+    },
+    "turns": [
+      {
+        "say": "我准备去洗把脸开始干活了，先撤啦",
+        "expect": {
+          "replyNotMatch": "？|\\?",
+          "replyMaxChars": 45
+        }
+      }
+    ]
+  },
+  {
+    "name": "UX · 挂了活动卡片，文字就必须点名它",
+    "turns": [
+      {
+        "say": "我最近注意力完全涣散，看屏幕两分钟就走神，有什么练习能帮我专注吗",
+        "expect": {
+          "tool": true,
+          "activity": "*"
+        }
+      }
+    ]
+  }
+]

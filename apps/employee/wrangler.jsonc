@@ -6,6 +6,7 @@
   "compatibility_flags": ["nodejs_compat"],
   "vars": {
     "DINGTALK_CLIENT_ID": "dingoyuuq9d3413qqbel",
+    "DINGTALK_ROBOT_CODE": "dingoyuuq9d3413qqbel",
     "DINGTALK_CORP_ID": "ding585edf06dbd4a79fc7ca53aad90ff185",
     "ANON_KEY_VERSION": "v1",
     "IDENTITY_ENCRYPTION_KEY_VERSION": "v1",
