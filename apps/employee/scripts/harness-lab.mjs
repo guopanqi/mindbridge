@@ -48,7 +48,7 @@ function createLab(env, overrides = {}) {
 // 一个 Session：持有 UserState 与最近消息，等价于 chat/index.js 从 D1 读出来的东西。
 // given 用来直接把 Session 摆到某个中途状态：等价于"这个用户上周已经聊到这里了"，
 // 让被测那一轮不必先靠若干次真实调用（本身就会抖）把状态跑出来。
-function createSession(lab, { profileContext = 'none', given, saved } = {}) {
+function createSession(lab, { profileContext = 'none', channel = 'h5', given, saved } = {}) {
   const seed = () => ({
     state: { ...emptyUserState(), ...(saved?.state || given?.state || {}) },
     // 线上每条历史都带 created_at，lab 必须同样带上，否则模型看到的上下文与生产不同构。
@@ -67,6 +67,7 @@ function createSession(lab, { profileContext = 'none', given, saved } = {}) {
     get history() { return history; },
     get clock() { return clock; },
     get profileContext() { return profileContext; },
+    get channel() { return channel; },
     advance(ms) { clock += ms; },
     snapshot() { return { state, history, clock }; },
     reset() { ({ state, history, clock } = seed()); },
@@ -76,7 +77,7 @@ function createSession(lab, { profileContext = 'none', given, saved } = {}) {
         instructions: buildInstructions({ userState: state }),
         context: buildModelVisibleContext({
           userState: state, recentMessages: history, currentMessage: text,
-          channel: 'h5', profileContext,
+          channel, profileContext,
         }),
       };
     },
@@ -88,7 +89,7 @@ function createSession(lab, { profileContext = 'none', given, saved } = {}) {
       try {
         const run = await runConversationHarness({
           env: lab.env, gateway: lab.gateway, userState: state, recentMessages: history,
-          currentMessage: text, profileContext, now,
+          currentMessage: text, channel, profileContext, now,
         });
         history = [...history, { role: 'user', text, at: now }, { role: 'assistant', text: run.decision.reply.text, at: now + 1 }].slice(-20);
         state = run.nextState;
@@ -117,7 +118,7 @@ function saveSession(name, session) {
   if (!name) return;
   mkdirSync(SESSION_DIR, { recursive: true });
   writeFileSync(sessionPath(name), JSON.stringify({
-    ...session.snapshot(), profileContext: session.profileContext, savedAt: new Date().toISOString(),
+    ...session.snapshot(), profileContext: session.profileContext, channel: session.channel, savedAt: new Date().toISOString(),
   }, null, 2));
 }
 
@@ -259,9 +260,9 @@ async function runScenario(lab, scenario, { verbose, quiet, json, records, makeS
 // 每个子命令声明自己接受的开关。拼错的开关必须报错而不是被忽略——
 // 被静默忽略的 --repeats 会让调用方以为跑了 3 遍，实际只跑了 1 遍。
 const COMMANDS = {
-  chat: { flags: ['session', 'given', 'advance', 'profile', 'model', 'verbose'], run: cmdChat },
-  run: { flags: ['session', 'given', 'advance', 'profile', 'model', 'turns', 'repeat', 'json', 'verbose', 'quiet'], run: cmdRun },
-  context: { flags: ['session', 'given', 'advance', 'profile', 'model', 'json'], run: cmdContext },
+  chat: { flags: ['session', 'given', 'advance', 'profile', 'channel', 'model', 'verbose'], run: cmdChat },
+  run: { flags: ['session', 'given', 'advance', 'profile', 'channel', 'model', 'turns', 'repeat', 'json', 'verbose', 'quiet'], run: cmdRun },
+  context: { flags: ['session', 'given', 'advance', 'profile', 'channel', 'model', 'json'], run: cmdContext },
   bench: { flags: ['n', 'model', 'json'], run: cmdBench },
   sessions: { flags: ['json'], run: cmdSessions },
 };
@@ -273,6 +274,7 @@ function openSession(lab, flags) {
   }
   const session = createSession(lab, {
     profileContext: flags.profile || saved?.profileContext || 'none',
+    channel: flags.channel || saved?.channel || 'h5',
     given: flags.given ? JSON.parse(flags.given) : undefined,
     saved,
   });
@@ -460,6 +462,7 @@ const HELP = `对话 Harness 实验台 —— 直接驱动真实模型跑 Harnes
   --repeat <n>       整批重复 n 遍，用于查抖动
   --model <id>       临时换模型（不改 wrangler.jsonc）
   --profile <标签>   设置 profileContext
+  --channel <名字>   设置 channel：h5（默认）或 dingtalk。钉钉机器人走 dingtalk，行为可能不同
   --json             机器可读输出（run / context / bench / sessions 都支持）
   -v / --verbose     展开 evidence / topics / openLoops / 工具命中
   -q / --quiet       只报失败

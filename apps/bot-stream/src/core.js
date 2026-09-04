@@ -60,17 +60,45 @@ export class Inbox {
   close() { this.db.close(); }
 }
 const escape = value => String(value || '').replace(/[\\`*_{}\[\]<>]/g,'');
-export function renderMessages(messages, h5Origin) {
-  const url = new URL(h5Origin);
-  return messages.filter(m => m.role !== 'user').map(m => {
-    if (typeof m.text === 'string') return escape(m.text);
-    if (!m.card) return '';
+const cardLink = (card, h5Origin) => {
+  const link = new URL(h5Origin);
+  if (card.eventId) link.searchParams.set('eventId',card.eventId);
+  return link.href;
+};
+// Buttons only ever open the authenticated H5. They never carry an action:
+// enrolment and referral stay behind an explicit confirmation inside the page.
+const buttonLabel = card => (card.kind === 'consent' ? '打开 MindBridge 确认' : card.activityId || card.name ? '打开 MindBridge 查看活动' : '打开 MindBridge 查看并确认');
+// collect 为真时把卡片的跳转收集成按钮，正文里就不再重复渲染同一个链接。
+function renderParts(messages, h5Origin, collect) {
+  const parts = [];
+  for (const m of messages) {
+    if (m.role === 'user') continue;
+    if (typeof m.text === 'string') { parts.push(escape(m.text)); continue; }
     const card = m.card;
-    if (Array.isArray(card.resources)) return `${card.resources.map(r => `${escape(r.name)}：${escape(r.contact)} ${escape(r.note)}`).join('\n\n')}\n\n${escape(card.disclaimer)}`;
-    const link = new URL(url);
-    if (card.eventId) link.searchParams.set('eventId',card.eventId);
-    return `${escape(card.title || card.name || '支持与活动')}\n\n${escape(card.body || card.description || '')}\n\n[打开 MindBridge 查看并确认](${link.href})`;
-  }).filter(Boolean).join('\n\n');
+    if (!card) continue;
+    // 结构标记由我们自己拼，escape 只清洗卡片内容，不会把这些标记洗掉。
+    // 危机场景下号码是最该被一眼看到的东西，单独加粗成行。
+    if (Array.isArray(card.resources)) {
+      parts.push(`${card.resources.map(r => `**${escape(r.name)} ${escape(r.contact)}**\n\n${escape(r.note)}`).join('\n\n')}\n\n${escape(card.disclaimer)}`);
+      continue;
+    }
+    const head = `#### ${escape(card.title || card.name || '支持与活动')}\n\n${escape(card.body || card.description || '')}`;
+    if (collect) { collect.push({ title: buttonLabel(card), actionURL: cardLink(card,h5Origin) }); parts.push(head); }
+    else parts.push(`${head}\n\n[打开 MindBridge 查看并确认](${cardLink(card,h5Origin)})`);
+  }
+  return parts.filter(Boolean).join('\n\n');
+}
+export function renderMessages(messages, h5Origin) {
+  return renderParts(messages, h5Origin, null);
+}
+// 有可点卡片时用 actionCard，把跳转变成按钮；纯文字仍走 markdown。
+// 始终只发一条消息：分多条会破坏 inbox 的 generated→sent 幂等性，重试会重复发送。
+export function renderOutbound(messages, h5Origin) {
+  const btns = [];
+  const text = renderParts(messages, h5Origin, btns);
+  if (!text) return null;
+  if (!btns.length) return { msgtype:'markdown', markdown:{ title:'MindBridge', text } };
+  return { msgtype:'actionCard', actionCard:{ title:'MindBridge', text, btnOrientation:'0', btns: btns.slice(0,2) } };
 }
 export async function processOne(inbox, config, fetchImpl = fetch, now = Date.now()) {
   const row = inbox.next(now); if (!row) return false;
@@ -103,8 +131,8 @@ export async function processOne(inbox, config, fetchImpl = fetch, now = Date.no
       inbox.generated(row.id,result); row.result = true; row.attempts = 0;
     }
     if (payload.expires <= Date.now()) { inbox.state(row.id,'expired'); return true; }
-    const body = {msgtype:'markdown',markdown:{title:'MindBridge',text:renderMessages(result.messages,config.h5Origin)}};
-    if (!body.markdown.text) throw new Error('EMPTY_RESPONSE');
+    const body = renderOutbound(result.messages,config.h5Origin);
+    if (!body) throw new Error('EMPTY_RESPONSE');
     const headers = {'content-type':'application/json'};
     if (config.getAccessToken) headers['x-acs-dingtalk-access-token'] = await config.getAccessToken();
     const response = await fetchImpl(webhookUrl(payload.webhook),{method:'POST',redirect:'error',headers,body:JSON.stringify(body),signal:AbortSignal.timeout(10000)});

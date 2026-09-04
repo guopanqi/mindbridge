@@ -266,9 +266,18 @@ export function close() {
   showingPost = false;
   helpfulnessDraft = null;
   state = null;
-  if (overlay) {
-    overlay.hidden = true;
-    clear(overlay);
+  if (overlay && !overlay.hidden) {
+    // 等收下去的动画放完再真正隐藏；直接 hidden 会让卡片凭空消失。
+    const node = overlay;
+    node.classList.add('closing');
+    const done = () => {
+      node.classList.remove('closing');
+      node.hidden = true;
+      clear(node);
+    };
+    node.addEventListener('animationend', done, { once: true });
+    // 系统关掉动画时 animationend 不会触发，这里兜底。
+    setTimeout(() => { if (!node.hidden) done(); }, 320);
   }
   // 关闭时一律刷新列表：中途报名、跳过、评分都会改变状态，
   // 只在「提交」时刷新会让列表显示过期状态。
@@ -282,6 +291,10 @@ export async function openActivity(eventId, afterClose) {
     state = result.activity;
     showingPost = false;
     helpfulnessDraft = null;
+    const node = ensureOverlay();
+    // 进场动画只在这里加一次，render() 之后的每一步都不再重播。
+    node.classList.add('opening');
+    setTimeout(() => node.classList.remove('opening'), 320);
     render();
   } catch (error) {
     toast(error instanceof ApiError && error.userMessage ? error.userMessage : '活动内容打不开，请稍后再试。');

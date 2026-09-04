@@ -159,4 +159,18 @@ $('#sheet-close').addEventListener('click', closeSheet);
 $('#sheet').addEventListener('click', (event) => { if (event.target.id === 'sheet') closeSheet(); });
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeSheet(); });
 
+// 输入法弹出时收起 tab 栏。visualViewport 是唯一能真正知道键盘占了多少地方的接口：
+// 焦点事件只能告诉我们光标在哪，说不出可视区被压缩了多少，
+// 而 Android 上「键盘收起但输入框仍有焦点」是常见状态。
+const viewport = window.visualViewport;
+if (viewport) {
+  const syncKeyboard = () => {
+    // 压缩超过 20% 才判定为键盘，避免把地址栏收放误判成键盘。
+    const shrunk = window.innerHeight - viewport.height > window.innerHeight * 0.2;
+    $('#app').classList.toggle('keyboard-open', shrunk);
+  };
+  viewport.addEventListener('resize', syncKeyboard);
+  viewport.addEventListener('scroll', syncKeyboard);
+}
+
 void boot();

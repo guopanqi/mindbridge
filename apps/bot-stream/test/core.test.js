@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdtempSync, rmSync, readFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { Inbox, validateMessage, webhookUrl, processOne, renderMessages } from '../src/core.js';
+import { Inbox, validateMessage, webhookUrl, processOne, renderMessages, renderOutbound } from '../src/core.js';
 const config = {corpId:'corp',robotCode:'robot',careOrigin:'https://care.example',h5Origin:'https://care.example',relayToken:'test'};
 const message = () => ({conversationType:'1',msgtype:'text',senderCorpId:'corp',chatbotCorpId:'corp',robotCode:'robot',senderStaffId:'staff',msgId:'msg',text:{content:'private-test-content'},sessionWebhook:'https://oapi.dingtalk.com/robot/sendBySession?session=secret',sessionWebhookExpiredTime:Date.now()+600000});
 test('only private text; exact corporate identity and official webhook',() => {
@@ -65,4 +65,27 @@ test('ten failed attempts become observable terminal state rather than silently 
     assert.equal(row.state,'failed'); assert.equal(row.attempts,10); assert.equal(row.last_error,'REQUEST_FAILED');
     assert.equal(inbox.next(Date.now()+999999),undefined);
   } finally { inbox.close(); rmSync(dir,{recursive:true,force:true}); }
+});
+test('cards become actionCard buttons that only open the H5',() => {
+  const body = renderOutbound([
+    {role:'assistant',text:'我能陪你说话，但我不能替代专业支持。'},
+    {role:'consent',card:{kind:'consent',title:'这些感受值得被专业的人接住',body:'要不要这样做，完全由你决定。',eventId:'c1'}},
+    {role:'crisis',card:{resources:[{name:'全国统一心理援助热线',contact:'12356',note:'可提供心理咨询与危机干预'}],disclaimer:'是否联系由你决定。'}},
+  ],config.h5Origin);
+  assert.equal(body.msgtype,'actionCard');
+  assert.equal(body.actionCard.btns.length,1);
+  assert.match(body.actionCard.btns[0].actionURL,/eventId=c1/);
+  // 按钮只负责打开页面，绝不能把同意/报名动作编码进 URL。
+  assert.doesNotMatch(body.actionCard.btns[0].actionURL,/action|approve|consent=/);
+  assert.match(body.actionCard.text,/12356/);
+  // 正文里不再重复渲染同一个链接。
+  assert.doesNotMatch(body.actionCard.text,/\]\(https/);
+});
+test('plain replies stay markdown, empty results yield nothing',() => {
+  assert.equal(renderOutbound([{role:'assistant',text:'我在听。'}],config.h5Origin).msgtype,'markdown');
+  assert.equal(renderOutbound([{role:'user',text:'只有用户消息'}],config.h5Origin),null);
+});
+test('at most two buttons even when several cards arrive',() => {
+  const cards = [1,2,3].map(n => ({role:'resource',card:{name:`活动${n}`,activityId:`a${n}`,eventId:`e${n}`}}));
+  assert.equal(renderOutbound(cards,config.h5Origin).actionCard.btns.length,2);
 });
