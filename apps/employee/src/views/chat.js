@@ -106,6 +106,18 @@ async function send(text) {
     append(body.messages.filter((m) => m.role !== 'user'));
   } catch (error) {
     typing.remove();
+    if (error instanceof ApiError && ['SERVER_TIMEOUT', 'NETWORK_ERROR'].includes(error.code)) {
+      // 超时不是写入失败的证明；仅同步服务端事实，不自动重发或按相同文本猜测成功。
+      try {
+        const body = await api.chatHistory();
+        clear(stream);
+        append(body.messages);
+        toast('连接中断，已同步最新记录。若这条消息尚未出现，请稍后刷新确认，避免重复发送。');
+      } catch {
+        toast('连接中断，暂时无法确认是否已保存。请稍后刷新记录确认，避免重复发送。');
+      }
+      return;
+    }
     const message = error instanceof ApiError && error.userMessage ? error.userMessage : '消息没有发送成功，请稍后重试。';
     toast(message);
   } finally {

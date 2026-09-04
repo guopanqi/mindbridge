@@ -11,22 +11,23 @@ export class ApiError extends Error {
 async function request(path, init = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
-  let response;
   try {
-    response = await fetch(path, { credentials: 'same-origin', signal: controller.signal, ...init });
+    const response = await fetch(path, { credentials: 'same-origin', signal: controller.signal, ...init });
+    let body;
+    try {
+      body = await response.json();
+    } catch (error) {
+      if (controller.signal.aborted) throw error;
+      throw new ApiError('INVALID_SERVER_RESPONSE');
+    }
+    if (!response.ok) throw new ApiError(body.reasonCode || `HTTP_${response.status}`, body.message);
+    return body;
   } catch (error) {
+    if (error instanceof ApiError) throw error;
     throw new ApiError(error?.name === 'AbortError' ? 'SERVER_TIMEOUT' : 'NETWORK_ERROR');
   } finally {
     clearTimeout(timer);
   }
-  let body;
-  try {
-    body = await response.json();
-  } catch {
-    throw new ApiError('INVALID_SERVER_RESPONSE');
-  }
-  if (!response.ok) throw new ApiError(body.reasonCode || `HTTP_${response.status}`, body.message);
-  return body;
 }
 
 const post = (path, payload) => request(path, {

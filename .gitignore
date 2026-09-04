@@ -38,3 +38,6 @@ scratch/
 *.pptx
 *.docx
 *.key
+
+# 对话实验台的本地会话存档
+apps/employee/.lab-sessions/

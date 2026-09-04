@@ -2,10 +2,14 @@
 
 同源 Cloudflare Pages 项目。当前已实现：
 
+发布范围为 H5 树洞：钉钉机器人 Channel Adapter、长期记忆摘要和 idle-gap microcompact 尚未实现，不能据此宣称双通道已打通。
+
+对话调用（含契约重试和工具后生成）共享 8 秒预算，前端请求上限为 12 秒，为读写数据库与网络留余量；这不是整条网络链路的硬 SLA。用户消息与回复保留一次 D1 batch 原子写入。前端连接中断后同步历史，但不自动重发，也不把未知结果宣称为发送失败。
+
 - **阶段 1**：钉钉 H5 免登、HMAC 稳定匿名身份、加密身份中继、HttpOnly 匿名会话。
 - **阶段 2A**：启动即自动免登，新会话播放一次隐私连接动画，随后进入员工端三个一级入口（倾诉树洞 / 匿名广场 / 我的）。
 - **阶段 2B**：care D1 业务数据模型（profile、conversation、message、post、resource_event、risk_event、aggregate_event），全部只以 `anon_id` 为主体。
-- **阶段 2C 基线**：服务端确定性规则分诊引擎（`functions/api/_lib/triage.js`），green/yellow/red 三级，红色走知情同意流程并展示可拨打的紧急热线，不做医学诊断，不谎称已代为联系任何人。外部大模型延后到阶段 3/4，接入点固定在 `responder.js`。
+- **阶段 2C 基线**：原确定性规则分诊已经退出运行时，由 Stage 5 Conversation Harness 接管对话状态、回复和只读活动检索；高风险副作用仍由确定性代码与用户确认控制。
 - **阶段 2D**：每日情绪打卡、匿名预约（随机个案编号、可取消）、授权与随时撤销、我的历史、清空自己的记录、数据透明说明。
 
 - **阶段 3**：HR 聚合看板与演示数据。care 侧新增 `/api/internal/metrics`（服务令牌鉴权、固定输出阈值抑制结果）、`tenant_profile`、可重复生成与重置的演示 seed 数据。
@@ -13,7 +17,7 @@
 
 管理端在独立项目 `../console` 中，见该目录的 README。
 
-尚未实现：钉钉机器人（阶段 5）、外部大模型接入（接入点已固定在 `responder.js`）。
+Stage 5 进行中：Conversation Harness 与 Responses API Gateway 已接入；待配置真实模型 Secret 并完成真实模型验收。钉钉机器人尚未接入。
 
 ## 演示数据
 
@@ -21,6 +25,7 @@
 npm run seed:generate      # 确定性生成，可反复彩排
 npm run seed:apply         # 灌入远端 care 库，全部带 data_origin='demo_seed'
 npm run seed:reset         # 只清除演示数据，不影响 data_origin='live'
+./lab --help               # 对话 Harness 实验台（真实模型，见 docs/stage5-conversation-harness.md）
 ```
 
 演示数据包含 200 人规模、90 天趋势、广场帖子与活动效果，**不含任何真实姓名、工号、联系方式或可识别案例**，也不伪造钉钉考勤、病假或聊天接口返回。看板顶部持续标注"模拟基线 + 当前演示事件"。
@@ -39,7 +44,7 @@ npm run seed:reset         # 只清除演示数据，不影响 data_origin='live
 ```text
 src/                 员工端前端模块，经 esbuild 打包为 public/app.js
 functions/api/       Pages Functions；_lib 为服务层，wall/ chat/ 为业务 API
-functions/api/_lib/triage-data.js   词典与话术片段，逐行取自原型 Demo
+functions/api/_lib/harness/     对话上下文、指令、模型网关、工具与安全降级
 migrations/identity/ 身份中继库（加密映射、alias）
 migrations/care/     业务库（会话与员工业务数据）
 ```
@@ -48,6 +53,7 @@ migrations/care/     业务库（会话与员工业务数据）
 
 - `DINGTALK_CLIENT_ID` 是公开的 AppKey / client_id，可由 `/api/config` 返回。
 - `DINGTALK_APP_SECRET`、四个匿名化/加密密钥只通过 Pages Secrets 配置，绝不提交。
+- `MODEL_API_KEY` 只通过 Pages Secret 配置；`MODEL_API_ORIGIN` 与 `MODEL_NAME` 是非敏感部署变量。
 - `CARE_DB` 与 `IDENTITY_DB` 是两个独立 D1 数据库。
 - API 不返回 `userId`、`anonId`、access token 或身份中继数据；前端展示名由 `anon_id` 单向派生。
 - 员工倾诉原文、广场帖子与回复在 care D1 中只以 AES-GCM 密文保存，AAD 绑定所属会话/帖子，密钥版本随行。
@@ -71,6 +77,7 @@ ANON_HMAC_KEY_V1
 SUBJECT_LOOKUP_KEY_V1
 IDENTITY_ENCRYPTION_KEY_V1
 CARE_CONTENT_KEY_V1
+MODEL_API_KEY
 ```
 
 `IDENTITY_ENCRYPTION_KEY_V1` 与 `CARE_CONTENT_KEY_V1` 都必须是 32 字节随机值的 base64url 编码，且必须是彼此独立的两把密钥。HMAC 密钥应至少为 32 个随机字符。当前会话采用高熵随机 token，care 库仅保存其 SHA-256 摘要。

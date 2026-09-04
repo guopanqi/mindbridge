@@ -1,6 +1,6 @@
 import { json } from './_lib/http.js';
 import { ApiError, ensureProfile, handleError, readJson, requireSession } from './_lib/care.js';
-import { CONTEXT_TAGS } from './_lib/triage.js';
+import { CONTEXT_TAGS } from './_lib/context-tags.js';
 
 export async function onRequestGet({ request, env }) {
   try {

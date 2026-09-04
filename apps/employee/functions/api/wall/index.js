@@ -4,7 +4,6 @@ import {
   ApiError, aggregateStatement, ensureProfile, handleError, newId,
   openBody, PLAIN_VERSION, readJson, requireSession, requireText, sealBody,
 } from '../_lib/care.js';
-import { analyze } from '../_lib/triage.js';
 import { classifyTopic } from '../_lib/topics.js';
 
 const PAGE_SIZE = 30;
@@ -112,7 +111,8 @@ export async function onRequestPost({ request, env }) {
     }
     const id = newId('post');
     const sealed = await sealBody(env, text, postAad(id));
-    const emotion = analyze(text, null).top;
+    // 广场发布不再复用已废弃的对话规则引擎；情绪留空，议题仍走独立分类。
+    const emotion = null;
     // 议题在此刻分类并落库；HR 端之后只对类别计数，不接触原文。
     const topic = classifyTopic(text);
     await env.CARE_DB.batch([

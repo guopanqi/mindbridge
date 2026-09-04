@@ -1,21 +1,20 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { CRISIS_RESOURCES, respond } from '../functions/api/_lib/responder.js';
-import { emptyState } from '../functions/api/_lib/triage.js';
+import { CRISIS_RESOURCES, safeFallback } from '../functions/api/_lib/harness/safety.js';
 import { SCOPES } from '../functions/api/consents.js';
 import { MOODS } from '../functions/api/checkin.js';
 
-test('红色场景返回紧急资源，并声明系统不会代为联系', () => {
-  const result = respond('我不想活了', emptyState(), 'none');
+test('已验证红色状态在模型不可用时仍返回紧急资源', () => {
+  const result = safeFallback({ supportLevel: 'red' });
   assert.equal(result.level, 'red');
   assert.ok(result.crisis);
   assert.equal(result.crisis.resources[0].contact, '12356');
   assert.match(result.crisis.disclaimer, /不会替你拨打/);
 });
 
-test('非红色场景不展示紧急资源，避免过度惊吓', () => {
-  assert.equal(respond('今天有点累', emptyState(), 'none').crisis, null);
+test('普通状态的模型降级不展示紧急资源，避免过度惊吓', () => {
+  assert.equal(safeFallback({ supportLevel: 'blue' }).crisis, null);
 });
 
 test('紧急资源文案不能宣称 24 小时（官方要求为每日至少 18 小时）', () => {

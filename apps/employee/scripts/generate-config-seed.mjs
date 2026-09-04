@@ -1,7 +1,6 @@
-// 干预矩阵与资源目录的出厂默认值，直接从规则引擎的 EMO 表派生，
-// 保证"配置的默认状态"与"代码里的兜底"永远一致。
+// 干预矩阵与资源目录的出厂默认值；它们是目录数据，不参与对话判断。
 import { writeFileSync } from 'node:fs';
-import { EMO } from '../functions/api/_lib/triage-data.js';
+import { INTERVENTION_DEFAULTS } from '../functions/api/_lib/intervention-defaults.js';
 
 const esc = (s) => String(s).replace(/'/g, "''");
 const now = Date.now();
@@ -9,7 +8,7 @@ const lines = ['-- 由 scripts/generate-config-seed.mjs 生成，勿手改。'];
 
 const catalog = new Map();
 let order = 0;
-for (const [emotion, item] of Object.entries(EMO)) {
+for (const [emotion, item] of Object.entries(INTERVENTION_DEFAULTS)) {
   order += 1;
   catalog.set(item.res.n, { level: 'L1', desc: item.res.d, icon: item.res.i });
   catalog.set(item.yellow.n, { level: 'L2', desc: item.yellow.d, icon: item.yellow.i });

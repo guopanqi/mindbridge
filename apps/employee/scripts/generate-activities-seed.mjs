@@ -6,7 +6,7 @@
 // input（写点什么）、note（纯提示）。新增活动只要给出 stages，不用改前端。
 import { writeFileSync } from 'node:fs';
 import { ACTIVITIES } from '../functions/api/_lib/activities-data.js';
-import { EMO } from '../functions/api/_lib/triage-data.js';
+import { INTERVENTION_DEFAULTS } from '../functions/api/_lib/intervention-defaults.js';
 
 const esc = (s) => String(s).replace(/'/g, "''");
 
@@ -92,7 +92,7 @@ for (const [id, raw] of Object.entries(ACTIVITIES)) {
 // 其余（多为线下团体活动）在这里补成报名制活动，避免员工点了推荐卡走进死路。
 const covered = new Set(Object.values(ACTIVITIES).map((a) => a.title));
 const missing = new Map();
-for (const item of Object.values(EMO)) {
+for (const item of Object.values(INTERVENTION_DEFAULTS)) {
   for (const [res, level] of [[item.res, 'L1'], [item.yellow, 'L2']]) {
     if (!covered.has(res.n) && !missing.has(res.n)) missing.set(res.n, { level, desc: res.d, icon: res.i });
   }

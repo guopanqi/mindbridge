@@ -6,6 +6,7 @@
   "scripts": {
     "build": "npm run build:sdk && npm run build:app",
     "check": "npm run build && node --test",
+    "lab": "node scripts/harness-lab.mjs",
     "dev": "wrangler pages dev public",
     "predeploy": "npm run check",
     "deploy": "wrangler pages deploy public --project-name mindbridge-app --branch main",

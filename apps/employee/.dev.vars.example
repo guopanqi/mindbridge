@@ -10,3 +10,6 @@ IDENTITY_ENCRYPTION_KEY_V1=""
 CARE_CONTENT_KEY_V1=""
 # care 与 console 之间的内部服务令牌（两侧必须一致）
 INTERNAL_SERVICE_TOKEN=""
+# 对话 Harness：Responses API（当前使用 DeepSeek）。MODEL_API_KEY 必须作为 secret 配置。
+MODEL_API_KEY=""
+MODEL_NAME="deepseek-v4-flash"
