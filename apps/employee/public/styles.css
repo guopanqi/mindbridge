@@ -167,6 +167,9 @@ main { flex: 1; min-height: 0; }
 .consent-list { display: grid; gap: 10px; }
 .consent-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 14px; line-height: 1.6; }
 .consent-row input { width: 20px; height: 20px; flex: 0 0 auto; accent-color: var(--brand); }
+.consent-row input:disabled { opacity: .45; }
+/* 「处理中」必须占位显示：这是唯一能说明「服务端还没确认」的信号。 */
+.consent-status { margin-left: auto; font-size: 12px; color: var(--ink-soft); white-space: nowrap; }
 .build-id { font-size: 11px; color: #9db2ae; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
 .panel.urgent { border-color: #e0b96b; background: #fffbf2; }
 .auth-request { border-top: 1px dashed var(--line); padding-top: 10px; }

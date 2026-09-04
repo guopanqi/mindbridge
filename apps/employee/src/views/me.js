@@ -138,28 +138,62 @@ function appointmentPanel(reload) {
   ]);
 }
 
+// 授权开关是这个产品里风险最高的一个控件：它决定疗愈师能不能看到对话原文。
+// 因此这里不做乐观更新——服务端确认之前，界面上的状态一律保持原样。
+//
+// 特别是超时：超时不是失败的证明，服务端可能已经写入。此时既不能显示成功，
+// 也不能本地取反假装没生效，唯一如实的做法是回服务端拿一次真实值。
 function consentPanel(reload) {
   return el('section', { class: 'panel' }, [
     el('h2', { text: '我的授权' }),
     el('p', { class: 'panel-sub', text: '默认全部关闭。开启后随时可以撤销，撤销立即生效。' }),
-    el('div', { class: 'consent-list' }, data.consents.map((item) => el('label', { class: 'consent-row' }, [
-      el('span', { text: item.label }),
-      (() => {
-        const box = el('input', { attrs: { type: 'checkbox' } });
+    el('div', { class: 'consent-list' }, data.consents.map((item) => {
+      const box = el('input', { attrs: { type: 'checkbox' } });
+      box.checked = item.granted;
+      const status = el('span', { class: 'consent-status', text: '' });
+
+      box.addEventListener('change', async () => {
+        const wanted = box.checked;
+        // 浏览器已经先把勾选框翻过去了。先扳回服务端已知的值：
+        // 在拿到确认之前，界面不能替服务端宣布结果。
         box.checked = item.granted;
-        box.addEventListener('change', async () => {
-          try {
-            await api.setConsent(item.scope, box.checked);
-            toast(box.checked ? '已授权。' : '已撤销。');
-            reload();
-          } catch {
-            box.checked = !box.checked;
-            toast('设置没有成功，请稍后再试。');
+        box.disabled = true;
+        status.textContent = '处理中…';
+        try {
+          await api.setConsent(item.scope, wanted);
+          toast(wanted ? '已授权。' : '已撤销。');
+          reload();
+        } catch (error) {
+          const code = error instanceof ApiError ? error.code : '';
+          if (code === 'SERVER_TIMEOUT' || code === 'NETWORK_ERROR') {
+            // 结果未知：不猜，去服务端读回真实值再显示。
+            status.textContent = '';
+            box.disabled = false;
+            try {
+              const fresh = await api.consents();
+              data.consents = fresh.consents;
+              const current = fresh.consents.find((c) => c.scope === item.scope);
+              toast(current && current.granted === wanted
+                ? '网络中断，但这次修改已经生效。'
+                : '网络中断，这次修改没有生效，请重试。');
+              reload();
+            } catch {
+              toast('网络中断，暂时无法确认这次修改是否生效。请稍后回到这里查看当前状态。');
+            }
+            return;
           }
-        });
-        return box;
-      })(),
-    ]))),
+          status.textContent = '';
+          box.disabled = false;
+          toast('设置没有成功，请稍后再试。');
+        }
+      });
+
+      return el('label', { class: 'consent-row' }, [
+        el('span', { text: item.label }),
+        status,
+        box,
+      ]);
+    })),
   ]);
 }
 
