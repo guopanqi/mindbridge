@@ -99,13 +99,27 @@ async function generateValidated(gateway, request, deadlineAt, clock) {
   throw new Error('MODEL_DECISION_INVALID');
 }
 
-// 模型可能改写标点或只用活动名的前半段，比对时先去掉标点与空白再放宽到前缀。
+// 模型天然会简称或改写活动名：标题「三分钟呼吸着陆法」会被说成「呼吸着陆法」
+// 或「三分钟的呼吸练习」，这些和卡片仍是连贯的。要挡的只是文字完全在讲别的事。
+// 因此比对最长公共子串而不是精确标题——精确匹配会把大多数合格回复也丢掉。
+const MIN_SHARED_RUN = 3;
 function mentionsActivity(reply, title) {
   const normalize = (value) => String(value || '').replace(/[\s\p{P}\p{S}]/gu, '');
   const text = normalize(reply);
   const name = normalize(title);
-  if (!name) return false;
-  return text.includes(name) || (name.length >= 5 && text.includes(name.slice(0, 5)));
+  if (!name || !text) return false;
+  if (name.length <= MIN_SHARED_RUN) return text.includes(name);
+  let previous = new Array(text.length + 1).fill(0);
+  for (let i = 1; i <= name.length; i++) {
+    const current = new Array(text.length + 1).fill(0);
+    for (let j = 1; j <= text.length; j++) {
+      if (name[i - 1] !== text[j - 1]) continue;
+      current[j] = previous[j - 1] + 1;
+      if (current[j] >= MIN_SHARED_RUN) return true;
+    }
+    previous = current;
+  }
+  return false;
 }
 
 function addUsage(first, second) {

@@ -1,4 +1,4 @@
-// 回访问题逐行取自 prototype/mindbridge-demo.html。
+// 回访问题逐行取自 prototype/mindbridge-prototype.html。
 
 export const FOLLOWUP_BY_ACTIVITY={
   breathing:'上次做完呼吸练习后，今天有没有感觉稍微松一点？',

@@ -14,12 +14,12 @@
 | `apps/employee/` | 员工端 H5 + Care Domain API | Cloudflare Pages `mindbridge-app` |
 | `apps/console/` | HR 看板 + 疗愈师个案台 | Cloudflare Pages `mindbridge-console` |
 | `apps/bot-stream/` | 钉钉 Stream 私聊接收器，共用员工端对话服务 | 常驻 Node 进程 |
-| `prototype/` | **交互原型**，只读参考，不是产品 | Pages `mindbridge-demo` |
+| `prototype/` | **交互原型**，只读参考，不是产品 | Pages `mindbridge-prototype` |
 | `docs/` | 技术债台账、路演需求、产品方案、比赛材料 | — |
 | `assets/` | 截图与图标 | — |
 | `archive/`、`PPT/` | 历史产物，只进不出 | — |
 
-`prototype/mindbridge-demo.html` 是只读交互原型。活动内容现在由 `apps/employee/content/activities/*.json`
+`prototype/mindbridge-prototype.html` 是只读交互原型。活动内容现在由 `apps/employee/content/activities/*.json`
 维护，经校验与幂等导入写入 D1；不再通过修改原型或生成脚本来维护活动。
 
 ## 架构边界（不可破坏）

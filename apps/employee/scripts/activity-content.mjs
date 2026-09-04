@@ -43,11 +43,28 @@ export function validateActivity(a) {
   if (!Array.isArray(a.tags) || a.tags.length > 20 || a.tags.some(t => !str(t, 40))) fail('invalid tags');
   if (!a.scale || !['up', 'down'].includes(a.scale.direction) || ['preLabel', 'low', 'high'].some(k => !str(a.scale[k], 200))) fail('invalid scale');
   if (!Array.isArray(a.stages) || a.stages.length > 50 || (a.kind === 'online' && !a.stages.length)) fail('invalid stages');
+  // 播放器认识的步骤类型。新增类型必须同时在 src/views/activity.js 里有渲染实现，
+  // 否则旧版本 WebView 会退回 fallbackHint —— 所以除这几种之外一律强制要求 fallbackHint。
+  const KNOWN = ['prompt', 'note', 'input', 'choice', 'breath', 'scan', 'timer', 'entries'];
+  const positive = (v, max) => Number.isSafeInteger(v) && v > 0 && v <= max;
   for (const s of a.stages) {
     if (!s || !str(s.type, 40) || !str(s.title, 200)) fail('invalid stage');
     if (s.hint !== undefined && !str(s.hint)) fail('invalid hint');
-    if (!['prompt', 'choice', 'input', 'note'].includes(s.type) && !str(s.fallbackHint)) fail('new stage needs fallbackHint');
+    if (!KNOWN.includes(s.type) && !str(s.fallbackHint)) fail('new stage needs fallbackHint');
     if (s.type === 'choice' && (!Array.isArray(s.options) || !s.options.length || s.options.length > 20 || s.options.some(o => !str(o.label, 200)))) fail('invalid choices');
+    if (s.type === 'breath') {
+      const c = s.cycle;
+      if (!c || !positive(c.inhale, 20) || !positive(c.exhale, 20)) fail('invalid breath cycle');
+      if (c.hold !== undefined && !(Number.isSafeInteger(c.hold) && c.hold >= 0 && c.hold <= 20)) fail('invalid breath hold');
+      if (!positive(s.rounds, 20)) fail('breath needs rounds');
+    }
+    if (s.type === 'scan' && (!Array.isArray(s.parts) || !s.parts.length || s.parts.length > 12
+      || s.parts.some(part => !str(part.name, 40) || !str(part.hint, 300)
+        || (part.seconds !== undefined && !positive(part.seconds, 120))))) fail('invalid scan parts');
+    if (s.type === 'timer' && (!Array.isArray(s.segments) || !s.segments.length || s.segments.length > 12
+      || s.segments.some(seg => !str(seg.title, 60) || !positive(seg.seconds, 300)))) fail('invalid timer segments');
+    if (s.type === 'entries' && (!Array.isArray(s.placeholders) || !s.placeholders.length
+      || s.placeholders.length > 6 || s.placeholders.some(t => !str(t, 120)))) fail('invalid entries');
   }
   if (JSON.stringify(a).length > 50000) fail('document too large');
   return a;

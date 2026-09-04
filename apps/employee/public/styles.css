@@ -287,3 +287,44 @@ main { flex: 1; min-height: 0; }
 .context-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
 .context-pill { background: var(--bg); border: 1px solid var(--line); border-radius: 999px;
   padding: 6px 12px; font-size: 13px; }
+
+/* ---------- 活动步骤：可体验的交互 ---------- */
+/* 呼吸圆。缩放时长由 JS 按当前相的秒数设置，动画和文字必须对得上。 */
+.breath-wrap { display: grid; place-items: center; gap: 10px; padding: 10px 0 4px; }
+.breath-orb {
+  width: 140px; height: 140px; border-radius: 50%; display: grid; place-items: center;
+  background: radial-gradient(circle at 38% 32%, #9fe0d0, var(--brand));
+  color: #fff; transform: scale(.62); transition: transform linear;
+  box-shadow: 0 10px 30px rgba(20, 123, 111, .28);
+}
+.breath-orb.inhale { transform: scale(1); }
+.breath-orb.hold { transform: scale(1); }
+.breath-orb.exhale { transform: scale(.62); }
+.breath-label { font-size: 17px; font-weight: 700; letter-spacing: .04em; }
+.breath-count { font-size: 26px; font-weight: 700; color: var(--brand); min-height: 32px; }
+.breath-rounds { display: flex; gap: 6px; justify-content: center; }
+.breath-rounds i { width: 22px; height: 4px; border-radius: 2px; background: var(--line); }
+.breath-rounds i.on { background: var(--brand); }
+
+/* 部位觉察：身体扫描与肌肉放松共用。 */
+.scan-stage { display: grid; place-items: center; gap: 8px; background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 22px 16px; }
+.scan-icon { font-size: 42px; line-height: 1; }
+.scan-count { font-size: 22px; font-weight: 700; color: var(--brand); }
+.scan-name { margin: 0; font-size: 16px; font-weight: 700; }
+.scan-hint { margin: 0; font-size: 14px; line-height: 1.7; color: var(--ink-soft); text-align: center; }
+.scan-dots { display: flex; gap: 6px; margin-top: 4px; }
+.scan-dots i { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
+.scan-dots i.on { background: var(--brand); }
+
+/* 计时跟练。 */
+.timer-stage { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 20px 16px; display: grid; gap: 8px; justify-items: center; }
+.timer-title { margin: 0; font-size: 17px; font-weight: 700; text-align: center; }
+.timer-hint { margin: 0; font-size: 14px; line-height: 1.7; color: var(--ink-soft); text-align: center; }
+.timer-clock { margin: 4px 0 0; font-size: 30px; font-weight: 700; color: var(--brand); font-variant-numeric: tabular-nums; }
+.timer-track { width: 100%; height: 5px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.timer-track i { display: block; height: 100%; width: 0; background: var(--brand); transition: width 1s linear; }
+
+@media (prefers-reduced-motion: reduce) {
+  .breath-orb { transition: none; }
+  .timer-track i { transition: none; }
+}

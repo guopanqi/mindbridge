@@ -1,36 +1,46 @@
 {
   "id": "breathing",
-  "contentVersion": 2,
+  "contentVersion": 3,
   "title": "三分钟呼吸着陆法",
-  "description": "通过简短的文字练习，给自己一点停留的空间。",
+  "description": "跟着屏幕上的圆一起吸气和呼气，让身体先从赶进度的紧绷里退下来。",
   "kind": "online",
   "level": "L1",
   "available": true,
-  "tags": [
-    "紧张"
-  ],
-  "duration": "3–5 分钟",
+  "form": "线上跟练",
+  "duration": "3 分钟",
+  "scoreLabel": "紧张感",
+  "suitedFor": "赶进度、开会前后、心跳快到静不下来的时候",
+  "coreMethod": "延长呼气的节律呼吸",
+  "tags": ["紧张"],
   "scale": {
     "preLabel": "此刻的紧张程度是多少？",
-    "low": "很低",
-    "high": "很高",
+    "low": "很放松",
+    "high": "非常紧张",
     "direction": "down"
   },
   "stages": [
     {
       "type": "prompt",
-      "title": "找到稳定姿势",
-      "hint": "双脚接触地面，让肩膀放松。"
+      "title": "先坐稳",
+      "hint": "双脚踩实地面，肩膀往下沉一点。不用刻意挺直腰背，舒服就行。"
     },
     {
-      "type": "prompt",
-      "title": "自然呼吸",
-      "hint": "按舒服的节奏呼吸，无需屏息。若不适，停止练习。"
+      "type": "breath",
+      "title": "跟着圆呼吸",
+      "hint": "圆变大时吸气，变小时呼气。呼气比吸气长，是这个练习起作用的地方。",
+      "cycle": { "inhale": 4, "hold": 2, "exhale": 6 },
+      "rounds": 6
     },
     {
-      "type": "prompt",
-      "title": "留意当下",
-      "hint": "看看身体有没有微小变化，没有变化也没关系。"
+      "type": "choice",
+      "title": "留意一个变化",
+      "hint": "不必要求自己已经平静下来，只看看哪里比刚才松了一点。",
+      "options": [
+        { "icon": "🫁", "label": "呼吸变慢了", "desc": "不再是浅而急的那种呼吸", "reflection": "呼吸慢下来时，身体通常比情绪先安静。这一点变化就够了。" },
+        { "icon": "🤲", "label": "肩膀松了一点", "desc": "肩颈没有刚才那么端着", "reflection": "肩膀是最先替我们扛紧张的地方。它松开，说明身体收到了信号。" },
+        { "icon": "🧠", "label": "脑子没那么吵", "desc": "念头还在，但没有一直冲上来", "reflection": "念头不需要消失。它们之间多出来的那点缝隙，就是你刚才争取到的。" },
+        { "icon": "😐", "label": "还是老样子", "desc": "没什么感觉", "reflection": "没有变化也是正常的结果，尤其是第一次做。练习起效通常需要重复几次，不是一次就见效。" }
+      ]
     }
   ]
 }

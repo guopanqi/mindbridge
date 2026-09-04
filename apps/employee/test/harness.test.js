@@ -392,6 +392,27 @@ test('文字没提到活动时不挂卡片，避免图文各说各话', async ()
   assert.ok(!result.nextState.recentRecommendations.includes('art-group'));
 });
 
+test('模型用简称或改写活动名时仍然挂卡片', async () => {
+  // 标题「三分钟呼吸着陆法」被说成「呼吸着陆法」，文字与卡片依然连贯，不该丢。
+  for (const wording of ['我这边有一个「呼吸着陆法」，跟着做就行。', '有一项三分钟的呼吸练习，很适合现在。']) {
+    const gateway = {
+      async generate(request) {
+        return {
+          decision: request.toolResult
+            ? decision({ reply: { text: wording } })
+            : decision({ toolCall: { name: 'search_activities', arguments: { query: '放松', limit: 1 } } }),
+          usage: { inputTokens: 1, outputTokens: 1 }, meta: { provider: 'f', model: 'f', latencyMs: 1 },
+        };
+      },
+    };
+    const env = { CARE_DB: { prepare() { return { bind() { return { all: async () => ({ results: [{ id: 'breathing', title: '三分钟呼吸着陆法' }] }) }; } }; } } };
+    const result = await runConversationHarness({
+      env, gateway, userState: emptyUserState(), recentMessages: [], currentMessage: '有什么活动吗', now: 1,
+    });
+    assert.equal(result.activity?.id, 'breathing', wording);
+  }
+});
+
 test('文字点名了活动时正常挂卡片', async () => {
   const gateway = {
     async generate(request) {
