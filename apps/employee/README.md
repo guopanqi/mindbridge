@@ -17,7 +17,7 @@
 
 管理端在独立项目 `../console` 中，见该目录的 README。
 
-Stage 5 进行中：Conversation Harness 与 Responses API Gateway 已接入；待配置真实模型 Secret 并完成真实模型验收。钉钉机器人尚未接入。
+Stage 5 进行中：Conversation Harness 与 Responses API Gateway 已接入，生产模型 Secret 与数据库迁移已配置；真实钉钉闭环仍需验收。钉钉机器人尚未接入。2026-09-04 真实模型回归 32 次对话出现 4 项断言失败，不能宣称全部通过，见 `docs/stage5-production-verification.md`。
 
 ## 演示数据
 
