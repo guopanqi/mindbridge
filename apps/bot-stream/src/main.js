@@ -31,7 +31,9 @@ client.registerCallbackListener(TOPIC_ROBOT, frame => {
   try { message = validateMessage(JSON.parse(frame.data),config); }
   catch { log('inbound_rejected'); client.socketCallBackResponse(frame.headers.messageId,{errcode:0}); return; }
   try {
-    if (message) inbox.put(message);
+    // validateMessage returns null for non 1:1 conversations. Without a log,
+    // "never arrived" and "arrived but dropped as group chat" look identical when triaging.
+    if (message) inbox.put(message); else log('inbound_ignored_not_direct');
     // Durable insert commits synchronously BEFORE acknowledgement.
     client.socketCallBackResponse(frame.headers.messageId,{errcode:0});
   } catch { log('inbox_write_failed'); /* Leave unacknowledged for server retry. */ }
