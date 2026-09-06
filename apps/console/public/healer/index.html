@@ -4,25 +4,38 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#0f766e" />
-    <title>MindBridge 管理后台</title>
+    <title>MindBridge 疗愈师工作台</title>
     <link rel="stylesheet" href="/styles.css" />
-    <script defer src="/app.js"></script>
+    <script defer src="/healer/app.js"></script>
   </head>
   <body>
     <section id="gate" class="gate">
       <div class="gate-box">
-        <p class="eyebrow">MINDBRIDGE · 管理后台</p>
-        <h1 id="gate-title">正在校验管理员身份</h1>
+        <p class="eyebrow">MINDBRIDGE · 疗愈师工作台</p>
+        <h1 id="gate-title">正在进入工作台</h1>
         <p id="gate-detail" class="gate-detail">请稍候。</p>
         <p id="gate-code" class="gate-code" hidden></p>
+        <div id="signin" class="healer-form" hidden>
+          <input id="signin-name" type="text" autocomplete="off" value="李佳" placeholder="姓名" aria-label="姓名" />
+          <input id="signin-pass" type="password" autocomplete="off" placeholder="密码（演示环境可留空）" aria-label="密码" />
+          <button id="signin-go" class="primary" type="button">进入工作台</button>
+        </div>
+        <details id="healer-gate" class="healer-gate">
+          <summary>用邀请码进入</summary>
+          <p class="gate-detail">邀请码由企业管理员生成，24 小时内有效。</p>
+          <div class="healer-form">
+            <input id="healer-code" type="text" autocomplete="off" placeholder="邀请码" aria-label="疗愈师邀请码" />
+            <button id="healer-login" class="primary" type="button">进入</button>
+          </div>
+        </details>
       </div>
     </section>
 
-    <div id="console" class="console" hidden>
+    <div id="workspace" class="console" hidden>
       <header class="topbar">
         <div>
-          <p class="brand">MindBridge 管理后台</p>
-          <p id="tenant-line" class="tenant-line"></p>
+          <p class="brand">MindBridge 疗愈师工作台</p>
+          <p class="tenant-line">个案只显示编号与风险级别；查看对话内容需要员工本人单独授权。</p>
         </div>
         <div class="topbar-right">
           <span id="staff-name" class="staff-name"></span>
@@ -30,16 +43,8 @@
         </div>
       </header>
 
-      <div id="origin-banner" class="origin-banner" role="status"></div>
-
-      <nav class="tabs" role="tablist">
-        <button class="tab on" role="tab" aria-selected="true" data-view="dashboard">员工关怀看板</button>
-        <button class="tab" role="tab" aria-selected="false" data-view="audit">审计记录</button>
-      </nav>
-
       <main>
-        <section id="view-dashboard" class="view"></section>
-        <section id="view-audit" class="view" hidden></section>
+        <section id="view-cases" class="view"></section>
       </main>
     </div>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>

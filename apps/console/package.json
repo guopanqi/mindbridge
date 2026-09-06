@@ -4,14 +4,13 @@
   "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "build": "npm run build:app && npm run build:healer",
+    "build": "npm run build:app",
     "check": "npm run build && node --test",
     "dev": "wrangler pages dev public",
     "predeploy": "npm run check",
     "deploy": "wrangler pages deploy public --project-name mindbridge-console --branch main",
     "db:migrate:local": "wrangler d1 migrations apply mindbridge-staff --local",
     "db:migrate": "wrangler d1 migrations apply mindbridge-staff --remote",
-    "build:healer": "node -e \"const fs=require('fs');fs.mkdirSync('public/healer',{recursive:true});fs.copyFileSync('public/index.html','public/healer/index.html')\"",
     "build:app": "node scripts/build-app.mjs"
   },
   "devDependencies": {

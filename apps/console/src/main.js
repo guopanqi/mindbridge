@@ -28,6 +28,7 @@ function showGate(title, detail, code) {
   }
   $('#gate').hidden = false;
   $('#console').hidden = true;
+  $('#signin').hidden = false;
 }
 
 function renderBanner(data) {
@@ -123,6 +124,21 @@ document.addEventListener('click', (event) => {
   const tab = /** @type {HTMLElement | null} */ (/** @type {Element} */ (event.target).closest('.tab'));
   if (tab) void showView(tab.dataset.view);
 });
+// 演示登录：预置账号「admin」，密码不校验。真实上线时用 DEMO_LOGIN=off 关掉。
+async function signInWithName() {
+  const name = $('#signin-name').value.trim();
+  if (!name) return toast('请填写姓名。');
+  try {
+    await api.signInAsDemo(name, $('#signin-pass').value);
+    await enterConsole(await api.session());
+  } catch (error) {
+    toast(error instanceof ApiError && error.userMessage ? error.userMessage : '这个账号进不去。');
+  }
+}
+
+$('#signin-go').addEventListener('click', () => void signInWithName());
+$('#signin-pass').addEventListener('keydown', (event) => { if (event.key === 'Enter') void signInWithName(); });
+
 $('#sign-out').addEventListener('click', async () => {
   await api.signOut().catch(() => {});
   showGate('已退出', '需要时可从钉钉管理后台重新进入。', null);

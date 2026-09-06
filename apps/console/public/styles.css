@@ -34,6 +34,8 @@ input, select { font: inherit; border: 1px solid var(--line); border-radius: 8px
 .healer-gate { margin-top: 22px; border-top: 1px solid var(--line); padding-top: 16px; }
 .healer-gate summary { cursor: pointer; font-size: 14px; color: var(--brand); font-weight: 600; }
 .healer-form { display: flex; gap: 8px; margin-top: 12px; }
+#signin { margin-top: 18px; flex-wrap: wrap; }
+#signin input { flex: 1 1 120px; }
 .healer-form input { flex: 1; }
 
 .console { max-width: 1180px; margin: 0 auto; padding: 0 20px 48px; }
