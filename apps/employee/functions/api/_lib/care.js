@@ -63,7 +63,20 @@ export async function openBody(env, cipher, version, aad) {
   }
 }
 
-export async function requireSession(request, env) {
+// 一次 HTTP 请求内可能有多个处理器都要校验会话（/api/bootstrap 聚合了 5 个），
+// 每次校验都是一读一写 D1。按 request 对象缓存，同一请求只做一遍。
+const sessionCache = new WeakMap();
+
+export function requireSession(request, env) {
+  let pending = sessionCache.get(request);
+  if (!pending) {
+    pending = resolveSession(request, env);
+    sessionCache.set(request, pending);
+  }
+  return pending;
+}
+
+async function resolveSession(request, env) {
   const token = readCookie(request, SESSION_COOKIE);
   if (!token) throw new ApiError('SESSION_REQUIRED', 401, '匿名会话已失效，请从钉钉工作台重新进入');
   const digest = await sha256Base64Url(token);

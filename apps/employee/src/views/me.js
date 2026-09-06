@@ -1,4 +1,5 @@
 import { api, ApiError } from '../api.js';
+import { cached, refresh } from '../store.js';
 import { BUILD_ID } from '../build-id.js';
 import { clear, closeSheet, el, openSheet, timeAgo, toast } from '../dom.js';
 
@@ -18,6 +19,7 @@ let data = {
   resources: [], retentionDays: 180, appointments: [], consents: [], authorizations: [],
 };
 let onClearChat = async () => {};
+let hydrated = false;
 
 // 标签平铺在一级页面，等于把「面临技术焦虑/转型」这类身份常驻在屏幕上，
 // 每次进来提醒一遍自己被归了哪一类，还可能被旁边的人瞥见。
@@ -217,22 +219,37 @@ export function renderMe(container, options = {}) {
 
 export async function loadMe() {
   const reload = () => void loadMe();
+  // 有缓存就先画出来，网络回来再重画一次；不要让人对着空白等一个来回。
+  const snapshot = cached();
+  if (snapshot) {
+    apply(snapshot);
+    hydrated = true;
+  }
+  if (hydrated) paint(reload);
   try {
-    const [me, history, appointments, consents, authorizations] = await Promise.all([
-      api.me(), api.history(), api.appointments(), api.consents(), api.authorizations(),
-    ]);
-    state.contextTag = me.contextTag;
-    data = {
-      ...history,
-      appointments: appointments.appointments,
-      consents: consents.consents,
-      authorizations: authorizations.requests,
-    };
+    apply(await refresh());
+    hydrated = true;
   } catch (error) {
     if (error instanceof ApiError && error.code === 'SESSION_REQUIRED') throw error;
     toast('部分信息暂时读不出来。');
   }
+  paint(reload);
+}
+
+function apply(body) {
+  state.contextTag = body.me.contextTag;
+  data = {
+    resources: body.resources,
+    retentionDays: body.retentionDays,
+    appointments: body.appointments,
+    consents: body.consents,
+    authorizations: body.authorizations,
+  };
+}
+
+function paint(reload) {
   const body = data;
+
   // append(null) 会插入字面量 "null" 文本节点，这里必须过滤。
   clear(root).append(...[
     authorizationPanel(reload),

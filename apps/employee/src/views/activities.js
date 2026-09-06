@@ -7,12 +7,14 @@
 // 按身份标签匹配的推荐需要一张 HR 侧的「标签 → 活动」映射，那张配置还不存在，
 // 没有就不编：宁可显示「还没有推荐」，也不把活动库里的东西假装成为你挑的。
 import { api, ApiError } from '../api.js';
+import { cached, refresh } from '../store.js';
 import { clear, el, timeAgo, toast } from '../dom.js';
 import { openActivity } from './activity.js';
 import { openLibrary } from './library.js';
 
 let root;
 let items = [];
+let hydrated = false;
 
 const KIND_LABEL = (item) => (item.kind === 'offline' ? '线下活动' : '线上自助');
 
@@ -142,12 +144,20 @@ export function renderActivities(container) {
 }
 
 export async function loadActivities() {
+  // 同 me：先用缓存把列表画出来，再回源刷新。两个页面共用一次 bootstrap 请求。
+  const snapshot = cached();
+  if (snapshot) {
+    items = snapshot.resources;
+    hydrated = true;
+  }
+  if (hydrated) render();
   try {
-    const body = await api.history();
-    items = body.resources;
+    items = (await refresh()).resources;
+    hydrated = true;
     render();
   } catch (error) {
     if (error instanceof ApiError && error.code === 'SESSION_REQUIRED') throw error;
-    clear(root).append(el('p', { class: 'empty', text: '活动暂时打不开，请稍后再试。' }));
+    if (!hydrated) clear(root).append(el('p', { class: 'empty', text: '活动暂时打不开，请稍后再试。' }));
+    else toast('活动列表暂时刷新不出来。');
   }
 }

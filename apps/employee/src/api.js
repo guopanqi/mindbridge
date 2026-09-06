@@ -41,6 +41,7 @@ export const api = {
   session: () => request('/api/session'),
   authenticate: (code) => post('/api/auth', { code }),
   me: () => request('/api/me'),
+  bootstrap: () => request('/api/bootstrap'),
   setContext: (contextTag) => post('/api/me', { contextTag }),
   chatHistory: () => request('/api/chat'),
   sendChat: (text) => post('/api/chat', { text }),

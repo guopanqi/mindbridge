@@ -2,6 +2,7 @@ import { api, ApiError } from '../api.js';
 import { clear, el, timeAgo, toast } from '../dom.js';
 
 let feed;
+let posts = null;
 let composer;
 const expanded = new Set();
 
@@ -95,15 +96,21 @@ export function renderWall(root) {
   root.append(composer, feed);
 }
 
+function paintWall() {
+  clear(feed);
+  if (!posts.length) {
+    feed.append(el('p', { class: 'empty', text: '广场还很安静。你可以成为第一个说话的人。' }));
+    return;
+  }
+  for (const post of posts) feed.append(card(post, () => void loadWall()));
+}
+
 export async function loadWall() {
+  // 上次的内容先留在屏幕上，刷新完成再整体替换，避免每次进广场都闪一下空白。
+  if (posts) paintWall();
   try {
-    const body = await api.wall();
-    clear(feed);
-    if (!body.posts.length) {
-      feed.append(el('p', { class: 'empty', text: '广场还很安静。你可以成为第一个说话的人。' }));
-      return;
-    }
-    for (const post of body.posts) feed.append(card(post, () => void loadWall()));
+    posts = (await api.wall()).posts;
+    paintWall();
   } catch (error) {
     if (error instanceof ApiError && error.code === 'SESSION_REQUIRED') throw error;
     toast('广场内容暂时读不出来，请稍后再试。');

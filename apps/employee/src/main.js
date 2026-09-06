@@ -7,6 +7,7 @@ import { loadActivities, renderActivities } from './views/activities.js';
 import { loadMe, renderMe, privacySheet } from './views/me.js';
 import { askContext } from './views/context-prompt.js';
 import { openActivity } from './views/activity.js';
+import { clearCache, refresh } from './store.js';
 
 const MIN_BOOT_MS = 1200;
 const AUTH_TIMEOUT_MS = 12_000;
@@ -72,6 +73,8 @@ async function enterApp() {
   $('#boot').hidden = true;
   $('#app').hidden = false;
   await showView('chat');
+  // 进来就把「我的 / 我的活动」的数据预热好，等用户点过去时已经在内存里，直接出内容。
+  void refresh().catch(() => {});
   // 机器人只提供定位链接，必须先完成正常免登；API仍检查参与记录归属。
   const link = new URL(window.location.href);
   const eventId = link.searchParams.get('eventId');
@@ -109,6 +112,7 @@ async function showView(view) {
   } catch (error) {
     if (error instanceof ApiError && error.code === 'SESSION_REQUIRED') {
       loaded.clear();
+      clearCache();
       currentView = null;
       await boot({ reason: 'expired' });
     }
