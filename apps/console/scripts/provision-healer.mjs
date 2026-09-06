@@ -23,7 +23,6 @@ const sql = [
 ].join('\n');
 
 writeFileSync('seed/healer.sql', `${sql}\n`);
-console.log(sql.split('\n').map(() => '').join(''));
 console.log(`已生成 seed/healer.sql（只含摘要，可安全提交给 wrangler 执行）`);
 console.log(`\n疗愈师：${name} · ${credential}`);
 console.log(`入口链接（只显示这一次，请立即保存）：\n${base}/healer?k=${key}\n`);

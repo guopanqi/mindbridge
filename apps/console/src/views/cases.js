@@ -5,6 +5,15 @@ let root;
 let allCases = [];
 let activeFilter = 'pending';
 let slaInterval = null;
+// 登录者本人的身份，由工作台在进入时注入；拿不到时退回演示用的预置疗愈师。
+let identity = { displayName: '李佳', credential: 'UNIHEAL 国际疗愈师 · UH-2024-0871' };
+
+export function setHealerIdentity(next) {
+  identity = {
+    displayName: next?.displayName || identity.displayName,
+    credential: next?.credential || identity.credential,
+  };
+}
 
 const RISK_LABEL = { red: '红色 · 危机信号', yellow: '黄色 · 需关注', green: '绿色' };
 
@@ -226,8 +235,8 @@ function renderWorkspace() {
   const header = el('div', { class: 'healer-header' }, [
     el('div', { class: 'healer-avatar', text: '🌿' }),
     el('div', {}, [
-      el('div', { class: 'healer-name', text: '李佳' }),
-      el('div', { class: 'healer-cert', text: 'UNIHEAL 国际疗愈师 · UH-2024-0871 · 在岗值班' }),
+      el('div', { class: 'healer-name', text: identity.displayName }),
+      el('div', { class: 'healer-cert', text: `${identity.credential} · 在岗值班` }),
     ]),
     el('div', { class: 'healer-badge' }, [
       el('div', { class: 'cnt', text: String(pendingList.length) }),

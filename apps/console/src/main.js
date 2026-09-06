@@ -3,7 +3,6 @@ import { BUILD_ID } from './build-id.js';
 import { $, el, toast } from './dom.js';
 import { loadDashboard, renderDashboard } from './views/dashboard.js';
 import { loadAudit, renderAudit } from './views/audit.js';
-import { loadCases, renderCases } from './views/cases.js';
 
 const GATE_TEXT = {
   NO_CODE: '请从钉钉管理后台（oa.dingtalk.com → 应用管理 → MindBridge）进入，直接访问网址无法校验管理员身份。',
@@ -54,16 +53,14 @@ async function showView(view) {
     tab.classList.toggle('on', on);
     tab.setAttribute('aria-selected', String(on));
   }
-  for (const name of ['dashboard', 'cases', 'audit']) $(`#view-${name}`).hidden = name !== view;
+  for (const name of ['dashboard', 'audit']) $(`#view-${name}`).hidden = name !== view;
   try {
     if (!loaded.has(view)) {
       loaded.add(view);
       if (view === 'dashboard') renderDashboard($('#view-dashboard'));
-      if (view === 'cases') renderCases($('#view-cases'));
       if (view === 'audit') renderAudit($('#view-audit'));
     }
     if (view === 'dashboard') renderBanner(await loadDashboard());
-    if (view === 'cases') await loadCases();
     if (view === 'audit') await loadAudit();
   } catch (error) {
     if (error instanceof ApiError && error.code === 'STAFF_SESSION_REQUIRED') {
@@ -75,14 +72,13 @@ async function showView(view) {
 }
 
 async function enterConsole(session) {
-  const roleLabel = session.roles.includes('admin') ? '企业管理员'
-    : session.roles.includes('healer') ? '持证疗愈师' : 'HR';
+  const roleLabel = session.roles.includes('admin') ? '企业管理员' : 'HR';
   $('#staff-name').textContent = `${session.displayName} · ${roleLabel}`;
   $('#gate').hidden = true;
   $('#console').hidden = false;
-  // 没有 admin 角色的账号看不到审计入口。
-  // 角色决定看得到什么：疗愈师只有个案台，HR / 管理员看不到个案台。
-  const visibility = { dashboard: 'hr_viewer', cases: 'healer', audit: 'admin' };
+  // 没有 admin 角色的账号看不到审计入口。个案台不在这个应用里：
+  // 疗愈师是外部人员，走独立的 /healer 工作台，两边不共用前端包。
+  const visibility = { dashboard: 'hr_viewer', audit: 'admin' };
   let first = null;
   for (const tab of /** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll('.tab'))) {
     const allowed = session.roles.includes(visibility[tab.dataset.view]);
@@ -96,20 +92,6 @@ async function enterConsole(session) {
 
 async function boot() {
   const url = new URL(window.location.href);
-
-  // 疗愈师门户：预设的长期密钥，进来立刻换成 HttpOnly 会话并从地址栏抹掉。
-  const portalKey = url.searchParams.get('k');
-  if (portalKey) {
-    url.searchParams.delete('k');
-    window.history.replaceState({}, '', url.toString());
-    try {
-      await api.signInWithPortalKey(portalKey);
-    } catch (error) {
-      showGate('疗愈师门户无法打开', error?.userMessage || '门户链接已失效，请联系企业管理员。',
-        error instanceof ApiError ? error.code : null);
-      return;
-    }
-  }
 
   const code = url.searchParams.get('code');
   if (code) {
@@ -134,49 +116,12 @@ async function boot() {
       return;
     }
   }
-  if (window.location.pathname.startsWith('/healer')) {
-    // 预设入口密钥走 URL 参数：演示时打开链接即登录，不需要在现场输入任何东西。
-    const params = new URLSearchParams(window.location.search);
-    const key = params.get('k');
-    if (key) {
-      // 无论成败都先把密钥从地址栏抹掉，避免留在截图、录屏和浏览器历史里。
-      params.delete('k');
-      const rest = params.toString();
-      window.history.replaceState({}, '', `${window.location.pathname}${rest ? `?${rest}` : ''}`);
-      try {
-        await api.signInAsHealer({ accessKey: key });
-        const session = await api.session();
-        return void enterConsole(session);
-      } catch (error) {
-        const reason = error instanceof ApiError ? error.code : 'UNEXPECTED_CLIENT_ERROR';
-        showGate('疗愈师门户', error instanceof ApiError && error.userMessage
-          ? error.userMessage
-          : '入口链接无效，请联系企业管理员重新获取。', reason);
-        return;
-      }
-    }
-    showGate('疗愈师门户', '请使用企业管理员提供的入口链接打开本页面。链接等同于登录凭证，请不要转发。', null);
-    return;
-  }
   showGate('需要从钉钉管理后台进入', GATE_TEXT.NO_CODE, null);
 }
 
 document.addEventListener('click', (event) => {
   const tab = /** @type {HTMLElement | null} */ (/** @type {Element} */ (event.target).closest('.tab'));
   if (tab) void showView(tab.dataset.view);
-});
-$('#healer-login').addEventListener('click', async () => {
-  const input = $('#healer-code');
-  const code = input.value.trim();
-  if (!code) return toast('请填写邀请码。');
-  try {
-    await api.signInAsHealer({ accessCode: code });
-    input.value = '';
-    const session = await api.session();
-    await enterConsole(session);
-  } catch (error) {
-    toast(error instanceof ApiError && error.userMessage ? error.userMessage : '邀请码无效。');
-  }
 });
 $('#sign-out').addEventListener('click', async () => {
   await api.signOut().catch(() => {});

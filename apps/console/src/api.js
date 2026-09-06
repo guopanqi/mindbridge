@@ -36,11 +36,6 @@ export const api = {
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ code }),
   }),
-  signInWithPortalKey: (key) => request('/api/auth/portal', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ key }),
-  }),
   signOut: () => request('/api/session', { method: 'DELETE' }),
   metrics: (days, origin = 'live') => request(`/api/metrics?days=${encodeURIComponent(days)}&origin=${encodeURIComponent(origin)}`),
   config: () => request('/api/config'),

@@ -37,7 +37,7 @@ export async function requireStaff(request, env, requiredRole) {
   const digest = await sha256Base64Url(token);
   const now = Date.now();
   const row = await env.STAFF_DB.prepare(
-    `SELECT s.staff_id, s.display_name, s.roles, s.status
+    `SELECT s.staff_id, s.display_name, s.credential, s.roles, s.status
      FROM staff_sessions ss JOIN staff s ON s.staff_id = ss.staff_id
      WHERE ss.session_digest = ? AND ss.expires_at > ?`
   ).bind(digest, now).first();
@@ -49,7 +49,7 @@ export async function requireStaff(request, env, requiredRole) {
   }
   await env.STAFF_DB.prepare('UPDATE staff_sessions SET last_seen_at = ? WHERE session_digest = ?')
     .bind(now, digest).run();
-  return { staffId: row.staff_id, displayName: row.display_name, roles };
+  return { staffId: row.staff_id, displayName: row.display_name, credential: row.credential, roles };
 }
 
 // 审计条目只记录报表名或匿名个案编号，不含员工原文，也不含 anon_id。

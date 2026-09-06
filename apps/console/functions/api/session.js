@@ -5,7 +5,13 @@ import { handleError, requireStaff } from './_lib/staff.js';
 export async function onRequestGet({ request, env }) {
   try {
     const staff = await requireStaff(request, env);
-    return json({ ok: true, authenticated: true, displayName: staff.displayName, roles: staff.roles });
+    return json({
+      ok: true,
+      authenticated: true,
+      displayName: staff.displayName,
+      credential: staff.credential,
+      roles: staff.roles,
+    });
   } catch (error) {
     if (error?.code === 'STAFF_SESSION_REQUIRED') return json({ ok: true, authenticated: false }, 401);
     return handleError(error, 'staff_session_failed');

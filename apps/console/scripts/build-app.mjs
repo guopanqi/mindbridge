@@ -29,14 +29,19 @@ const stamp = `${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHou
 // sha 是构建时 HEAD，构建产物随后才提交，所以它指向父提交；时间戳才是判断新旧的主要依据。
 const buildId = `${gitShortSha()}${workingTreeDirty() ? '+' : ''} · ${stamp}`;
 
-await build({
-  entryPoints: ['src/main.js'],
+// 管理后台与疗愈师工作台是两个独立入口，各自打包：
+// 外部疗愈师的浏览器里不应该出现关怀看板与审计页的代码。
+const shared = {
   bundle: true,
   format: 'iife',
   target: 'es2020',
   minify: true,
-  outfile: 'public/app.js',
   define: { __BUILD_ID__: JSON.stringify(buildId) },
-});
+};
+
+await Promise.all([
+  build({ ...shared, entryPoints: ['src/main.js'], outfile: 'public/app.js' }),
+  build({ ...shared, entryPoints: ['src/healer.js'], outfile: 'public/healer/app.js' }),
+]);
 
 console.log(`build id: ${buildId}`);
