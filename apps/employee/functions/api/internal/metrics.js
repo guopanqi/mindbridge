@@ -259,6 +259,11 @@ export async function onRequestGet({ request, env }) {
     };
     const pad = (n) => String(n).padStart(2, '0');
 
+    // 不走 q()：这一条要的就是真实侧的总量，与当前选择的 origin 无关。
+    const liveEvents = await env.CARE_DB
+      .prepare("SELECT COUNT(*) AS n FROM aggregate_events WHERE created_at > ? AND data_origin = 'live'")
+      .bind(since).first();
+
     const report = {
       ok: true,
       origin,
@@ -373,7 +378,9 @@ export async function onRequestGet({ request, env }) {
         demo_seed: await summarize(env, since, 'demo_seed'),
         live: await summarize(env, since, 'live'),
       },
-      liveEventCount: null,
+      // 横幅要说明"演示期间并入了多少条真实事件"，这是全租户一个总数，
+      // 不按人、部门或情绪拆分，推不出任何个体，所以不适用 k 抑制。
+      liveEventCount: liveEvents?.n || 0,
     };
     // 无法从不含主体的aggregate_events证明每个情绪/事件分组达到k，真实侧保守不出数。
     if (origin === 'live') {

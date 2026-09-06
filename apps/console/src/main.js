@@ -35,15 +35,25 @@ function renderBanner(data) {
   const banner = $('#origin-banner');
   banner.textContent = '';
   if (!data) return;
-  banner.append(
-    el('span', { class: 'sim-chip', text: '模拟基线' }),
-    el('span', {
-      text: `${data.tenant.name} · ${data.tenant.headcount} 人规模为预置演示数据`,
-    }),
-    el('span', { class: 'live-chip', text: '真实事件' }),
-    el('span', { text: `本次演示期间已并入 ${data.liveEventCount} 条真实钉钉员工事件` }),
-  );
-  $('#tenant-line').textContent = `${data.tenant.name} · ${data.tenant.industry} · 近 ${data.window.days} 天`;
+  // 种子数据没铺好时 tenant 会整体为空。宁可少说一句，也不要把 null 印在横幅上。
+  const tenant = data.tenant || {};
+  const nodes = [];
+  if (tenant.name && tenant.headcount) {
+    nodes.push(
+      el('span', { class: 'sim-chip', text: '模拟基线' }),
+      el('span', { text: `${tenant.name} · ${tenant.headcount} 人规模为预置演示数据` }),
+    );
+  }
+  if (typeof data.liveEventCount === 'number') {
+    nodes.push(
+      el('span', { class: 'live-chip', text: '真实事件' }),
+      el('span', { text: `本次演示期间已并入 ${data.liveEventCount} 条真实钉钉员工事件` }),
+    );
+  }
+  banner.append(...nodes);
+  banner.hidden = nodes.length === 0;
+  $('#tenant-line').textContent = [tenant.name, tenant.industry, `近 ${data.window.days} 天`]
+    .filter(Boolean).join(' · ');
 }
 
 async function showView(view) {
