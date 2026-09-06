@@ -29,7 +29,7 @@ async function handleAction(payload, onSuccess) {
 function tickSLA() {
   const elements = document.querySelectorAll('[data-sla]');
   const now = Date.now();
-  elements.forEach((el) => {
+  elements.forEach((/** @type {HTMLElement} */ el) => {
     const deadline = Number(el.dataset.sla);
     if (!deadline || el.classList.contains('gr')) return;
     const diff = Math.floor((deadline - now) / 1000);

@@ -30,7 +30,7 @@ export function askContext(onDone) {
 
   overlay.append(el('div', { class: 'ctx-sheet' }, [
     el('h2', { text: '哪种状态更接近你？' }),
-    el('p', { class: 'ctx-sub', text: '这个选择只关联你的匿名身份，用来让回应和推荐更贴近你的处境；随时可以更改或清空。它不参与风险判定，企业只能看到匿名聚合趋势。' }),
+    el('p', { class: 'ctx-sub', text: '告诉我们你当前的角色，助手能提供更贴切的回应；随时可以更改或清空。它不参与风险判定，企业端仅展示 10 人以上的宏观统计，绝无法反推到个人。' }),
     el('div', { class: 'ctx-options' }, OPTIONS.map(([tag, icon, title, desc]) => el('button', {
       class: 'ctx-option', attrs: { type: 'button' }, on: { click: () => void finish(tag) },
     }, [

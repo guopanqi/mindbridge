@@ -49,16 +49,19 @@ function bubble(message) {
 
 function resourceCard(card) {
   if (!card) return null;
+  const state = card.progress?.state || 'offered';
+  const stateText = ({ joined: '进行中', completed: '已完成', declined: '已跳过', unavailable: '活动记录不可用' })[state];
+  const actionable = !['declined', 'unavailable'].includes(state);
   return el('div', { class: 'card resource' }, [
     el('div', { class: 'card-icon', text: card.icon || '🌿' }),
     el('div', { class: 'card-main' }, [
       el('p', { class: 'card-title', text: card.name }),
       el('p', { class: 'card-desc', text: card.description }),
-      el('p', { class: 'card-tag', text: card.level === 'L2' ? '专业深层支持 · 依个人意愿自主参与' : '可立即使用的自助资源' }),
-      card.eventId ? el('button', {
-        class: 'primary small card-cta',
-        text: ({ joined: '继续活动', completed: '已完成 · 查看结果', declined: '已跳过', unavailable: '活动记录不可用' })[card.progress?.state] || (card.level === 'L2' ? '看看详情' : '现在试试'),
-        attrs: { type: 'button', disabled: ['declined', 'unavailable'].includes(card.progress?.state) },
+      el('p', { class: 'card-tag', text: stateText || (card.level === 'L2' ? '专业支持' : '自助练习') }),
+      card.eventId && actionable ? el('button', {
+        class: `${state === 'completed' ? 'secondary' : 'primary'} small card-cta`,
+        text: ({ joined: '继续活动', completed: '查看结果' })[state] || (card.level === 'L2' ? '查看详情' : '开始'),
+        attrs: { type: 'button' },
         on: { click: () => void openActivity(card.eventId, refreshCardsSafely) },
       }) : null,
     ]),
@@ -87,15 +90,24 @@ function consentCard(card, messageId) {
   const status = card.support?.status;
   const submitted = ['requested', 'claimed', 'active', 'closed', 'done', 'cancelled', 'unavailable'].includes(status);
   const statusLabel = ({ requested: '已提交 · 等待接单', claimed: '疗愈师已接单', active: '正在跟进', closed: '本次服务已结束', done: '本次服务已结束', cancelled: '本次预约已取消', unavailable: '预约记录不可用' })[status];
+  if (submitted) return el('div', { class: 'card consent' }, [
+    el('p', { class: 'card-title', text: '专业支持预约' }),
+    el('div', { class: 'support-summary', attrs: { role: 'status' } }, [
+      el('p', { class: 'support-summary-label', text: status === 'requested' ? '等待接单' : statusLabel }),
+      card.support.caseCode ? el('p', { class: 'support-summary-code', text: `个案编号 ${card.support.caseCode}` }) : null,
+    ]),
+    el('p', { class: 'card-desc', text: '可在「我的」查看预约详情。' }),
+  ]);
   return el('div', { class: 'card consent' }, [
     el('p', { class: 'card-title', text: card.title }),
     el('p', { class: 'card-desc', text: card.body }),
-    el('div', { class: 'card-actions' }, (card.actions || []).map((item, index) => {
+    status === 'dismissed' ? el('p', { class: 'card-tag', text: '已选择暂时不用，之后仍可预约。' }) : null,
+    el('div', { class: 'card-actions' }, (card.actions || []).filter(item => !(status === 'dismissed' && item.action === 'dismiss')).map((item, index) => {
       const label = typeof item === 'string' ? item : item.label;
       const action = typeof item === 'string' ? null : item.action;
       const button = el('button', {
         class: index === 0 ? 'primary small' : 'secondary small',
-        text: action === 'request_appointment' && submitted ? `${card.support.linked === false ? '已有预约 · ' : ''}${statusLabel}${card.support.caseCode ? ` · ${card.support.caseCode}` : ''}` : action === 'dismiss' && status === 'dismissed' ? '已选择暂时不用' : label,
+        text: action === 'dismiss' && status === 'dismissed' ? '已选择暂时不用' : label,
         attrs: { type: 'button' },
       });
       button.disabled = supportPending || submitted || (action === 'dismiss' && status === 'dismissed');

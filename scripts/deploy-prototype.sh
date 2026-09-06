@@ -7,11 +7,11 @@ set -euo pipefail
 
 if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
   echo "用法：./scripts/deploy-prototype.sh [Pages 项目名]"
-  echo "默认项目名：mindbridge-prototype"
+  echo "默认项目名：mindbridge-demo"
   exit 0
 fi
 
-PROJECT_NAME="${1:-mindbridge-prototype}"
+PROJECT_NAME="${1:-mindbridge-demo}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SITE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)/prototype"
 

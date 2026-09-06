@@ -91,10 +91,10 @@ function authorizationPanel(reload) {
 }
 
 const STATUS_LABEL = {
-  requested: '已提交 · 等待疗愈师接单',
+  requested: '等待接单',
   claimed: '疗愈师已接单',
   active: '疗愈师正在跟进',
-  done: '已闭环',
+  done: '已结束',
   closed: '已结束',
   cancelled: '已取消',
 };
@@ -108,10 +108,10 @@ function appointmentPanel(reload) {
       ? el('ul', { class: 'apt-list' }, data.appointments.map((item) => el('li', {}, [
         el('div', {}, [
           el('span', { class: 'apt-code', text: item.caseCode }),
-          el('span', { class: 'apt-status', text: STATUS_LABEL[item.status] || item.status }),
+          el('span', { class: 'apt-status', text: STATUS_LABEL[item.status] || '状态待确认' }),
         ]),
         el('span', { class: 'res-meta', text: timeAgo(item.at) }),
-        item.status !== 'cancelled' ? el('button', {
+        ['requested', 'claimed', 'active'].includes(item.status) ? el('button', {
           class: 'link danger', text: '取消', attrs: { type: 'button' },
           on: {
             click: async () => {
@@ -138,7 +138,7 @@ function appointmentPanel(reload) {
           }
         },
       },
-    }) : el('p', { class: 'panel-sub', text: '你已有一条未结束的预约，可以在上方查看进度。这次服务结束或取消后可以再次预约。' }),
+    }) : el('p', { class: 'panel-sub', text: '本次预约结束或取消后，可再次预约。' }),
   ]);
 }
 

@@ -95,6 +95,9 @@ main { flex: 1; min-height: 0; }
 .card-desc { margin: 0; color: var(--ink-soft); font-size: 13px; line-height: 1.65; }
 .card-tag { margin: 6px 0 0; font-size: 11px; color: var(--brand); }
 .card-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+.support-summary { margin: 12px 0; padding-left: 12px; border-left: 3px solid var(--brand); }
+.support-summary-label { margin: 0; color: var(--brand); font-size: 15px; font-weight: 600; }
+.support-summary-code { margin: 5px 0 0; color: var(--ink-soft); font-size: 12px; overflow-wrap: anywhere; }
 .presets { display: flex; gap: 8px; padding: 0 14px 8px; overflow-x: auto; }
 .preset { flex: 0 0 auto; border: 1px solid var(--line); background: #fff; color: var(--ink-soft); padding: 7px 12px; font-size: 13px; border-radius: 999px; }
 .composer { display: flex; gap: 8px; padding: 10px 14px calc(10px + env(safe-area-inset-bottom)); background: #fff; border-top: 1px solid var(--line); }

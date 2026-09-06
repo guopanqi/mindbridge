@@ -1,2 +1,2 @@
 此链接是“mindbridge原型”的网页版，“mindbridge原型”本地文件无法打开时请在浏览器中访问：
-https://mindbridge-prototype.pages.dev/mindbridge-prototype
+https://mindbridge-demo.pages.dev/mindbridge-prototype

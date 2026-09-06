@@ -20,8 +20,8 @@ const stateLabel = (item) => ({
   offered: '待尝试',
   joined: item.kind === 'offline' ? '已报名' : '进行中',
   completed: '已完成',
-  declined: '不适合我',
-}[item.state] || item.state);
+  declined: '已跳过',
+}[item.state] || '状态待确认');
 
 // 「再做一次」新建参与记录：一次参与是一次完整体验，
 // 复用已完成的旧记录只会让人看到「已完成」而什么都做不了。
@@ -42,10 +42,16 @@ async function open(item, reload) {
   }
 }
 
-function card(item, reload, { reason } = {}) {
+/**
+ * @param {any} item
+ * @param {() => void} reload
+ * @param {{ reason?: string }} [options]
+ */
+function card(item, reload, options = {}) {
+  const { reason } = options;
   const openLabel = {
     offered: item.kind === 'offline' ? '了解并报名' : '开始',
-    joined: item.kind === 'offline' ? '去确认' : '继续',
+    joined: item.kind === 'offline' ? '查看报名' : '继续',
     completed: '再做一次',
     declined: '再看看',
   }[item.state] || '打开';
@@ -58,8 +64,8 @@ function card(item, reload, { reason } = {}) {
     reason ? el('p', { class: 'act-card-reason', text: reason }) : null,
     el('p', { class: 'act-card-meta', text: `${KIND_LABEL(item)} · ${timeAgo(item.at)}` }),
     // 没评价就是没评价，不能显示成零分。
-    item.state === 'completed'
-      ? el('p', { class: 'act-card-meta', text: item.helpfulness ? `你的评价：${item.helpfulness}` : '未评价' })
+    item.state === 'completed' && item.helpfulness
+      ? el('p', { class: 'act-card-meta', text: `你的评价：${item.helpfulness}` })
       : null,
     el('div', { class: 'act-card-actions' }, [
       el('button', {
@@ -68,8 +74,8 @@ function card(item, reload, { reason } = {}) {
       }),
       // 完成当时跳过了评价的，这里补一个入口——否则结果页永远走不到，
       // 因为「再做一次」一律新建参与记录，不会再打开旧的那条。
-      item.state === 'completed' && !item.helpfulness ? el('button', {
-        class: 'link', text: '补个评价', attrs: { type: 'button' },
+      item.state === 'completed' ? el('button', {
+        class: 'link', text: '查看结果', attrs: { type: 'button' },
         on: { click: () => void openActivity(item.id, reload) },
       }) : null,
       item.state === 'offered' ? el('button', {
@@ -78,7 +84,7 @@ function card(item, reload, { reason } = {}) {
           click: async () => {
             try {
               await api.activityProgress({ eventId: item.id, action: 'skip' });
-              toast('好，下次给你换一个。');
+              toast('已跳过。');
               reload();
             } catch {
               toast('操作没有成功，请稍后再试。');
@@ -109,7 +115,7 @@ function render() {
 
   clear(root).append(...[
     section(
-      '为你推荐', '来自你和树洞的对话。不想要就说不感兴趣，下次会换一个。',
+      '为你推荐', '来自树洞对话的推荐，可自由选择。',
       offered.map((item) => card(item, reload, { reason: item.reason })),
       '还没有推荐。你也可以自己到活动库里找。',
     ),
@@ -117,7 +123,7 @@ function render() {
       ? section('进行中 / 待参加', null, ongoing.map((item) => card(item, reload)), '')
       : null,
     section(
-      '做过的活动', null,
+      '活动记录', null,
       past.map((item) => card(item, reload)),
       '还没有参加过活动。',
     ),

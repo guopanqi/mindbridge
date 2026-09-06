@@ -50,18 +50,18 @@ function trendChart(points, minSample) {
   svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
   svg.setAttribute('class', 'trend');
   svg.setAttribute('role', 'img');
-  svg.setAttribute('aria-label', `近 ${points.length} 天压力指数趋势`);
+  svg.setAttribute('aria-label', `近 ${points.length} 天情绪温度趋势`);
   for (const level of [1, 2, 3, 4, 5]) {
     const line = document.createElementNS(SVG_NS, 'line');
-    line.setAttribute('x1', pad.left);
-    line.setAttribute('x2', width - pad.right);
-    line.setAttribute('y1', yFor(level));
-    line.setAttribute('y2', yFor(level));
+    line.setAttribute('x1', String(pad.left));
+    line.setAttribute('x2', String(width - pad.right));
+    line.setAttribute('y1', String(yFor(level)));
+    line.setAttribute('y2', String(yFor(level)));
     line.setAttribute('class', 'grid');
     svg.append(line);
     const label = document.createElementNS(SVG_NS, 'text');
-    label.setAttribute('x', 6);
-    label.setAttribute('y', yFor(level) + 4);
+    label.setAttribute('x', '6');
+    label.setAttribute('y', String(yFor(level) + 4));
     label.setAttribute('class', 'axis');
     label.textContent = String(level);
     svg.append(label);
@@ -760,7 +760,7 @@ function switchPane(pane) {
   if (pane === 'activities') container.append(renderActivitiesPane(cachedData));
   if (pane === 'industry') container.append(renderIndustryPane(cachedData));
   if (pane === 'cfg') container.append(renderCfgPane());
-  if (pane === 'sensing') container.append(renderSensingPane(cachedData));
+  if (pane === 'sensing') container.append(renderSensingPane());
 }
 
 export async function loadDashboard() {

@@ -59,7 +59,7 @@ export class Inbox {
   prune(now = Date.now()) { this.db.prepare('DELETE FROM inbox WHERE created_at < ?').run(now-86400000); }
   close() { this.db.close(); }
 }
-const escape = value => String(value || '').replace(/[\\`*_{}\[\]<>]/g,'');
+const escape = value => String(value || '').replace(/[\\`*_{}[\]<>]/g, '');
 const cardLink = (card, h5Origin) => {
   const link = new URL(h5Origin);
   if (card.eventId) link.searchParams.set('eventId',card.eventId);

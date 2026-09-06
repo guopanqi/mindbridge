@@ -49,7 +49,7 @@ function renderBanner(data) {
 async function showView(view) {
   if (currentView === view) return;
   currentView = view;
-  for (const tab of document.querySelectorAll('.tab')) {
+  for (const tab of /** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll('.tab'))) {
     const on = tab.dataset.view === view;
     tab.classList.toggle('on', on);
     tab.setAttribute('aria-selected', String(on));
@@ -84,7 +84,7 @@ async function enterConsole(session) {
   // 角色决定看得到什么：疗愈师只有个案台，HR / 管理员看不到个案台。
   const visibility = { dashboard: 'hr_viewer', cases: 'healer', audit: 'admin' };
   let first = null;
-  for (const tab of document.querySelectorAll('.tab')) {
+  for (const tab of /** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll('.tab'))) {
     const allowed = session.roles.includes(visibility[tab.dataset.view]);
     tab.hidden = !allowed;
     if (allowed && !first) first = tab.dataset.view;
@@ -162,7 +162,7 @@ async function boot() {
 }
 
 document.addEventListener('click', (event) => {
-  const tab = event.target.closest('.tab');
+  const tab = /** @type {HTMLElement | null} */ (/** @type {Element} */ (event.target).closest('.tab'));
   if (tab) void showView(tab.dataset.view);
 });
 $('#healer-login').addEventListener('click', async () => {

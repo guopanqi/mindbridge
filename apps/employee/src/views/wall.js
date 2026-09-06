@@ -88,7 +88,7 @@ export function renderWall(root) {
   composer = el('div', { class: 'composer wall' }, [
     input,
     el('div', { class: 'composer-row' }, [
-      el('span', { class: 'composer-safe', text: '发布前会做隐私与善意检查' }),
+      el('span', { class: 'composer-safe', text: '已开启隐私保护与温暖社区守护' }),
       el('button', { class: 'primary small', text: '发布', attrs: { type: 'button' }, on: { click: () => void publish() } }),
     ]),
   ]);

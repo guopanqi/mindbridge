@@ -87,7 +87,7 @@ async function enterApp() {
 async function showView(view) {
   if (currentView === view) return;
   currentView = view;
-  for (const tab of document.querySelectorAll('.tab')) {
+  for (const tab of /** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll('.tab'))) {
     const on = tab.dataset.view === view;
     tab.classList.toggle('on', on);
     tab.setAttribute('aria-selected', String(on));
@@ -115,6 +115,7 @@ async function showView(view) {
   }
 }
 
+/** @param {{ reason?: string }} [options] */
 export async function boot({ reason } = {}) {
   if (booting) return;
   booting = true;
@@ -150,7 +151,7 @@ export async function boot({ reason } = {}) {
 }
 
 document.addEventListener('click', (event) => {
-  const tab = event.target.closest('.tab');
+  const tab = /** @type {HTMLElement | null} */ (/** @type {Element} */ (event.target).closest('.tab'));
   if (tab) void showView(tab.dataset.view);
 });
 $('#boot-retry').addEventListener('click', () => void boot({ reason: 'retry' }));
@@ -159,15 +160,32 @@ $('#sheet-close').addEventListener('click', closeSheet);
 $('#sheet').addEventListener('click', (event) => { if (event.target.id === 'sheet') closeSheet(); });
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape') closeSheet(); });
 
-// 输入法弹出时收起 tab 栏。visualViewport 是唯一能真正知道键盘占了多少地方的接口：
-// 焦点事件只能告诉我们光标在哪，说不出可视区被压缩了多少，
-// 而 Android 上「键盘收起但输入框仍有焦点」是常见状态。
+// 输入法弹出时收起 tab 栏，让输入框与发送按钮直接紧贴在键盘上方。
+// 结合焦点事件（点按瞬间零延时隐藏）与 visualViewport（动态跟随视口高度压缩）：
+const isTextInput = (target) => target && (target.tagName === 'TEXTAREA' || (target.tagName === 'INPUT' && !['checkbox', 'radio', 'button', 'submit'].includes(target.type)));
+
+const setKeyboardOpen = (open) => {
+  $('#app')?.classList.toggle('keyboard-open', Boolean(open));
+};
+
+document.addEventListener('focusin', (event) => {
+  if (isTextInput(event.target)) setKeyboardOpen(true);
+});
+
+document.addEventListener('focusout', (event) => {
+  if (isTextInput(event.target)) {
+    setTimeout(() => {
+      if (!isTextInput(document.activeElement)) setKeyboardOpen(false);
+    }, 80);
+  }
+});
+
 const viewport = window.visualViewport;
 if (viewport) {
   const syncKeyboard = () => {
-    // 压缩超过 20% 才判定为键盘，避免把地址栏收放误判成键盘。
-    const shrunk = window.innerHeight - viewport.height > window.innerHeight * 0.2;
-    $('#app').classList.toggle('keyboard-open', shrunk);
+    const shrunk = window.innerHeight - viewport.height > window.innerHeight * 0.15;
+    const hasFocus = isTextInput(document.activeElement);
+    setKeyboardOpen(shrunk || hasFocus);
   };
   viewport.addEventListener('resize', syncKeyboard);
   viewport.addEventListener('scroll', syncKeyboard);

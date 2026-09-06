@@ -256,22 +256,42 @@ try {
     await enter();
     assert.equal(await page.getByRole('button', { name: '继续活动', exact: true }).count(), 1);
     await page.getByRole('button', { name: '安排疗愈师', exact: true }).click();
-    await page.getByRole('button', { name: /已提交 · 等待接单/ }).waitFor();
+    await page.locator('.support-summary-label').getByText('等待接单', { exact: true }).waitFor();
     await page.reload();
     await enter();
-    assert.equal(await page.getByRole('button', { name: /已提交 · 等待接单/ }).isDisabled(), true, '页面重进保持已提交');
+    assert.equal(await page.locator('.support-summary-label').textContent(), '等待接单', '页面重进保持已提交');
+    assert.equal(await page.locator('.consent button').count(), 0, '已有预约只展示状态，不保留选择按钮');
+    await page.setViewportSize({ width: 320, height: 568 });
+    await page.screenshot({ path: join(screenshots, 'support-summary.png'), fullPage: true });
     for (const status of ['claimed', 'active', 'done', 'cancelled']) {
       supportStatus = status;
       await enter();
-      assert.equal(await page.locator('.consent button').first().isDisabled(), true, `${status} 不能重复提交旧卡`);
+      assert.equal(await page.locator('.consent button').count(), 0, `${status} 不显示旧操作按钮`);
     }
     activityState = 'completed';
     await enter();
-    assert.equal(await page.getByRole('button', { name: '已完成 · 查看结果', exact: true }).count(), 1);
+    assert.equal(await page.getByRole('button', { name: '查看结果', exact: true }).count(), 1);
+    assert.equal(await page.locator('.resource .card-tag').textContent(), '已完成');
     activityState = 'declined';
     await enter();
-    assert.equal(await page.getByRole('button', { name: '已跳过', exact: true }).isDisabled(), true);
+    assert.equal(await page.locator('.resource .card-tag').textContent(), '已跳过');
+    assert.equal(await page.locator('.resource button').count(), 0);
     assert.equal(posts, 1);
+    await page.route('**/api/history', route => route.fulfill({ json: { resources: [
+      { id: 'done', name: '完成的活动', state: 'completed', kind: 'online', helpfulness: '有帮助', at: Date.now() },
+      { id: 'unrated', name: '未评价的活动', state: 'completed', kind: 'online', at: Date.now() },
+      { id: 'skipped', name: '跳过的活动', state: 'declined', kind: 'online', at: Date.now() },
+      { id: 'booked', name: '线下活动', state: 'joined', kind: 'offline', at: Date.now() },
+    ] } }));
+    await page.evaluate(async () => {
+      const activities = await import('/src/views/activities.js');
+      activities.renderActivities(document.querySelector('#view-chat'));
+      await activities.loadActivities();
+    });
+    assert.equal(await page.getByRole('button', { name: '查看结果', exact: true }).count(), 2, '无论是否评价都能看结果');
+    assert.equal(await page.getByText('未评价', { exact: true }).count(), 0, '不把选填反馈显示为待办');
+    assert.equal(await page.getByRole('button', { name: '查看报名', exact: true }).count(), 1);
+    assert.equal(await page.getByRole('heading', { name: '活动记录', exact: true }).count(), 1);
     await page.close();
   }
   assert.deepEqual(errors, []);

@@ -101,7 +101,7 @@ export async function onRequestGet({ request, env }) {
 
     const [
       tenant, trend, active, prevActive, stress, prevStress, riskRows, greenRow,
-      emotions, resources, wall, liveEvents, topicRows, deptRows, deptMood, deptEmotion,
+      emotions, resources, wall, topicRows, deptRows, deptMood, deptEmotion,
       rhythmRows, sensingRows, redCases, ctxRows, activityOverallRow, perfRows,
     ] = await Promise.all([
       q('SELECT display_name, headcount, industry, data_origin FROM tenant_profile WHERE id = ?', 'demo').first(),
@@ -132,7 +132,6 @@ export async function onRequestGet({ request, env }) {
                 COUNT(DISTINCT CASE WHEN state='completed' THEN anon_id END) AS completed_people
          FROM resource_events WHERE created_at > ? GROUP BY resource_name, resource_level ORDER BY offered DESC LIMIT 8`, since).all(),
       q("SELECT SUM(CASE WHEN event_type = 'wall_post' THEN 1 ELSE 0 END) AS posts, SUM(CASE WHEN event_type = 'wall_hug' THEN 1 ELSE 0 END) AS hugs FROM aggregate_events WHERE created_at > ?", since).first(),
-      q("SELECT COUNT(*) AS n FROM aggregate_events WHERE data_origin = 'live' AND created_at > ?", since).first(),
       // 组织议题：发帖时已分类，这里只计数，不接触原文。
       q('SELECT topic, COUNT(*) AS n, COUNT(DISTINCT anon_id) AS people FROM posts WHERE topic IS NOT NULL AND deleted_at IS NULL AND created_at > ? GROUP BY topic ORDER BY n DESC LIMIT 6', since).all(),
       q("SELECT department AS name, COUNT(*) AS headcount FROM profiles WHERE department IS NOT NULL GROUP BY department ORDER BY headcount DESC").all(),
