@@ -30,6 +30,34 @@
       ],
       "cwd": "apps/console",
       "port": 8789
+    },
+    {
+      "name": "model-stub",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "scripts/demo-video/model-stub.mjs"
+      ],
+      "port": 8799
+    },
+    {
+      "name": "employee-demo",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "wrangler",
+        "pages",
+        "dev",
+        "public",
+        "--port",
+        "8788",
+        "--binding",
+        "MODEL_API_ORIGIN=http://127.0.0.1:8799/v1",
+        "--binding",
+        "MODEL_API_KEY=demo-stub",
+        "--binding",
+        "MODEL_NAME=demo-stub"
+      ],
+      "cwd": "apps/employee",
+      "port": 8788
     }
   ]
 }
