@@ -165,6 +165,7 @@ async function send(text) {
   // 输入框先清空是为了手感，但这份文本必须留着：
   // 一旦确认没有发出去，要原样放回去，而不是让人重打一遍。
   input.value = '';
+  input.style.height = '';
   const pending = bubble({ role: 'user', text: trimmed });
   pending.classList.add('pending');
   stream.append(pending);
@@ -230,6 +231,13 @@ export function renderChat(root) {
     lastTapAt = now;
     void send(input.value);
   };
+
+  // 输入框随内容长高（最多约四行），否则第二行会被 rows=1 的高度切掉。
+  const autosize = () => {
+    input.style.height = 'auto';
+    input.style.height = `${Math.min(input.scrollHeight, 96)}px`;
+  };
+  input.addEventListener('input', autosize);
 
   input.addEventListener('keydown', (event) => {
     if (event.key === 'Enter' && !event.shiftKey) {

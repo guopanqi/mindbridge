@@ -1,7 +1,7 @@
 // 视频 A · 日常线：钉钉进入 → 匿名连接 → 倾诉 → 呼吸着陆法 → 三天后回访 → 我的活动。
 // 前置：launch.json 里的 model-stub 与 employee-demo 已启动。
 import path from 'node:path';
-import { ANON_ID, d1, launch, resetDemoEmployee, routeEmployeeAuth, sleep, tap, titleCard, typeSlow, waitReply } from './lib.mjs';
+import { ANON_ID, d1, dismissKeyboard, interlude, launch, resetDemoEmployee, routeEmployeeAuth, sleep, tap, typeSlow, waitReply } from './lib.mjs';
 
 resetDemoEmployee();
 
@@ -38,7 +38,9 @@ await page.locator('.card.resource button').waitFor();
 await sleep(3200);
 mark('A7 card');
 
-// A8 打开活动 → 开始
+// A8 收起键盘 → 打开活动 → 开始
+await dismissKeyboard(page);
+await sleep(800);
 await tap(page, '.card.resource button');
 await page.locator('.act-sheet .primary').waitFor();
 await sleep(1800);
@@ -65,12 +67,14 @@ await sleep(1200);
 await typeSlow(page, '.composer textarea', '好多了 谢谢你');
 await tap(page, '.composer .send');
 await waitReply(page);
-await sleep(2200);
+await sleep(1500);
+await dismissKeyboard(page);
+await sleep(1000);
 mark('A11 thanks');
 
 // A12 三天后：把回访拉到当下，黑场，再打开应用
 d1(`UPDATE follow_ups SET due_at=${Date.now() - 1000} WHERE anon_id='${ANON_ID}' AND state='scheduled'`);
-await titleCard(page, '三 天 后');
+await interlude(page, '三天后');
 mark('A12 card');
 await page.goto('http://localhost:8788/');
 await page.locator('.card.followup').waitFor({ timeout: 20000 });

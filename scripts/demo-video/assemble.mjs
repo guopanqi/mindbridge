@@ -42,25 +42,22 @@ const asset = path.join(OUT, 'assets', `${frame}.png`);
 const output = path.join(OUT, `${name}.mp4`);
 
 // 截图是 JPEG 全范围色、拉伸过的边带还会带上奇怪的像素宽高比，最后统一归一到 tv 色域和 1:1。
-// 手机：内容 1170×2253，上下各用内容边缘 2 像素拉伸成状态栏/指示条底色，再叠外框。
+// 手机：内容 1170×2532（安全区留白由录制时注入的 CSS 负责），直接嵌进屏幕区再叠外框。
 // 电脑：内容 2160×1350，直接嵌进屏幕区。
 const filter = isPhone
   ? [
-    '[0:v]split=3[c][t][b]',
-    '[t]crop=1170:2:0:0,scale=1170:177:flags=neighbor[top]',
-    '[b]crop=1170:2:0:2251,scale=1170:102:flags=neighbor[bot]',
-    '[top][c][bot]vstack=inputs=3,pad=1290:2652:60:60:black[screen]',
-    '[screen][1:v]overlay=0:0:format=auto,fps=30,scale=in_range=pc:out_range=tv,format=yuv420p,setsar=1[v]',
+    '[0:v]pad=1290:2652:60:60:black[screen]',
+    '[screen][1:v]overlay=0:0:format=auto:shortest=1,fps=30,scale=in_range=pc:out_range=tv,format=yuv420p,setsar=1[v]',
   ].join(';')
   : [
     '[0:v]pad=2268:1548:54:54:black[screen]',
-    '[screen][1:v]overlay=0:0:format=auto,fps=30,scale=in_range=pc:out_range=tv,format=yuv420p,setsar=1[v]',
+    '[screen][1:v]overlay=0:0:format=auto:shortest=1,fps=30,scale=in_range=pc:out_range=tv,format=yuv420p,setsar=1[v]',
   ].join(';');
 
 execFileSync('ffmpeg', [
   '-y', '-loglevel', 'error', '-stats',
   '-f', 'concat', '-safe', '0', '-i', listFile,
-  '-i', asset,
+  '-loop', '1', '-i', asset,
   '-filter_complex', filter, '-map', '[v]',
   '-c:v', 'libx264', '-preset', 'medium', '-crf', '18', '-profile:v', 'high', '-level', '5.1', '-movflags', '+faststart',
   output,
