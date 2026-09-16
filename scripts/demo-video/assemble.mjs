@@ -7,10 +7,16 @@ import path from 'node:path';
 
 const [name, frame = 'phone-941', ...rest] = process.argv.slice(2);
 const speeds = [];
+let canvas = null;
 for (let i = 0; i < rest.length; i++) {
   if (rest[i] === '--speed') {
     const [from, to, factor] = rest[++i].split(':').map(Number);
     speeds.push({ from, to, factor });
+  }
+  // --canvas 2560x1440：把样机等比缩放后居中放到统一画布上，多段不同设备才能拼成一条视频。
+  if (rest[i] === '--canvas') {
+    const [w, h] = rest[++i].split('x').map(Number);
+    canvas = { w, h };
   }
 }
 
@@ -44,15 +50,15 @@ const output = path.join(OUT, `${name}.mp4`);
 // 截图是 JPEG 全范围色、拉伸过的边带还会带上奇怪的像素宽高比，最后统一归一到 tv 色域和 1:1。
 // 手机：内容 1170×2532（安全区留白由录制时注入的 CSS 负责），直接嵌进屏幕区再叠外框。
 // 电脑：内容 2160×1350，直接嵌进屏幕区。
-const filter = isPhone
-  ? [
-    '[0:v]pad=1290:2652:60:60:black[screen]',
-    '[screen][1:v]overlay=0:0:format=auto:shortest=1,fps=30,scale=in_range=pc:out_range=tv,format=yuv420p,setsar=1[v]',
-  ].join(';')
-  : [
-    '[0:v]pad=2268:1548:54:54:black[screen]',
-    '[screen][1:v]overlay=0:0:format=auto:shortest=1,fps=30,scale=in_range=pc:out_range=tv,format=yuv420p,setsar=1[v]',
-  ].join(';');
+const device = isPhone ? { w: 1290, h: 2652, ox: 60, oy: 60 } : { w: 2268, h: 1548, ox: 54, oy: 54 };
+const CANVAS_BG = '#eef4f2';
+const fit = canvas
+  ? `,scale=-2:'min(${canvas.h - 120},ih)':flags=lanczos,pad=${canvas.w}:${canvas.h}:(ow-iw)/2:(oh-ih)/2:${CANVAS_BG}`
+  : '';
+const filter = [
+  `[0:v]pad=${device.w}:${device.h}:${device.ox}:${device.oy}:black[screen]`,
+  `[screen][1:v]overlay=0:0:format=auto:shortest=1${fit},fps=30,scale=in_range=pc:out_range=tv,format=yuv420p,setsar=1[v]`,
+].join(';');
 
 execFileSync('ffmpeg', [
   '-y', '-loglevel', 'error', '-stats',

@@ -131,19 +131,31 @@ emit(`INSERT INTO tenant_profile (id, display_name, headcount, industry, data_or
 let seq = 0;
 const id = (prefix) => `${prefix}_seed${String(++seq).padStart(6, '0')}`;
 
+// 路演故事线：第 6～7 周前是「Q3 冲刺」，黄色对话明显抬升；随后一周集中推送呼吸着陆法，
+// 完成量上去、黄色占比回落；最近几周回到基线略好于冲刺前。
+const SPRINT = { from: 44, to: 31 };
+const PUSH = { from: 30, to: 19 };
+const storyBias = (d) => {
+  if (d <= SPRINT.from && d >= SPRINT.to) return 0.09;
+  if (d <= PUSH.from && d >= PUSH.to) return 0.03;
+  if (d < PUSH.to) return -0.02;
+  return 0;
+};
+const inPush = (d) => d <= PUSH.from && d >= PUSH.to;
+
 for (let d = DAYS - 1; d >= 0; d--) {
   const ts = startOfDay(d);
   const day = bucket(ts);
   const weekday = new Date(ts).getUTCDay();
   const workday = weekday !== 0 && weekday !== 6;
-  const chats = workday ? between(14, 30) : between(3, 9);
+  const chats = workday ? between(16, 32) + (inPush(d) ? 6 : 0) : between(10, 13);
   for (let i = 0; i < chats; i++) {
     const emotion = pick(EMOTIONS);
     const at = ts + between(9, 23) * 3600000;
     const anonId = pick(activePeople);
     // 部门差异体现在对话的黄色占比上（情绪温度就是这么算的），
     // 而不是另造一套打卡分数——打卡入口已经下线。
-    const bias = (DEPT_META[deptOf[anonId]]?.bias ?? 0) * 0.06;
+    const bias = (DEPT_META[deptOf[anonId]]?.bias ?? 0) * 0.06 + storyBias(d);
     const roll = rnd();
     // 危机级表达在真实企业里是低频事件。原先 3.5% 会让 90 天累计出现 60+ 次红色，
     // 与「个案需本人同意才建立」的实际转化量对不上，看板上像是大量漏接。
@@ -156,9 +168,9 @@ for (let d = DAYS - 1; d >= 0; d--) {
       emit(`INSERT INTO risk_events (id, anon_id, conversation_id, level, rule, emotion, engine, created_at, data_origin) VALUES ('${id('risk')}', '${anonId}', NULL, '${level}', '演示数据 · 规则命中', '${esc(emotion)}', 'rules-v1', ${at}, '${ORIGIN}');`);
       emit(`INSERT INTO aggregate_events (id, event_type, emotion, level, bucket_day, created_at, data_origin) VALUES ('${id('agg')}', 'risk_flagged', '${esc(emotion)}', '${level}', '${day}', ${at}, '${ORIGIN}');`);
     }
-    if (rnd() > 0.55) {
-      const [name, resLevel] = pick(RESOURCES);
-      const state = rnd() > 0.45 ? (rnd() > 0.5 ? 'completed' : 'joined') : 'offered';
+    if (rnd() > 0.55 || inPush(d)) {
+      const [name, resLevel] = inPush(d) && rnd() < 0.7 ? RESOURCES[0] : pick(RESOURCES);
+      const state = rnd() > (inPush(d) ? 0.3 : 0.45) ? (rnd() > 0.5 ? 'completed' : 'joined') : 'offered';
       // 帮助度选填：完成的人里只有一部分会评，评价率因此低于 100%，这是真实形态。
       const done = state === 'completed';
       const rated = done && rnd() > 0.4;
@@ -180,8 +192,8 @@ for (let d = DAYS - 1; d >= 0; d--) {
 const REPLIES = ['我也是，抱抱。', '听起来真的不容易。', '我懂这种感觉。', '谢谢你说出来。', '这两天我也一样。', '要不要一起去楼下走走。'];
 let postSeq = 0;
 for (let d = DAYS - 1; d >= 0; d--) {
-  if (rnd() > 0.55) continue;
-  const posts = between(1, 3);
+  if (rnd() > 0.7) continue;
+  const posts = between(1, 4);
   for (let k = 0; k < posts; k++) {
     const author = pick(activePeople);
     const dept = deptOf[author];
@@ -218,6 +230,26 @@ EXTRA_CASES.forEach(([code, status, dept, hoursAgo, resp], idx) => {
   const log = JSON.stringify([`${new Date(at).toTimeString().slice(0, 5)} 员工授权转接，个案建立`]);
   emit(`INSERT OR REPLACE INTO appointments (id, case_code, anon_id, conversation_id, risk_level, status, share_context, note_cipher, content_key_version, department, work_profile_json, tags_json, response_minutes, log_json, sla_at, claimed_by, claimed_at, closed_at, created_at, updated_at, data_origin) VALUES ('app_seed_1${idx}', '${code}', '${people[10 + idx]}', NULL, 'red', '${status}', 0, NULL, NULL, '${esc(dept)}', '{}', '[]', ${resp ?? 'NULL'}, '${esc(log)}', ${sla}, 'staff_healer_01', ${at + 240000}, ${closed ?? 'NULL'}, ${at}, ${now}, '${ORIGIN}');`);
 });
+
+// 团队节奏（钉钉考勤/审批/待办的聚合元数据）：按周给最近 12 周，冲刺期下班时间与加班审批明显上抬。
+// 只在模拟基线里出现；真实侧仍然只显示真的同步到的数据。
+emit(`UPDATE sensing_signals SET enabled = 1 WHERE key IN ('attendance_off_duty', 'attendance_late_share', 'approval_overtime', 'todo_pending');`);
+for (let w = 11; w >= 0; w--) {
+  const dayOffset = w * 7;
+  const at = startOfDay(dayOffset);
+  const day = bucket(at);
+  const sprint = dayOffset <= SPRINT.from && dayOffset >= SPRINT.to;
+  const push = inPush(dayOffset);
+  const rows = [
+    ['median_off_duty_minutes', (sprint ? 19 * 60 + 40 : push ? 18 * 60 + 50 : 18 * 60 + 25) + between(-8, 8), 'minutes'],
+    ['late_off_duty_share', (sprint ? 46 : push ? 31 : 22) + between(-3, 3), 'percent'],
+    ['overtime_approvals', (sprint ? 58 : push ? 33 : 21) + between(-4, 4), 'count'],
+    ['pending_todos', (sprint ? 9.2 : push ? 7.1 : 5.8) + between(-4, 4) / 10, 'count'],
+  ];
+  for (const [metric, value, unit] of rows) {
+    emit(`INSERT OR REPLACE INTO org_rhythm (id, bucket_day, metric, value, sample_size, unit, source, data_origin, created_at) VALUES ('rhy_seed_${metric}_${day}', '${day}', '${metric}', ${value}, ${between(150, 178)}, '${unit}', 'dingtalk', '${ORIGIN}', ${at});`);
+  }
+}
 
 mkdirSync('seed', { recursive: true });
 writeFileSync('seed/demo_seed.sql', `${lines.join('\n')}\n`);

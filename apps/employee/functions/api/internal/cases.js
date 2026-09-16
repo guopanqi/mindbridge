@@ -29,12 +29,9 @@ const noteAad = (id) => `care:appointment:${id}`;
 const caseNoteAad = (id) => `care:case_note:${id}`;
 const messageAad = (conversationId) => `care:message:${conversationId}`;
 
-const formatTime = (ts) => {
-  const d = new Date(ts);
-  const h = String(d.getHours()).padStart(2, '0');
-  const m = String(d.getMinutes()).padStart(2, '0');
-  return `${h}:${m}`;
-};
+// Worker 里的本地时间是 UTC，日志里的时刻要按企业所在时区写，否则和前端按本机时区显示的「触发时间」对不上。
+const TIME_FORMAT = new Intl.DateTimeFormat('zh-CN', { timeZone: 'Asia/Shanghai', hour: '2-digit', minute: '2-digit', hour12: false });
+const formatTime = (ts) => TIME_FORMAT.format(new Date(ts));
 
 async function listCases(env) {
   const { results } = await env.CARE_DB.prepare(

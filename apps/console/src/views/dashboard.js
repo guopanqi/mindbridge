@@ -24,8 +24,10 @@ function kpi(value, label, hint) {
   ]);
 }
 
-// 压力趋势折线图
+// 情绪温度趋势折线图：口径是 10 分制（10 = 全部对话都是绿色），纵轴只画 5～10 这一段，波动才看得出来。
 function trendChart(points, minSample) {
+  const Y_MIN = 5;
+  const Y_MAX = 10;
   const width = 720;
   const height = 180;
   const pad = { top: 14, right: 12, bottom: 22, left: 30 };
@@ -33,10 +35,16 @@ function trendChart(points, minSample) {
     return el('p', { class: 'empty', text: SUPPRESSED_TEXT(minSample) });
   }
   const xStep = (width - pad.left - pad.right) / Math.max(1, points.length - 1);
-  const yFor = (v) => pad.top + ((5 - v) / 4) * (height - pad.top - pad.bottom);
+  const yFor = (v) => pad.top + ((Y_MAX - Math.max(Y_MIN, Math.min(Y_MAX, v))) / (Y_MAX - Y_MIN)) * (height - pad.top - pad.bottom);
+  // 日度样本只有二三十条，逐日画会是锯齿；按 7 天滑动平均画，趋势才读得出来。断点照旧断开。
+  const smoothed = points.map((point, index) => {
+    if (point.suppressed) return point;
+    const window = points.slice(Math.max(0, index - 6), index + 1).filter((p) => !p.suppressed);
+    return { ...point, value: window.reduce((sum, p) => sum + p.value, 0) / window.length };
+  });
   const segments = [];
   let current = [];
-  points.forEach((point, index) => {
+  smoothed.forEach((point, index) => {
     if (point.suppressed) {
       if (current.length) segments.push(current);
       current = [];
@@ -51,7 +59,7 @@ function trendChart(points, minSample) {
   svg.setAttribute('class', 'trend');
   svg.setAttribute('role', 'img');
   svg.setAttribute('aria-label', `近 ${points.length} 天情绪温度趋势`);
-  for (const level of [1, 2, 3, 4, 5]) {
+  for (const level of [5, 6, 7, 8, 9, 10]) {
     const line = document.createElementNS(SVG_NS, 'line');
     line.setAttribute('x1', String(pad.left));
     line.setAttribute('x2', String(width - pad.right));
@@ -78,7 +86,7 @@ function trendChart(points, minSample) {
     svg,
     el('p', {
       class: 'chart-caption',
-      text: `${first?.bucket || ''} → ${last?.bucket || ''} · 数值越高压力越大 · 断点表示当日样本不足 ${minSample} 人`,
+      text: `${first?.bucket || ''} → ${last?.bucket || ''} · 7 天滑动平均 · 10 分 = 对话全部为绿色，越低表示非绿对话越多 · 断点表示当日样本不足 ${minSample} 人`,
     }),
   ]);
 }
@@ -200,7 +208,7 @@ function renderDashPane(data) {
             return el('tr', { class: 'masked' }, [
               el('td', { text: d.name }),
               el('td', { class: 'mono', text: String(d.headcount) }),
-              el('td', { attrs: { colspan: 4 }, text: `有效样本 ${d.sampleSize} 人（少于 ${data.minSample} 人）· 按隐私规则不予展示` }),
+              el('td', { attrs: { colspan: 4 }, text: `有效样本少于 ${data.minSample} 人 · 按隐私规则不予展示` }),
             ]);
           }
           return el('tr', {}, [

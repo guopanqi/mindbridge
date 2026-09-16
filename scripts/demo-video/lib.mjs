@@ -235,7 +235,7 @@ export async function dismissKeyboard(page) {
 }
 
 // 时间过渡卡：在当前页面上淡入一层与应用同色的幕布，只有一行字，停一会儿。
-export async function interlude(page, text, ms = 2200) {
+export async function interlude(page, text, ms = 2200, { fadeOut = false } = {}) {
   await page.evaluate((label) => {
     const cover = document.createElement('div');
     cover.className = 'demo-interlude';
@@ -244,6 +244,10 @@ export async function interlude(page, text, ms = 2200) {
     requestAnimationFrame(() => cover.classList.add('on'));
   }, text);
   await sleep(ms);
+  if (fadeOut) {
+    await page.evaluate(() => { const cover = document.querySelector('.demo-interlude'); cover.classList.remove('on'); setTimeout(() => cover.remove(), 600); });
+    await sleep(700);
+  }
 }
 
 // 本地 D1 直接改数据：录制专用，只碰演示账号。

@@ -96,7 +96,7 @@ export async function onRequestGet({ request, env }) {
 
     // 不混合模拟与真实样本来凑k，避免通过已知基线相减推算真实小样本。
     const origin = url.searchParams.get('origin') === 'demo_seed' ? 'demo_seed' : 'live';
-    const scoped = /\b(FROM|JOIN) (mood_checkins|messages|aggregate_events|risk_events|resource_events|posts|profiles|appointments)\b/g;
+    const scoped = /\b(FROM|JOIN) (mood_checkins|messages|aggregate_events|risk_events|resource_events|posts|profiles|appointments|org_rhythm)\b/g;
     const q = (sql, ...binds) => env.CARE_DB.prepare(sql.replace(scoped, (_m, op, table) => `${op} (SELECT * FROM ${table} WHERE data_origin='${origin}')`)).bind(...binds);
 
     const [
@@ -147,7 +147,8 @@ export async function onRequestGet({ request, env }) {
          FROM posts po JOIN profiles p ON p.anon_id = po.anon_id
          WHERE po.created_at > ? AND po.deleted_at IS NULL AND po.topic IS NOT NULL AND p.department IS NOT NULL
          GROUP BY p.department, po.topic`, since).all(),
-      q("SELECT metric, value, sample_size, unit, bucket_day FROM org_rhythm WHERE data_origin = 'live' ORDER BY bucket_day DESC").all().catch(() => ({ results: [] })),
+      // 团队节奏也按当前 origin 取：模拟基线自带一套模拟节奏，真实侧只看真的同步到的。
+      q('SELECT metric, value, sample_size, unit, bucket_day FROM org_rhythm ORDER BY bucket_day DESC').all().catch(() => ({ results: [] })),
       q('SELECT key, label, enabled, source FROM sensing_signals').all().catch(() => ({ results: [] })),
       q(`SELECT COUNT(*) AS total,
                 SUM(CASE WHEN status IN ('active','done') THEN 1 ELSE 0 END) AS handled,
