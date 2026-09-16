@@ -90,6 +90,7 @@ async function enterApp() {
 async function showView(view) {
   if (currentView === view) return;
   currentView = view;
+  $('#app').dataset.view = view;
   for (const tab of /** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll('.tab'))) {
     const on = tab.dataset.view === view;
     tab.classList.toggle('on', on);
@@ -184,15 +185,36 @@ document.addEventListener('focusout', (event) => {
   }
 });
 
+// iOS WebView 弹出键盘时，布局视口不会缩小，页面只是被顶上去；
+// 键盘收起后经常停在偏移的位置，对话流下面就凭空少了两行。
+// 这里让 .app 始终与可视视口等高等位，键盘开合都把窗口滚回原点，
+// 并把对话流重新贴到底部。
 const viewport = window.visualViewport;
+const pinStreamBottom = () => {
+  const stream = document.querySelector('#view-chat:not([hidden]) .stream');
+  if (stream) stream.scrollTop = stream.scrollHeight;
+};
 if (viewport) {
+  let lastHeight = viewport.height;
   const syncKeyboard = () => {
+    const app = $('#app');
     const shrunk = window.innerHeight - viewport.height > window.innerHeight * 0.15;
     const hasFocus = isTextInput(document.activeElement);
     setKeyboardOpen(shrunk || hasFocus);
+    if (app) {
+      app.style.height = shrunk ? `${Math.round(viewport.height)}px` : '';
+      app.style.transform = shrunk && viewport.offsetTop ? `translateY(${Math.round(viewport.offsetTop)}px)` : '';
+    }
+    if (window.scrollY || window.scrollX) window.scrollTo(0, 0);
+    if (Math.abs(viewport.height - lastHeight) > 1) {
+      lastHeight = viewport.height;
+      pinStreamBottom();
+      requestAnimationFrame(pinStreamBottom);
+    }
   };
   viewport.addEventListener('resize', syncKeyboard);
   viewport.addEventListener('scroll', syncKeyboard);
+  document.addEventListener('focusout', () => setTimeout(syncKeyboard, 120));
 }
 
 void boot();
