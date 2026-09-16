@@ -67,13 +67,13 @@ function renderCaseCard(item, onReload) {
 
   const card = el('div', { class: `case ${riskClass}` });
 
-  // 头部：匿名代号 + 状态 + 部门时间
+  // 头部：匿名代号 + 状态 + 触发时间。原始部门不下发给疗愈师（最小必要），只保留下方脱敏工作背景。
   card.append(
     el('div', { class: 'cid' }, [
       el('span', { text: item.caseCode }),
       el('span', { class: `lvl ${isDone ? 'g' : 'r'}`, text: isDone ? '已闭环' : (RISK_LABEL[item.riskLevel] || item.riskLevel) }),
     ]),
-    el('div', { class: 'meta', text: `${item.dept || '未提供部门'} · 触发 ${formatTime(item.at)} · ${isDone ? '已完成处置' : '员工已授权转接'}` }),
+    el('div', { class: 'meta', text: `触发 ${formatTime(item.at)} · ${isDone ? '已完成处置' : '员工已授权转接'}` }),
   );
 
   // 情绪标签

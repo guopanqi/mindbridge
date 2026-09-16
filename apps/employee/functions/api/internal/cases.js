@@ -37,7 +37,7 @@ async function listCases(env) {
   const { results } = await env.CARE_DB.prepare(
     `SELECT a.id, a.case_code, a.conversation_id, a.risk_level, a.status, a.share_context, a.note_cipher,
             a.content_key_version, a.created_at, a.claimed_by, a.claimed_at, a.closed_at,
-            a.department, a.work_profile_json, a.tags_json, a.response_minutes, a.log_json, a.sla_at,
+            a.work_profile_json, a.tags_json, a.response_minutes, a.log_json, a.sla_at,
             (SELECT COUNT(*) FROM case_notes n WHERE n.appointment_id = a.id) AS note_count,
             (SELECT CASE WHEN status IN ('pending','approved') AND expires_at <= ? THEN 'expired'
               WHEN EXISTS (SELECT 1 FROM consent_grants g WHERE g.anon_id=c.anon_id AND g.scope='share_context_with_healer' AND g.revoked_at>=COALESCE(c.decided_at,c.created_at)) THEN 'revoked'
@@ -85,7 +85,6 @@ async function listCases(env) {
       caseCode: row.case_code,
       riskLevel: row.risk_level,
       status,
-      dept: row.department || null,
       workProfile,
       tags,
       sla: row.sla_at || (row.created_at + 2 * 3600 * 1000),

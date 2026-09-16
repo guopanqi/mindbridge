@@ -56,7 +56,7 @@ const fit = canvas
   ? `,scale=-2:'min(${canvas.h - 120},ih)':flags=lanczos,pad=${canvas.w}:${canvas.h}:(ow-iw)/2:(oh-ih)/2:${CANVAS_BG}`
   : '';
 const filter = [
-  `[0:v]pad=${device.w}:${device.h}:${device.ox}:${device.oy}:black[screen]`,
+  `[0:v]pad=${device.w}:${device.h}:${device.ox}:${device.oy}:${CANVAS_BG}[screen]`,
   `[screen][1:v]overlay=0:0:format=auto:shortest=1${fit},fps=30,scale=in_range=pc:out_range=tv,format=yuv420p,setsar=1[v]`,
 ].join(';');
 
