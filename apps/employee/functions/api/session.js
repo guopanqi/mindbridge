@@ -11,16 +11,21 @@ export async function onRequestGet({ request, env, waitUntil }) {
     .prepare('SELECT session_digest, anon_id, organization_id, entry_channel FROM sessions WHERE session_digest = ? AND expires_at > ?')
     .bind(digest, now).first() : null;
   let renewedCookie = null;
+  let organizationName = null;
   if (session?.entry_channel === 'beta_web') {
-    const org = await env.CARE_DB.prepare("SELECT id FROM organizations WHERE id = ? AND status = 'active' AND kind = 'beta'")
+    const org = await env.CARE_DB.prepare("SELECT id, display_name FROM organizations WHERE id = ? AND status = 'active' AND kind = 'beta'")
       .bind(session.organization_id).first();
     if (!org) session = null;
+    else organizationName = org.display_name;
   }
   if (!session) {
     const renewed = await renewBetaSession(request, env);
     if (!renewed) return json({ authenticated: false }, 401, { 'set-cookie': clearSessionCookie() });
     session = { anon_id: renewed.anonId, organization_id: renewed.organizationId, entry_channel: 'beta_web' };
     renewedCookie = renewed.cookie;
+    const org = await env.CARE_DB.prepare('SELECT display_name FROM organizations WHERE id = ?')
+      .bind(renewed.organizationId).first();
+    organizationName = org?.display_name || null;
   } else {
     await env.CARE_DB.prepare('UPDATE sessions SET last_seen_at = ? WHERE session_digest = ?').bind(now, digest).run();
   }
@@ -37,6 +42,7 @@ export async function onRequestGet({ request, env, waitUntil }) {
     review: String(session.anon_id || '').startsWith('mbreview_'),
     entryChannel: session.entry_channel || 'dingtalk',
     organizationId: session.organization_id || null,
+    organizationName,
   }, 200, renewedCookie ? { 'set-cookie': renewedCookie } : {});
 }
 

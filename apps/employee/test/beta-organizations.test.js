@@ -74,7 +74,9 @@ test('邀请身份可续会话，广场在两个公开组织之间严格隔离',
 
   const renewed = await sessionGet({ request: req('/api/session', 'GET', null, aDevice), env });
   assert.equal(renewed.status, 200);
-  assert.equal((await renewed.json()).organizationId, 'org_0');
+  const renewedBody = await renewed.json();
+  assert.equal(renewedBody.organizationId, 'org_0');
+  assert.equal(renewedBody.organizationName, '组织0');
   assert.ok(cookie(renewed, '__Host-mb_session'));
   assert.equal(sqlite.prepare("SELECT COUNT(*) AS n FROM product_events WHERE event_name='wall_post_created' AND organization_id='org_0'").get().n, 1);
 });

@@ -70,9 +70,12 @@ function showFailure(code) {
   $('#boot').classList.add('failed');
 }
 
-async function enterApp() {
+async function enterApp(session) {
   const me = await api.me();
   $('#display-name').textContent = me.displayName;
+  $('#organization-label').textContent = session?.entryChannel === 'beta_web'
+    ? `${session.organizationName || '公开测试组织'} · 匿名参与`
+    : '匿名身份 · HR 与疗愈师都看不到你是谁';
   $('#boot').hidden = true;
   $('#app').hidden = false;
   await showView('chat');
@@ -165,13 +168,14 @@ export async function boot({ reason } = {}) {
     const alive = session.authenticated;
     if (!alive) {
       await establishSession();
+      session = await getSession();
       const elapsed = Date.now() - startedAt;
       const wait = reducedMotion() ? 0 : Math.max(0, MIN_BOOT_MS - elapsed);
       if (wait) await new Promise((resolve) => setTimeout(resolve, wait));
     } else {
       for (const node of document.querySelectorAll('#boot-steps li')) node.classList.add('done');
     }
-    await enterApp();
+    await enterApp(session);
   } catch (error) {
     const code = error instanceof ApiError ? error.code : 'UNEXPECTED_CLIENT_ERROR';
     // 不打印原始错误：可能带有授权码或身份关联信息。
