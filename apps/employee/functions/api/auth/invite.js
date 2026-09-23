@@ -36,17 +36,21 @@ export async function onRequestPost({ request, env }) {
     if (isNewMember) {
       browserCredential = randomToken();
       anonId = newId('mbbeta');
-      const result = await env.CARE_DB.prepare(
-        `UPDATE beta_invites SET join_count = join_count + 1
-         WHERE id = ? AND disabled_at IS NULL AND (expires_at IS NULL OR expires_at > ?)
-           AND (max_joins IS NULL OR join_count < max_joins)`
-      ).bind(invite.id, now).run();
-      if (!result.meta?.changes) throw new ApiError('INVITE_FULL', 403, '邀请名额已满或链接已失效');
-      await env.CARE_DB.prepare(
-        `INSERT INTO beta_memberships
-         (anon_id, organization_id, invite_id, browser_credential_digest, created_at, last_seen_at)
-         VALUES (?, ?, ?, ?, ?, ?)`
-      ).bind(anonId, invite.organization_id, invite.id, await sha256Base64Url(browserCredential), now, now).run();
+      // D1 batch 在同一事务中串行完成名额检查、加入与计数；满额时两条语句均不写入。
+      const [inserted] = await env.CARE_DB.batch([
+        env.CARE_DB.prepare(
+          `INSERT INTO beta_memberships
+           (anon_id, organization_id, invite_id, browser_credential_digest, created_at, last_seen_at)
+           SELECT ?, organization_id, id, ?, ?, ? FROM beta_invites
+           WHERE id = ? AND disabled_at IS NULL AND (expires_at IS NULL OR expires_at > ?)
+             AND (max_joins IS NULL OR join_count < max_joins)`
+        ).bind(anonId, await sha256Base64Url(browserCredential), now, now, invite.id, now),
+        env.CARE_DB.prepare(
+          `UPDATE beta_invites SET join_count = join_count + 1
+           WHERE id = ? AND EXISTS (SELECT 1 FROM beta_memberships WHERE anon_id = ? AND invite_id = ?)`
+        ).bind(invite.id, anonId, invite.id),
+      ]);
+      if (!inserted.meta?.changes) throw new ApiError('INVITE_FULL', 403, '邀请名额已满或链接已失效');
     } else {
       await env.CARE_DB.prepare('UPDATE beta_memberships SET last_seen_at = ? WHERE anon_id = ?')
         .bind(now, anonId).run();

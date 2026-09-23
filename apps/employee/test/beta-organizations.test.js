@@ -61,6 +61,10 @@ test('邀请身份可续会话，广场在两个公开组织之间严格隔离',
   const b = cookie(joinedB, '__Host-mb_session');
   const aDevice = cookie(joinedA, '__Host-mb_device');
   assert.notEqual(a, b);
+  sqlite.prepare('UPDATE beta_invites SET max_joins = 1 WHERE id = ?').run('inv_0');
+  const full = await join({ request: req('/api/auth/invite', 'POST', { token: tokens[0] }), env });
+  assert.equal(full.status, 403);
+  assert.equal(sqlite.prepare('SELECT join_count FROM beta_invites WHERE id = ?').get('inv_0').join_count, 1);
 
   const posted = await wallPost({ request: req('/api/wall', 'POST', { text: '今天希望有人听我说说' }, a), env });
   assert.equal(posted.status, 200);

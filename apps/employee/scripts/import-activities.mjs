@@ -25,7 +25,7 @@ if (!mode) {
   if (args.includes('--apply')) throw new Error('--apply requires --local or --remote');
   console.log(`Validated ${documents.length} activities and ${mappings.length} mappings`);
 } else {
-  const cli = options => execFileSync(process.execPath, [join(root, 'node_modules/wrangler/bin/wrangler.js'), 'd1', 'execute', 'mindbridge-care', mode, ...options], { cwd: root, encoding: 'utf8' });
+  const cli = options => execFileSync(process.execPath, [join(root, 'node_modules/wrangler/bin/wrangler.js'), 'd1', 'execute', 'mindbridge-beta-care', mode, ...options], { cwd: root, encoding: 'utf8' });
   const existing = JSON.parse(cli(['--command', 'SELECT id,content_version,content_hash FROM activities', '--json'])).flatMap(r => r.results || []);
   const plan = documents.map(a => ({ a, status: classifyActivity(a, existing.find(r => r.id === a.id)) }));
   for (const { a, status } of plan) console.log(`${status}: ${a.id} v${a.contentVersion}`);
