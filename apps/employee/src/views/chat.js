@@ -47,13 +47,26 @@ function bubble(message) {
   ]);
 }
 
+// 时间戳不逐条显示：和上一条间隔超过 5 分钟才在中间插一行，跨天带日期。
+const STAMP_GAP = 5 * 60 * 1000;
+let lastStampAt = 0;
+function stampFor(at) {
+  if (!at || at - lastStampAt < STAMP_GAP) return null;
+  lastStampAt = at;
+  const d = new Date(at);
+  const sameDay = new Date().toDateString() === d.toDateString();
+  const time = d.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Shanghai' });
+  const day = d.toLocaleDateString('zh-CN', { month: 'numeric', day: 'numeric', timeZone: 'Asia/Shanghai' });
+  return el('div', { class: 'stamp', text: sameDay ? time : `${day} ${time}` });
+}
+
 function resourceCard(card) {
   if (!card) return null;
   const state = card.progress?.state || 'offered';
   const stateText = ({ joined: '进行中', completed: '已完成', declined: '已跳过', unavailable: '活动记录不可用' })[state];
   const actionable = !['declined', 'unavailable'].includes(state);
   return el('div', { class: 'card resource' }, [
-    el('div', { class: 'card-icon', text: card.icon || '🌿' }),
+    el('div', { class: 'card-icon', text: card.icon || '🌿', attrs: { 'aria-hidden': 'true' } }),
     el('div', { class: 'card-main' }, [
       el('p', { class: 'card-title', text: card.name }),
       el('p', { class: 'card-desc', text: card.description }),
@@ -74,7 +87,9 @@ async function requestAppointment(button, messageId) {
   cardRefreshVersion++;
   for (const node of stream.querySelectorAll('.consent button')) node.disabled = true;
   try {
-    const result = await api.requestAppointment({ riskLevel: 'red', shareContext: true, messageId });
+    // 建案不等于交出对话原文：卡片上只承诺「交给疗愈师一个个案编号」，就只给编号。
+    // 疗愈师要看上下文，得在工作台单独发起申请，由员工本人再确认一次。
+    const result = await api.requestAppointment({ riskLevel: 'red', shareContext: false, messageId });
     button.textContent = `已提交 · 个案编号 ${result.caseCode}`;
     toast('已提交。疗愈师会看到个案编号和风险级别，看不到你是谁。你随时可以在「我的」里取消。');
   } catch (error) {
@@ -90,7 +105,7 @@ function consentCard(card, messageId) {
   const status = card.support?.status;
   const submitted = ['requested', 'claimed', 'active', 'closed', 'done', 'cancelled', 'unavailable'].includes(status);
   const statusLabel = ({ requested: '已提交 · 等待接单', claimed: '疗愈师已接单', active: '正在跟进', closed: '本次服务已结束', done: '本次服务已结束', cancelled: '本次预约已取消', unavailable: '预约记录不可用' })[status];
-  if (submitted) return el('div', { class: 'card consent' }, [
+  if (submitted) return el('div', { class: `card consent${card.tone === 'urgent' ? ' urgent' : ''}` }, [
     el('p', { class: 'card-title', text: '专业支持预约' }),
     el('div', { class: 'support-summary', attrs: { role: 'status' } }, [
       el('p', { class: 'support-summary-label', text: status === 'requested' ? '等待接单' : statusLabel }),
@@ -98,7 +113,7 @@ function consentCard(card, messageId) {
     ]),
     el('p', { class: 'card-desc', text: '可在「我的」查看预约详情。' }),
   ]);
-  return el('div', { class: 'card consent' }, [
+  return el('div', { class: `card consent${card.tone === 'urgent' ? ' urgent' : ''}` }, [
     el('p', { class: 'card-title', text: card.title }),
     el('p', { class: 'card-desc', text: card.body }),
     status === 'dismissed' ? el('p', { class: 'card-tag', text: '已选择暂时不用，之后仍可预约。' }) : null,
@@ -129,7 +144,7 @@ function consentCard(card, messageId) {
 function crisisCard(card) {
   if (!card) return null;
   return el('div', { class: 'card crisis' }, [
-    el('p', { class: 'card-title', text: '如果当下感到难以承受，请随时拨打援助热线' }),
+    el('p', { class: 'card-title', text: '如果你更想跟一个不认识你的人说说话' }),
     el('ul', { class: 'crisis-list' }, (card.resources || []).map((item) => el('li', {}, [
       el('a', { class: 'crisis-tel', text: item.contact, attrs: { href: `tel:${item.contact}` } }),
       el('span', { class: 'crisis-name', text: item.name }),
@@ -139,8 +154,19 @@ function crisisCard(card) {
   ]);
 }
 
+// 对话流顶部的隐私说明卡（与 prototype 的 .privacy-note 一致：一枚呼吸的烛光点 + 两行说明）。
+function privacyNote() {
+  lastStampAt = 0; // 每次重画对话流都从头算时间戳间隔
+  return el('div', { class: 'privacy-note', attrs: { 'aria-label': '隐私说明' } }, [
+    el('i', { class: 'dot', attrs: { 'aria-hidden': 'true' } }),
+    el('p', { class: 't', html: '你在这里说的每一句话，都属于隐私。<span>真实身份与心理服务数据隔离，你可以随时清空本次对话。</span>' }),
+  ]);
+}
+
 function append(messages) {
   for (const message of messages) {
+    const stamp = stampFor(message.at);
+    if (stamp) stream.append(stamp);
     const node = bubble(message);
     if (node) stream.append(node);
   }
@@ -166,6 +192,8 @@ async function send(text) {
   // 一旦确认没有发出去，要原样放回去，而不是让人重打一遍。
   input.value = '';
   input.style.height = '';
+  const pendingStamp = stampFor(Date.now());
+  if (pendingStamp) stream.append(pendingStamp);
   const pending = bubble({ role: 'user', text: trimmed });
   pending.classList.add('pending');
   stream.append(pending);
@@ -199,6 +227,7 @@ async function send(text) {
         const body = await api.chatHistory();
         const saved = body.messages.some((m) => m.role === 'user' && m.text === trimmed);
         clear(stream);
+        stream.append(privacyNote());
         append(body.messages);
         if (saved) {
           toast('连接中断，但这条消息已经发出去了。');
@@ -247,10 +276,11 @@ export function renderChat(root) {
     }
   });
 
+  // 与 prototype 一致：方形烛光橙按钮 + 箭头，不放文字。
   sendBtn = el('button', {
     class: 'primary send',
-    text: '发送',
-    attrs: { type: 'button' },
+    html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>',
+    attrs: { type: 'button', 'aria-label': '发送' },
   });
 
   // 关键：阻止 pointerdown / mousedown 导致输入框失焦 (blur) 和虚拟键盘收起。
@@ -333,6 +363,7 @@ export async function loadChat() {
   try {
     const body = await api.chatHistory();
     clear(stream);
+    stream.append(privacyNote());
     if (!body.messages.length) {
       append([{ role: 'assistant', text: '你好，我是你的倾诉伙伴 MindBridge。\n这里是一处完全属于你的私密树洞，有什么压力或想法，随时跟我聊聊。' }]);
       await renderFollowup();
@@ -349,6 +380,7 @@ export async function loadChat() {
 export async function clearChat() {
   await api.clearChat();
   clear(stream);
+  stream.append(privacyNote());
   append([{ role: 'assistant', text: '记录已清空。想从头说起也可以，我在。' }]);
 }
 

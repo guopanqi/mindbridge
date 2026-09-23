@@ -58,22 +58,25 @@ function card(item, reload, options = {}) {
     declined: '再看看',
   }[item.state] || '打开';
 
-  return el('div', { class: 'act-card' }, [
-    el('div', { class: 'act-card-head' }, [
-      el('span', { class: 'act-card-title', text: item.name }),
+  // 版式与 prototype 的 activity-card 一致：类型胶囊 + 状态 / 标题 / 理由 / 元信息 / 通栏按钮。
+  return el('div', { class: `act-card${reason ? ' recommended' : ''}` }, [
+    el('div', { class: 'act-card-top' }, [
+      el('span', { class: `act-card-type${item.kind === 'offline' ? ' offline' : ''}`, text: KIND_LABEL(item) }),
       el('span', { class: 'act-card-state', text: stateLabel(item) }),
     ]),
+    el('p', { class: 'act-card-title', text: item.name }),
     reason ? el('p', { class: 'act-card-reason', text: reason }) : null,
-    el('p', { class: 'act-card-meta', text: `${KIND_LABEL(item)} · ${timeAgo(item.at)}` }),
-    // 没评价就是没评价，不能显示成零分。
-    item.state === 'completed' && item.helpfulness
-      ? el('p', { class: 'act-card-meta', text: `你的评价：${item.helpfulness}` })
-      : null,
+    el('div', { class: 'act-card-meta' }, [
+      el('span', { text: timeAgo(item.at) }),
+      el('span', { text: item.kind === 'offline' ? '匿名报名' : '匿名完成' }),
+      // 没评价就是没评价，不能显示成零分。
+      item.state === 'completed' && item.helpfulness ? el('span', { text: `你的评价：${item.helpfulness}` }) : null,
+    ]),
+    el('button', {
+      class: `act-card-btn${item.kind === 'offline' ? ' secondary' : ''}`, text: openLabel, attrs: { type: 'button' },
+      on: { click: () => void open(item, reload) },
+    }),
     el('div', { class: 'act-card-actions' }, [
-      el('button', {
-        class: 'secondary small', text: openLabel, attrs: { type: 'button' },
-        on: { click: () => void open(item, reload) },
-      }),
       // 完成当时跳过了评价的，这里补一个入口——否则结果页永远走不到，
       // 因为「再做一次」一律新建参与记录，不会再打开旧的那条。
       item.state === 'completed' ? el('button', {

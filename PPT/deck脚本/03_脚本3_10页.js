@@ -1,7 +1,7 @@
-const L = require("./lib.js");
+const L = require("../工具库/lib.js");
 const { C, HF } = L;
 const p = L.newDeck();
-const OUT = "/sessions/keen-exciting-maxwell/mnt/mindbridge/PPT输出_cowork/MindBridge_脚本3.pptx";
+const OUT = process.argv[2] || __dirname + "/../成品/MindBridge_脚本3.pptx";
 
 // P1 cover
 L.cover(p);

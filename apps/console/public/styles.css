@@ -1,19 +1,20 @@
 :root {
   color-scheme: light;
-  --ink: #16332f;
-  --ink-soft: #5d7873;
-  --line: #dde9e6;
-  --brand: #147b6f;
-  --brand-soft: #e8f4f1;
-  --bg: #f3f7f6;
+  /* 与 prototype HRBP 后台（skC）同一套色 */
+  --ink: #1b2026;
+  --ink-soft: #69727c;
+  --line: #e2e6ea;
+  --brand: #2d6a5a;
+  --brand-soft: #e6f1ed;
+  --bg: #f4f6f8;
   --card: #ffffff;
-  --mut: #637381;
-  --mut2: #8898aa;
-  --grn: #2d8a5e;
-  --amb: #c07a2c;
+  --mut: #69727c;
+  --mut2: #98a1ab;
+  --grn: #3d8b64;
+  --amb: #c08424;
   --red: #c9503a;
-  --warn: #c07a2c;
-  --danger: #b04141;
+  --warn: #c08424;
+  --danger: #c9503a;
   --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
   color: var(--ink);
@@ -232,7 +233,9 @@ tr.masked td { color: var(--mut2); font-style: italic; background: #fafbfc; }
 .case.done { border-left: 4px solid var(--grn); background: #fbfdfc; }
 .cid { font-size: 14px; font-weight: 700; display: flex; align-items: center; gap: 9px; font-family: var(--mono); }
 .cid .lvl { font-size: 10.5px; padding: 2px 7px; border-radius: 4px; font-weight: 600; font-family: -apple-system, sans-serif; }
-.cid .lvl.r { background: #f9ece9; color: var(--red); }
+/* 危机级别要一眼分得出：红色是实心红底，黄色才是浅底。淡粉底的红字在投影和录像里会偏橙。 */
+.cid .lvl.r { background: var(--red); color: #fff; }
+.cid .lvl.y { background: #fdf1dd; color: #8a6018; }
 .cid .lvl.g { background: #e6f2ec; color: var(--grn); }
 .meta { font-size: 11.5px; color: var(--mut); margin-top: 4px; }
 .tagrow { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
@@ -243,6 +246,8 @@ tr.masked td { color: var(--mut2); font-style: italic; background: #fafbfc; }
   background: #f0f7f4; border: 1px solid #cfe2d8; border-radius: 6px;
   padding: 10px 12px; margin-top: 10px; font-size: 12px; color: #2d6a5a; line-height: 1.6;
 }
+.ctx-req { display: flex; gap: 8px; margin-top: 10px; }
+.ctx-req input { flex: 1; min-width: 0; }
 .sla { position: absolute; right: 18px; top: 16px; text-align: right; }
 .sla .lb { font-size: 10.5px; color: var(--mut2); }
 .sla .tm { font-size: 16px; font-weight: 700; font-family: var(--mono); color: var(--brand); margin-top: 2px; }
@@ -296,3 +301,50 @@ tr.masked td { color: var(--mut2); font-style: italic; background: #fafbfc; }
 .fn span{font-size:11px;color:var(--mut)}
 .fn-arrow{color:var(--mut2);font-size:14px}
 .fn-note{margin:6px 0 8px;font-size:11.5px;line-height:1.65;color:var(--mut)}
+
+/* 行业总览表：当前所选行业高亮，整行可点切换 */
+.industry-all tr.is-current td { background: var(--brand-soft); }
+.industry-all tbody tr { cursor: pointer; }
+.industry-all td.masked { color: var(--mut2); font-style: italic; }
+
+/* 疗愈师台在手机上打开：值班的人不一定守着电脑。窄屏下单列铺开，倒计时不再绝对定位，
+   每个控件要么占满一行、要么和同类并排，不留半截被挤断的输入框。 */
+@media (max-width: 460px) {
+  .console { padding: 0 14px 28px; }
+  .topbar { align-items: flex-start; gap: 10px; padding: 14px 0 12px; }
+  .topbar > div:first-child { flex: 1; min-width: 0; }
+  .brand { font-size: 15.5px; }
+  .tenant-line { font-size: 11px; line-height: 1.5; }
+  .topbar-right { flex-shrink: 0; gap: 8px; }
+  .staff-name { font-size: 12px; }
+  .ghost { padding: 6px 10px; font-size: 12px; }
+
+  .healer-header { gap: 10px; padding: 12px 14px; margin-bottom: 12px; }
+  .healer-header > div:nth-child(2) { min-width: 0; }
+  .healer-avatar { font-size: 20px; }
+  .healer-name { font-size: 14px; }
+  .healer-cert { font-size: 10.5px; line-height: 1.45; word-break: keep-all; overflow-wrap: break-word; }
+  .healer-badge { margin-left: 12px; padding-left: 12px; border-left: 1px solid var(--line); }
+  .healer-badge .cnt { font-size: 19px; line-height: 1.1; }
+  .healer-badge .lbl { font-size: 10px; white-space: nowrap; }
+
+  .qbar { gap: 2px; }
+  .qbar button { padding: 8px 9px; font-size: 12.5px; }
+
+  .case { padding: 13px 14px; }
+  .cid { flex-wrap: wrap; gap: 6px; font-size: 13px; }
+  .sla { position: static; text-align: left; margin: 9px 0 2px; display: flex; align-items: baseline; gap: 8px; }
+  .sla .tm { margin-top: 0; font-size: 15px; }
+  /* 窄屏下把卡片按重要性重排：先看清个案与时间线，再是处置动作，
+     「申请查看上下文」是次要动作，沉到最后，别和「开始联系」抢视觉重心。 */
+  .case { display: flex; flex-direction: column; }
+  .acts { order: 4; }
+  .ctx-req { order: 5; flex-direction: column; gap: 7px; margin-top: 12px; }
+  .ctx-req input { width: 100%; font-size: 12px; padding: 7px 10px; }
+  .ctx-req button { width: 100%; font-size: 12.5px; padding: 7px 10px; font-weight: 500; }
+  .locked.granted { order: 5; }
+  .acts { gap: 8px; }
+  .acts input { width: 100% !important; }
+  .logtxt { width: 100%; font-size: 10.5px; }
+  .mx { min-width: 0; }
+}

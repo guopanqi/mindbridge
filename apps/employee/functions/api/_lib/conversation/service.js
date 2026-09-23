@@ -76,6 +76,7 @@ async function respondWithHarness(env, { text, conversation, profileContext, now
     return {
       result: safeFallback(loadedState, text),
       enteredRed: fallbackNeedsCrisis(text) && loadedState.supportLevel !== 'red',
+      degraded: true,
     };
   }
   const level = harness.nextState.supportLevel === 'blue'
@@ -98,7 +99,7 @@ async function respondWithHarness(env, { text, conversation, profileContext, now
       reply: harness.decision.reply.text,
       resource,
       crisis: level === 'red'
-        ? { resources: CRISIS_RESOURCES, disclaimer: 'MindBridge 不会替你拨打这些电话，是否联系由你决定。' }
+        ? { resources: CRISIS_RESOURCES, disclaimer: 'MindBridge 不会替你拨打，打不打由你决定。' }
         : null,
     },
     harness: { ...harness, revision },
@@ -253,27 +254,40 @@ export async function handleInbound({ env, anonId, text, channel = 'h5', request
     }
 
     if (result.level === 'red' && engineOutput.enteredRed) {
-      // 红色：停止普通推荐，先说明边界并征求知情同意，绝不谎称已代为联系任何人。
+      // 红色第一步：先给人，不给号码。说明边界并征求知情同意，绝不谎称已代为联系任何人。
       const card = {
         kind: 'consent',
-        title: '这些感受值得被专业的人接住',
-        body: '我能陪你说话，但我不能替代专业支持。如果你愿意，我可以在不透露你身份的前提下，把「有人现在需要支持」这件事交给持证疗愈师；要不要这样做，完全由你决定。',
+        tone: 'urgent',
+        title: '这件事不该你一个人扛',
+        body: '我能陪你说话，但我不能替代专业支持。只要你同意，值班的持证疗愈师会在 30 分钟内联系你，全程只用一个个案编号，他不会知道你是谁、在哪个部门。',
         actions: [
           { label: '我愿意，请安排疗愈师', action: 'request_appointment' },
-          { label: '暂时不用，我想继续说说', action: 'dismiss' },
+          { label: '暂时不用，我想再待会儿', action: 'dismiss' },
         ],
       };
       const cardId = newId('msg');
       const sealed = await sealBody(env, JSON.stringify(card), aad);
       statements.push(insert(cardId, 'consent', sealed, 'red', now + 3));
       appended.push({ id: cardId, role: 'consent', at: now + 3, card });
+    }
 
-      // 紧急资源：只提供可拨打的号码，绝不宣称系统已经代为联系。
-      const crisisCard = { kind: 'crisis', ...result.crisis };
-      const crisisId = newId('msg');
-      const crisisSealed = await sealBody(env, JSON.stringify(crisisCard), aad);
-      statements.push(insert(crisisId, 'crisis', crisisSealed, 'red', now + 4));
-      appended.push({ id: crisisId, role: 'crisis', at: now + 4, card: crisisCard });
+    // 热线不是红色的默认推送：只有当同意卡已经给过、员工还没接受，红色又持续了一轮时才补上，
+    // 而且整段对话只补这一次——反复弹号码，对已经说"说了也没用"的人只是噪音。
+    // 模型不可用的降级路径例外：那一轮拿不到判断，宁可多给一次号码。
+    if (result.level === 'red' && result.crisis && (!engineOutput.enteredRed || engineOutput.degraded)) {
+      const already = await env.CARE_DB.prepare(
+        "SELECT 1 AS hit FROM messages WHERE anon_id = ? AND role = 'crisis' LIMIT 1"
+      ).bind(anonId).first();
+      const offered = engineOutput.degraded || await env.CARE_DB.prepare(
+        "SELECT 1 AS hit FROM messages WHERE anon_id = ? AND role = 'consent' LIMIT 1"
+      ).bind(anonId).first();
+      if (!already && offered) {
+        const crisisCard = { kind: 'crisis', ...result.crisis };
+        const crisisId = newId('msg');
+        const crisisSealed = await sealBody(env, JSON.stringify(crisisCard), aad);
+        statements.push(insert(crisisId, 'crisis', crisisSealed, 'red', now + 4));
+        appended.push({ id: crisisId, role: 'crisis', at: now + 4, card: crisisCard });
+      }
     }
 
     if (result.level !== 'green') {

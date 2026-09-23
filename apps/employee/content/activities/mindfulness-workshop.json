@@ -1,0 +1,41 @@
+{
+  "id": "mindfulness-workshop",
+  "contentVersion": 1,
+  "title": "午间正念工作坊",
+  "description": "疗愈师带领的 8 人小组，不用自我介绍，也不用聊工作，来闭着眼睛坐一小时就行。",
+  "kind": "offline",
+  "level": "L2",
+  "available": true,
+  "form": "线下小组",
+  "duration": "60 分钟",
+  "scoreLabel": "紧绷感",
+  "suitedFor": "连续失眠、早上不想去公司、一个人调作息调不回来的时候",
+  "coreMethod": "疗愈师带领的团体正念",
+  "schedule": "本周五 12:30",
+  "location": "B 座 3F 静室",
+  "tags": [
+    "失眠",
+    "疲惫",
+    "低落",
+    "正念"
+  ],
+  "scale": {
+    "preLabel": "报名时，身上的紧绷感大概是多少？",
+    "low": "很松",
+    "high": "很紧",
+    "direction": "down"
+  },
+  "stages": [
+    {
+      "type": "choice",
+      "title": "留意一个变化",
+      "hint": "刚坐完一小时，不必要求自己已经彻底放松，只看看哪里比来之前松了一点。",
+      "options": [
+        { "label": "呼吸变慢了", "reflection": "身体先慢下来，脑子才跟得上。" },
+        { "label": "肩膀松了一点", "reflection": "肩膀先落下来，呼吸就顺了。" },
+        { "label": "脑子没那么吵", "reflection": "一小时不用说话、不用应付人，脑子就有空了。" },
+        { "label": "还是老样子", "reflection": "一次坐不出效果很正常，下次再来一趟看看。" }
+      ]
+    }
+  ]
+}

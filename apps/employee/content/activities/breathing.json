@@ -1,6 +1,6 @@
 {
   "id": "breathing",
-  "contentVersion": 4,
+  "contentVersion": 5,
   "title": "三分钟呼吸着陆法",
   "description": "跟着屏幕上的圆一起吸气和呼气，让身体先从赶进度的紧绷里退下来。",
   "kind": "online",
@@ -31,6 +31,29 @@
         "exhale": 6
       },
       "rounds": 18
+    },
+    {
+      "type": "choice",
+      "title": "留意一个变化",
+      "hint": "不必要求自己已经平静下来，只看看哪里比刚才松了一点。",
+      "options": [
+        {
+          "label": "呼吸变慢了",
+          "reflection": "呼吸慢下来，心跳就跟着慢了。"
+        },
+        {
+          "label": "肩膀松了一点",
+          "reflection": "肩膀先落下来，呼吸就顺了。身体收到信号了。"
+        },
+        {
+          "label": "脑子没那么吵",
+          "reflection": "三分钟不处理任何事，脑子就有地方喘口气。"
+        },
+        {
+          "label": "还是老样子",
+          "reflection": "一次没感觉很正常，下次卡住的时候再来一遍。"
+        }
+      ]
     }
   ]
 }

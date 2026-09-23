@@ -47,6 +47,18 @@ function finish(session) {
   render();
 }
 
+// 线下活动确认参加：内容里若配了收尾提问（「留意一个变化」），先问完再结算，
+// 让线下这一次和线上练习留下同样结构的完成记录。
+function attend(session) {
+  if (!active(session) || session.finished) return;
+  const plan = activityPlan(session.activity.stages);
+  if (!plan.length) { finish(session); return; }
+  session.position = 0;
+  moveProgress(session, plan[0].index);
+  session.phase = 'experience';
+  render();
+}
+
 function begin(session) {
   if (!active(session) || session.phase === 'experience') return;
   if (session.activity.progress.state === 'offered') {
@@ -187,7 +199,11 @@ function result(session) {
   const conclusion = ACTIVITY_PRESENTATION[activity.stages[0]?.type]?.conclusion || '这次练习到这里就完成了，接下来按自己的节奏继续。';
   return [
     el('section', { class: 'act-conclusion', attrs: { 'aria-label': '活动结果' } }, [
-    el('h2', { class: 'act-step-title', text: '体验结束' }),
+    // 线下场次统一用这张示意插画收尾；它是插画不是现场照片，也不涉及任何参加者的影像。
+    activity.kind === 'offline'
+      ? el('img', { class: 'act-photo', attrs: { src: '/media/offline-workshop.svg', alt: '线下工作坊示意插画', loading: 'lazy' } })
+      : null,
+    el('h2', { class: 'act-step-title', text: activity.kind === 'offline' ? '已完成 · 线下参与' : '体验结束' }),
     el('p', { class: 'act-save-status', attrs: { role: 'status' }, text: session.saved ? '已记录完成' : '正在保存完成记录…' }),
     !session.answers.filter(Boolean).length ? el('p', { class: 'act-closing-copy', text: conclusion }) : null,
     ...session.answers.filter(Boolean).map(answer => el('div', { class: 'act-outcome' }, [
@@ -214,7 +230,7 @@ function booked(session) {
     el('p', { text: `时间：${session.activity.schedule || '待安排'}` }),
     el('p', { text: `地点：${session.activity.location || '待安排'}` }),
     el('p', { class: 'act-note', text: '实际参加后再确认完成。' }),
-    el('button', { class: 'primary', text: '我已参加', attrs: { type: 'button' }, on: { click: () => finish(session) } }),
+    el('button', { class: 'primary', text: '我已参加', attrs: { type: 'button' }, on: { click: () => attend(session) } }),
   ];
 }
 

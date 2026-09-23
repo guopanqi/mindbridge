@@ -1,7 +1,7 @@
 import { api, ApiError } from '../api.js';
 import { cached, refresh } from '../store.js';
 import { BUILD_ID } from '../build-id.js';
-import { clear, closeSheet, el, openSheet, timeAgo, toast } from '../dom.js';
+import { clear, closeSheet, confirmSheet, el, openSheet, timeAgo, toast } from '../dom.js';
 
 export const CONTEXT_LABELS = {
   none: '未选择',
@@ -117,7 +117,7 @@ function appointmentPanel(reload) {
           class: 'link danger', text: '取消', attrs: { type: 'button' },
           on: {
             click: async () => {
-              if (!window.confirm('确定取消本次预约吗？已授权的对话查阅权限将一并同步撤销。')) return;
+              if (!await confirmSheet('取消本次预约？', '已授权的对话查阅权限将一并同步撤销。', { confirmLabel: '取消预约', cancelLabel: '保留' })) return;
               try { await api.cancelAppointment(item.id); reload(); } catch { toast('取消没有成功。'); }
             },
           },
@@ -266,7 +266,7 @@ function paint(reload) {
         class: 'secondary', text: '清空我的倾诉记录', attrs: { type: 'button' },
         on: {
           click: async () => {
-            if (!window.confirm('清空后无法恢复。预约和授权不会被一起删除，可以在上面单独取消。确定吗？')) return;
+            if (!await confirmSheet('清空我的倾诉记录？', '清空后无法恢复。预约和授权不会被一起删除，可以在上面单独取消。', { confirmLabel: '清空' })) return;
             try {
               await onClearChat();
               toast('已清空。');

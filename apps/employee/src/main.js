@@ -1,4 +1,4 @@
-import { api, ApiError, hasSession } from './api.js';
+import { api, ApiError, getSession } from './api.js';
 import { BUILD_ID } from './build-id.js';
 import { $, closeSheet, reducedMotion } from './dom.js';
 import { clearChat, focusComposer, loadChat, renderChat } from './views/chat.js';
@@ -135,7 +135,21 @@ export async function boot({ reason } = {}) {
   }
 
   try {
-    const alive = await hasSession();
+    const url = new URL(window.location.href);
+    const reviewRequested = url.searchParams.get('demo') === 'review';
+    if (reviewRequested) {
+      url.searchParams.delete('demo');
+      window.history.replaceState(null, '', url.toString());
+      await api.authenticateReview();
+    }
+
+    let session = await getSession();
+    // 正常入口不能沿用此前的评审身份；清掉后继续执行原有钉钉免登。
+    if (!reviewRequested && session.authenticated && session.review) {
+      await api.signOut();
+      session = { authenticated: false, review: false };
+    }
+    const alive = session.authenticated;
     if (!alive) {
       await establishSession();
       const elapsed = Date.now() - startedAt;

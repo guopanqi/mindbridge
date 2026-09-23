@@ -34,7 +34,7 @@ const findAccount = (name) => {
 
 export async function onRequestPost({ request, env }) {
   try {
-    if (String(env.DEMO_LOGIN || '').toLowerCase() === 'off') {
+    if (String(env.REVIEW_DEMO || '').toLowerCase() !== 'on' || String(env.DEMO_LOGIN || '').toLowerCase() === 'off') {
       throw new ApiError('DEMO_LOGIN_DISABLED', 403, '这个环境没有开启演示登录');
     }
     const body = await readJson(request);

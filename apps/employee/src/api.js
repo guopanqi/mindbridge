@@ -40,6 +40,8 @@ export const api = {
   config: () => request('/api/config'),
   session: () => request('/api/session'),
   authenticate: (code) => post('/api/auth', { code }),
+  authenticateReview: () => post('/api/auth/demo'),
+  signOut: () => request('/api/session', { method: 'DELETE' }),
   me: () => request('/api/me'),
   bootstrap: () => request('/api/bootstrap'),
   setContext: (contextTag) => post('/api/me', { contextTag }),
@@ -68,12 +70,15 @@ export const api = {
   setConsent: (scope, granted) => post('/api/consents', { scope, granted }),
 };
 
-export async function hasSession() {
+export async function getSession() {
   try {
-    const body = await api.session();
-    return body.authenticated === true;
+    return await api.session();
   } catch (error) {
-    if (error instanceof ApiError && error.code === 'HTTP_401') return false;
+    if (error instanceof ApiError && error.code === 'HTTP_401') return { authenticated: false, review: false };
     throw error;
   }
+}
+
+export async function hasSession() {
+  return (await getSession()).authenticated === true;
 }

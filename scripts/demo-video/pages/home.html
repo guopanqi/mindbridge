@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>主屏幕</title>
+<!-- 视频 1 的第一屏：手机桌面 → 点钉钉 → 钉钉工作台（workbench.html）→ 点 MindBridge。
+     录制视口 390×751：顶部 59px 状态栏与底部 34px 指示条由样机外框盖上，页面自己留出这两段。 -->
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", sans-serif; color: #1c2530;
+    height: 100vh; overflow: hidden; display: flex; flex-direction: column;
+    /* 浅色渐变壁纸：状态栏走深色字（与钉钉工作台同一套外框），所以桌面也用浅底 */
+    background: linear-gradient(165deg, #dbe7ef 0%, #cfdde8 42%, #e7eef2 100%);
+  }
+  .wallglow { position: fixed; left: -60px; bottom: 120px; width: 320px; height: 320px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,255,255,.55), transparent 70%); pointer-events: none; }
+  main { flex: 1; min-height: 0; padding: 78px 26px 0; display: flex; flex-direction: column; gap: 26px; }
+  .row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 22px 16px; }
+  .app { text-align: center; border: 0; background: none; padding: 0; font: inherit; color: inherit; }
+  .app .ai { width: 60px; height: 60px; border-radius: 15px; margin: 0 auto 7px; display: grid; place-items: center;
+    font-size: 28px; background: #fff; box-shadow: 0 4px 12px rgba(31,54,72,.16); }
+  .app .an { font-size: 11.5px; color: #2b3947; }
+  /* 钉钉：蓝底白「钉」，右上角未读角标 */
+  .app.ding .ai { background: linear-gradient(160deg, #1e9bff, #0071e3); color: #fff; position: relative; font-weight: 700; font-size: 27px; }
+  .app.ding .badge { position: absolute; top: -5px; right: -5px; min-width: 20px; height: 20px; border-radius: 10px;
+    background: #fa3b30; color: #fff; font-size: 11px; font-weight: 600; display: grid; place-items: center; padding: 0 5px; }
+  .dots { display: flex; justify-content: center; gap: 6px; margin-top: auto; padding-bottom: 14px; }
+  .dots i { width: 6px; height: 6px; border-radius: 50%; background: rgba(43,57,71,.25); }
+  .dots i.on { background: #2b3947; }
+  .dock { flex: none; margin: 0 14px calc(10px + 34px); padding: 12px 10px; border-radius: 26px;
+    background: rgba(255,255,255,.62); backdrop-filter: blur(12px); box-shadow: 0 4px 14px rgba(31,54,72,.12); display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .dock .ai { margin-bottom: 0; }
+  .dock .an { display: none; }
+</style>
+</head>
+<body>
+  <div class="wallglow"></div>
+  <main>
+    <div class="row">
+      <button class="app ding" id="dingtalk" type="button">
+        <div class="ai">钉<span class="badge">3</span></div><div class="an">钉钉</div>
+      </button>
+      <div class="app"><div class="ai">📅</div><div class="an">日历</div></div>
+      <div class="app"><div class="ai">📮</div><div class="an">邮件</div></div>
+      <div class="app"><div class="ai">🗒</div><div class="an">备忘录</div></div>
+    </div>
+    <div class="row">
+      <div class="app"><div class="ai">🗺</div><div class="an">地图</div></div>
+      <div class="app"><div class="ai">🎧</div><div class="an">音乐</div></div>
+      <div class="app"><div class="ai">📷</div><div class="an">相机</div></div>
+      <div class="app"><div class="ai">⚙️</div><div class="an">设置</div></div>
+    </div>
+    <div class="row">
+      <div class="app"><div class="ai">🏃</div><div class="an">健康</div></div>
+      <div class="app"><div class="ai">🌤</div><div class="an">天气</div></div>
+      <div class="app"><div class="ai">🧭</div><div class="an">浏览器</div></div>
+      <div class="app"><div class="ai">🧮</div><div class="an">计算器</div></div>
+    </div>
+    <div class="dots"><i class="on"></i><i></i><i></i></div>
+  </main>
+  <div class="dock">
+    <div class="app"><div class="ai">📞</div></div>
+    <div class="app"><div class="ai">💬</div></div>
+    <div class="app"><div class="ai">🧭</div></div>
+    <div class="app"><div class="ai">🎵</div></div>
+  </div>
+  <script>
+    document.getElementById('dingtalk').addEventListener('click', () => {
+      setTimeout(() => { location.href = 'workbench.html'; }, 240);
+    });
+  </script>
+</body>
+</html>

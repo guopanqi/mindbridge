@@ -41,8 +41,29 @@ export function openSheet(title, nodes) {
   $('#sheet-close').focus();
 }
 
+let pendingConfirm = null;
 export function closeSheet() {
   $('#sheet').hidden = true;
+  $('#sheet-close').hidden = false;
+  // 点遮罩 / 按 Esc 关掉确认浮层，等于「再想想」。
+  if (pendingConfirm) { const resolve = pendingConfirm; pendingConfirm = null; resolve(false); }
+}
+
+// 页内确认。window.confirm 在部分 WebView / 内嵌浏览器里会被静默吞掉（直接返回 false），
+// 表现为「按钮点了没反应」；这里用自家浮层，行为在所有壳里一致。
+export function confirmSheet(title, text, { confirmLabel = '确定', cancelLabel = '再想想' } = {}) {
+  return new Promise((resolve) => {
+    const closeBtn = $('#sheet-close');
+    const finish = (value) => { pendingConfirm = null; closeSheet(); resolve(value); };
+    pendingConfirm = resolve;
+    const actions = el('div', { class: 'card-actions' }, [
+      el('button', { class: 'primary small', text: confirmLabel, attrs: { type: 'button' }, on: { click: () => finish(true) } }),
+      el('button', { class: 'secondary small', text: cancelLabel, attrs: { type: 'button' }, on: { click: () => finish(false) } }),
+    ]);
+    openSheet(title, [el('p', { text }), actions]);
+    closeBtn.hidden = true; // 确认场景只留「确定 / 再想想」两个按钮
+    actions.querySelector('.primary').focus();
+  });
 }
 
 export const timeAgo = (ts) => {

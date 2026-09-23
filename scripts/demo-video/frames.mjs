@@ -72,6 +72,13 @@ async function shot(html, size, file) {
   console.log(`wrote ${file}`);
 }
 await shot(phoneHtml('9:41', false), PHONE.canvas, 'phone-941.png');
+await shot(phoneHtml('21:40', false), PHONE.canvas, 'phone-2140.png');   // 绿灯篇：加班到晚上
+await shot(phoneHtml('12:18', false), PHONE.canvas, 'phone-1218.png');   // 黄灯篇：午休
 await shot(phoneHtml('23:41', false), PHONE.canvas, 'phone-2341.png');
+// 员工端是墨绿深色底，进入应用后状态栏要换成浅色字（assemble 的 --dark-from）。
+await shot(phoneHtml('9:41', true), PHONE.canvas, 'phone-941-dark.png');
+await shot(phoneHtml('21:40', true), PHONE.canvas, 'phone-2140-dark.png');
+await shot(phoneHtml('12:18', true), PHONE.canvas, 'phone-1218-dark.png');
+await shot(phoneHtml('23:41', true), PHONE.canvas, 'phone-2341-dark.png');
 await shot(laptopHtml(), LAPTOP.canvas, 'laptop.png');
 await browser.close();

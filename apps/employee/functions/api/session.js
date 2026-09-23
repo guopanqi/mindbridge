@@ -8,7 +8,7 @@ export async function onRequestGet({ request, env, waitUntil }) {
   const digest = await sha256Base64Url(token);
   const now = Date.now();
   const session = await env.CARE_DB
-    .prepare('SELECT session_digest FROM sessions WHERE session_digest = ? AND expires_at > ?')
+    .prepare('SELECT session_digest, anon_id FROM sessions WHERE session_digest = ? AND expires_at > ?')
     .bind(digest, now)
     .first();
   if (!session) return json({ authenticated: false }, 401, { 'set-cookie': clearSessionCookie() });
@@ -20,7 +20,11 @@ export async function onRequestGet({ request, env, waitUntil }) {
       console.error(JSON.stringify({ event: 'opportunistic_purge_failed' }));
     }));
   }
-  return json({ authenticated: true, session: 'anonymous' });
+  return json({
+    authenticated: true,
+    session: 'anonymous',
+    review: String(session.anon_id || '').startsWith('mbreview_'),
+  });
 }
 
 export async function onRequestDelete({ request, env }) {

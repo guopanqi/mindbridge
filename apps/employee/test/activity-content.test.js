@@ -86,11 +86,14 @@ test('活动只允许所属员工访问，已开始快照在停用后仍能继�
   db.close();
 });
 
-test('呼吸是单段180秒；媒体和选择内容均可直接进入核心体验', () => {
-  assert.equal(sample.stages.length, 1);
+test('呼吸是180秒一段加一道收尾提问；媒体和选择内容均可直接进入核心体验', () => {
+  // 呼吸本身仍是不被切碎的单段 180 秒；之后只允许一道「留意一个变化」的收尾选择，
+  // 让完成记录里留下员工自己说的那一句，不是系统替他判断的分数。
+  assert.equal(sample.stages.length, 2);
   const breath = sample.stages[0];
   assert.equal(breath.type, 'breath');
   assert.equal((breath.cycle.inhale + breath.cycle.hold + breath.cycle.exhale) * breath.rounds, 180);
+  assert.equal(sample.stages[1].type, 'choice');
   for (const id of ['pmr', 'bodyscan-text', 'stretch-guide']) {
     const activity = validateActivity(JSON.parse(readFileSync(new URL(`../content/activities/${id}.json`, import.meta.url))));
     assert.equal(activity.stages.length, 1);

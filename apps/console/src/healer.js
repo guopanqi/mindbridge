@@ -61,6 +61,17 @@ async function boot() {
         error instanceof ApiError ? error.code : null);
       return;
     }
+  } else if (url.searchParams.get('demo') === 'review') {
+    url.searchParams.delete('demo');
+    window.history.replaceState({}, '', url.toString());
+    try {
+      await api.signInAsDemo('李佳', '');
+    } catch (error) {
+      showGate('评审入口无法打开',
+        error instanceof ApiError && error.userMessage ? error.userMessage : '演示登录没有完成。',
+        error instanceof ApiError ? error.code : null);
+      return;
+    }
   }
   try {
     const session = await api.session();

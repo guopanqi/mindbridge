@@ -116,6 +116,16 @@ async function boot() {
       showGate('无法进入管理后台', GATE_TEXT[reason] || error.userMessage || '身份校验没有完成。', reason);
       return;
     }
+  } else if (url.searchParams.get('demo') === 'review') {
+    url.searchParams.delete('demo');
+    window.history.replaceState({}, '', url.toString());
+    try {
+      await api.signInAsDemo('admin', '');
+    } catch (error) {
+      const reason = error instanceof ApiError ? error.code : 'UNEXPECTED_CLIENT_ERROR';
+      showGate('评审入口无法打开', error.userMessage || '演示登录没有完成。', reason);
+      return;
+    }
   }
   try {
     const session = await api.session();

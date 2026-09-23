@@ -24,7 +24,7 @@ function replyBox(post, onDone) {
   });
   return el('div', { class: 'reply-box' }, [
     input,
-    el('button', { class: 'secondary small', text: '回复', attrs: { type: 'button' }, on: { click: () => void submit() } }),
+    el('button', { class: 'link', text: '发送', attrs: { type: 'button' }, on: { click: () => void submit() } }),
   ]);
 }
 
@@ -33,15 +33,15 @@ function card(post, reload) {
   return el('div', { class: `post${post.mine ? ' mine' : ''}` }, [
     el('div', { class: 'post-head' }, [
       el('span', { class: 'post-author', text: post.author }),
-      post.simulated ? el('span', { class: 'chip sim', text: '模拟数据' }) : null,
-      el('span', { class: 'post-time', text: timeAgo(post.at) }),
+      post.mine ? el('span', { class: 'post-you', text: '你' }) : null,
+      el('span', { class: 'post-time', text: `· ${timeAgo(post.at)}` }),
     ]),
     el('p', { class: 'post-body', text: post.text }),
     el('div', { class: 'post-actions' }, [
       el('button', {
         class: `hug${post.hugged ? ' on' : ''}`,
-        text: `🤗 抱抱 ${post.hugs}`,
-        attrs: { type: 'button', 'aria-pressed': post.hugged },
+        text: `${post.hugged ? '♥' : '♡'} ${post.hugs}`,
+        attrs: { type: 'button', 'aria-pressed': post.hugged, 'aria-label': '抱抱' },
         on: {
           click: async () => {
             try { await api.hug(post.id); reload(); } catch { toast('操作没有成功，请稍后再试。'); }
@@ -49,7 +49,7 @@ function card(post, reload) {
         },
       }),
       el('button', {
-        class: 'link', text: post.replies.length > 2 && !expanded.has(post.id) ? `展开 ${post.replies.length} 条回复` : '回复',
+        class: 'link mut', text: post.replies.length > 2 && !expanded.has(post.id) ? `查看全部 ${post.replies.length} 条回复` : `回复${post.replies.length ? ` · ${post.replies.length}` : ''}`,
         attrs: { type: 'button' },
         on: { click: () => { expanded.add(post.id); reload(); } },
       }),
@@ -73,7 +73,7 @@ function card(post, reload) {
 export function renderWall(root) {
   clear(root);
   feed = el('div', { class: 'feed' });
-  const input = el('textarea', { attrs: { rows: 2, maxlength: 500, placeholder: '写点什么…这里只显示你的匿名代号' } });
+  const input = el('textarea', { attrs: { rows: 1, maxlength: 500, placeholder: '写点什么…数据已被匿名' } });
   const publish = async () => {
     const text = input.value.trim();
     if (!text) return;
@@ -89,8 +89,8 @@ export function renderWall(root) {
   composer = el('div', { class: 'composer wall' }, [
     input,
     el('div', { class: 'composer-row' }, [
-      el('span', { class: 'composer-safe', text: '已开启隐私保护与温暖社区守护' }),
-      el('button', { class: 'primary small', text: '发布', attrs: { type: 'button' }, on: { click: () => void publish() } }),
+      el('span', { class: 'composer-safe', html: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6l7-3z"/><path d="M9 12l2 2 4-4"/></svg>发布前会进行隐私与善意检查' }),
+      el('button', { class: 'primary pill', text: '发布', attrs: { type: 'button' }, on: { click: () => void publish() } }),
     ]),
   ]);
   root.append(composer, feed);

@@ -48,9 +48,9 @@ const PHONE_CSS = `
   .demo-kb-key.dim { background: #adb3bd; }
   .demo-kb-key.wide { flex-basis: 42px; font-size: 15px; }
   .demo-kb-key.space { flex-basis: 178px; font-size: 15px; }
-  .demo-kb-key.go { flex-basis: 88px; background: #147b6f; color: #fff; font-size: 16px; }
+  .demo-kb-key.go { flex-basis: 88px; background: #3e986b; color: #fff; font-size: 16px; }
   .demo-kb-key.n123 { flex-basis: 42px; font-size: 15px; }
-  .demo-kb-key.on { background: #147b6f; color: #fff; }
+  .demo-kb-key.on { background: #3e986b; color: #fff; }
   .demo-kb-home { position: absolute; left: 50%; bottom: 8px; width: 134px; height: 5px; margin-left: -67px; border-radius: 3px; background: #1c1c1e; opacity: .85; }
 `;
 const KEYBOARD_HTML = `
@@ -69,16 +69,16 @@ const INIT_SCRIPT = (kind) => `
       ::-webkit-scrollbar { width: 0 !important; height: 0 !important; }
       * { scrollbar-width: none !important; }
       .demo-ripple { position: fixed; z-index: 99999; pointer-events: none; border-radius: 50%;
-        width: 22px; height: 22px; margin: -11px 0 0 -11px; background: rgba(20,123,111,.28);
-        border: 2px solid rgba(20,123,111,.55); animation: demo-ripple .42s ease-out forwards; }
-      .demo-ripple.desktop { width: 28px; height: 28px; margin: -14px 0 0 -14px; background: rgba(20,123,111,.18); }
+        width: 22px; height: 22px; margin: -11px 0 0 -11px; background: rgba(238,185,108,.28);
+        border: 2px solid rgba(238,185,108,.6); animation: demo-ripple .42s ease-out forwards; }
+      .demo-ripple.desktop { width: 28px; height: 28px; margin: -14px 0 0 -14px; background: rgba(45,106,90,.18); }
       @keyframes demo-ripple { from { transform: scale(.4); opacity: 1; } to { transform: scale(${kind === 'phone' ? 3.2 : 2.4}); opacity: 0; } }
       .demo-cursor { position: fixed; z-index: 99998; pointer-events: none; width: 18px; height: 26px; margin: -2px 0 0 -2px;
         background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='18' height='26' viewBox='0 0 18 26'><path d='M1 1 L1 20 L6 15.5 L9.5 24 L13 22.5 L9.5 14 L16 14 Z' fill='white' stroke='black' stroke-width='1.4' stroke-linejoin='round'/></svg>") no-repeat; }
-      .demo-interlude { position: fixed; inset: 0; z-index: 99995; background: #f4faf8; display: grid; place-items: center;
+      .demo-interlude { position: fixed; inset: 0; z-index: 99995; background: #0d1a17; display: grid; place-items: center;
         font-family: -apple-system, 'PingFang SC', sans-serif; opacity: 0; transition: opacity .5s ease; }
       .demo-interlude.on { opacity: 1; }
-      .demo-interlude p { margin: 0; color: #147b6f; font-size: 26px; letter-spacing: .4em; font-weight: 600; }
+      .demo-interlude p { margin: 0; color: #eeb96c; font-family: 'Songti SC', 'STSong', serif; font-size: 26px; letter-spacing: .4em; font-weight: 600; }
       ${kind === 'phone' ? PHONE_CSS.replace(/`/g, '') : ''}
     \`;
     document.head.appendChild(style);
@@ -174,11 +174,11 @@ export async function routeEmployeeAuth(context) {
   // 第三步「生成专属随机代号」点亮后紧接着就进应用，肉眼看不到；把首个 /api/me 拖住 1 秒让它停一下。
   let firstMe = true;
   await context.route('**/api/me', async (route) => {
-    if (firstMe) { firstMe = false; await sleep(1000); }
+    if (firstMe) { firstMe = false; await sleep(600); }
     await route.continue();
   });
   await context.route('**/api/auth', async (route) => {
-    await sleep(1100);
+    await sleep(700);
     await route.fulfill({
       status: 200,
       headers: {
@@ -209,11 +209,11 @@ export async function tap(page, locator, { settle = 350 } = {}) {
   await page.mouse.up();
 }
 
-export async function typeSlow(page, locator, text, { delay = 70 } = {}) {
-  await tap(page, locator);
-  await sleep(200);
+export async function typeSlow(page, locator, text, { delay = 70, settle = 180 } = {}) {
+  await tap(page, locator, { settle });
+  await sleep(140);
   await page.keyboard.type(text, { delay });
-  await sleep(400);
+  await sleep(260);
 }
 
 // 等「正在听」出现又消失，即一轮回复落地。
@@ -228,10 +228,10 @@ export async function dismissKeyboard(page) {
   const stream = page.locator('.stream').first();
   const box = await stream.boundingBox();
   if (!box) return;
-  await page.mouse.move(box.x + box.width / 2, box.y + 40, { steps: 10 });
-  await sleep(200);
-  await page.mouse.down(); await sleep(60); await page.mouse.up();
-  await sleep(450);
+  await page.mouse.move(box.x + box.width / 2, box.y + 40, { steps: 8 });
+  await sleep(120);
+  await page.mouse.down(); await sleep(50); await page.mouse.up();
+  await sleep(300);
 }
 
 // 时间过渡卡：在当前页面上淡入一层与应用同色的幕布，只有一行字，停一会儿。
@@ -250,6 +250,51 @@ export async function interlude(page, text, ms = 2200, { fadeOut = false } = {})
   }
 }
 
+// 跨页面的幕布：幕布必须盖住刷新本身，否则会闪一下启动页/旧内容。
+// 做法是把幕布文案写进 sessionStorage（同源同标签页能跨导航保留），
+// 页面一 DOMContentLoaded 就先把幕布画上，等新页面就绪了再由 curtainDown 揭幕。
+export function curtainInitScript() {
+  document.addEventListener('DOMContentLoaded', () => {
+    let label = null;
+    try { label = sessionStorage.getItem('demoCurtain'); } catch { label = null; }
+    if (!label) return;
+    const cover = document.createElement('div');
+    cover.className = 'demo-interlude on';
+    cover.id = 'demo-curtain';
+    cover.innerHTML = '<p>' + label + '</p>';
+    document.body.appendChild(cover);
+  });
+}
+
+// 只写标志位：下一次导航过去时，新页面自己会把幕布画上（用于跨源往返）。
+export async function curtainArm(page, text) {
+  await page.evaluate((label) => { try { sessionStorage.setItem('demoCurtain', label); } catch {} }, text);
+}
+
+// 当场拉起幕布（同时写标志位，好让接下来的刷新继续被盖住）。
+export async function curtainUp(page, text, hold = 600) {
+  await page.evaluate((label) => {
+    try { sessionStorage.setItem('demoCurtain', label); } catch {}
+    if (document.querySelector('#demo-curtain')) return;
+    const cover = document.createElement('div');
+    cover.className = 'demo-interlude';
+    cover.id = 'demo-curtain';
+    cover.innerHTML = '<p>' + label + '</p>';
+    document.body.appendChild(cover);
+    requestAnimationFrame(() => cover.classList.add('on'));
+  }, text);
+  await sleep(hold);
+}
+
+export async function curtainDown(page) {
+  await page.evaluate(() => {
+    try { sessionStorage.removeItem('demoCurtain'); } catch {}
+    const cover = document.querySelector('#demo-curtain');
+    if (cover) { cover.classList.remove('on'); setTimeout(() => cover.remove(), 500); }
+  });
+  await sleep(550);
+}
+
 // 本地 D1 直接改数据：录制专用，只碰演示账号。
 export function d1(sql) {
   execSync(`npx wrangler d1 execute mindbridge-care --local --command ${JSON.stringify(sql)}`, { cwd: path.resolve('apps/employee'), stdio: 'ignore' });
@@ -257,7 +302,7 @@ export function d1(sql) {
 
 export function resetDemoEmployee() {
   // 一次执行完，减少与正在运行的 wrangler 抢本地 sqlite 锁的次数。
-  const byAnon = ['messages', 'follow_ups', 'resource_events', 'risk_events', 'appointments', 'conversation_locks', 'context_requests'];
+  const byAnon = ['messages', 'follow_ups', 'resource_events', 'risk_events', 'appointments', 'conversation_locks', 'context_requests', 'consent_grants'];
   d1([
     `DELETE FROM case_notes WHERE appointment_id IN (SELECT id FROM appointments WHERE anon_id='${ANON_ID}')`,
     `DELETE FROM conversation_state WHERE conversation_id IN (SELECT id FROM conversations WHERE anon_id='${ANON_ID}')`,

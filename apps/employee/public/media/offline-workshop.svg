@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 300" role="img" aria-label="线下工作坊示意插画：八个人围坐成一圈">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2C5F2D"/><stop offset="1" stop-color="#244C25"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="46%" r="46%">
+      <stop offset="0" stop-color="#EEB96C" stop-opacity=".40"/>
+      <stop offset="1" stop-color="#EEB96C" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="640" height="300" rx="14" fill="url(#sky)"/>
+  <circle cx="320" cy="140" r="200" fill="url(#glow)"/>
+  <g opacity=".22" fill="#AEC79A">
+    <circle cx="70" cy="62" r="34"/><circle cx="592" cy="52" r="26"/><circle cx="556" cy="246" r="40"/>
+  </g>
+  <ellipse cx="320" cy="206" rx="232" ry="52" fill="#356B36" opacity=".55"/>
+  <ellipse cx="320" cy="200" rx="86" ry="22" fill="#EEB96C" opacity=".30"/>
+  <g id="people">
+    <!-- 八个无面部特征的人物，围坐成一圈；后排小、前排大，做出景深 -->
+    <g fill="#AEC79A">
+      <g transform="translate(184,150) scale(.82)"><circle cy="-30" r="17"/><path d="M-27 34c0-20 12-34 27-34s27 14 27 34z"/></g>
+      <g transform="translate(456,150) scale(.82)"><circle cy="-30" r="17"/><path d="M-27 34c0-20 12-34 27-34s27 14 27 34z"/></g>
+    </g>
+    <g fill="#EDF1E6">
+      <g transform="translate(256,140) scale(.9)"><circle cy="-30" r="17"/><path d="M-27 34c0-20 12-34 27-34s27 14 27 34z"/></g>
+      <g transform="translate(384,140) scale(.9)"><circle cy="-30" r="17"/><path d="M-27 34c0-20 12-34 27-34s27 14 27 34z"/></g>
+    </g>
+    <g fill="#F3F1E7">
+      <g transform="translate(320,132)"><circle cy="-30" r="17"/><path d="M-27 34c0-20 12-34 27-34s27 14 27 34z"/></g>
+    </g>
+    <g fill="#EEB96C">
+      <g transform="translate(128,186) scale(1.02)"><circle cy="-30" r="17"/><path d="M-28 34c0-20 12-34 28-34s28 14 28 34z"/></g>
+      <g transform="translate(512,186) scale(1.02)"><circle cy="-30" r="17"/><path d="M-28 34c0-20 12-34 28-34s28 14 28 34z"/></g>
+      <g transform="translate(320,206) scale(1.1)"><circle cy="-30" r="17"/><path d="M-28 34c0-20 12-34 28-34s28 14 28 34z"/></g>
+    </g>
+  </g>
+  <g fill="#EDF1E6" opacity=".9" font-family="-apple-system, 'PingFang SC', sans-serif">
+    <text x="320" y="272" font-size="15" text-anchor="middle" opacity=".82">午间正念工作坊 · 8 人小组</text>
+  </g>
+</svg>

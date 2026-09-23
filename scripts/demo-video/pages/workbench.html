@@ -4,46 +4,63 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>工作台</title>
+<!-- 与 prototype 的钉钉工作台（#wecom）同一版式：灰底白卡、钉字蓝标、非当前应用灰掉、MindBridge 带角标。 -->
 <style>
-  * { box-sizing: border-box; }
-  body { margin: 0; font-family: -apple-system, "PingFang SC", sans-serif; background: #f5f6f8; color: #1f2329; height: 100vh; overflow: hidden; }
-  header { background: #fff; padding: 73px 16px 10px; display: flex; align-items: center; justify-content: space-between; }
-  header h1 { margin: 0; font-size: 18px; font-weight: 600; }
-  .org { font-size: 12px; color: #8f959e; margin-top: 2px; }
-  .search { margin: 10px 16px 0; background: #fff; border-radius: 10px; padding: 9px 12px; color: #b0b5bc; font-size: 14px; }
-  section { margin: 14px 16px 0; background: #fff; border-radius: 12px; padding: 14px 10px 6px; }
-  section h2 { margin: 0 0 8px 6px; font-size: 14px; font-weight: 600; }
-  .grid { display: grid; grid-template-columns: repeat(4, 1fr); row-gap: 14px; }
-  .app { display: grid; justify-items: center; gap: 6px; font-size: 12px; color: #3b4048; }
-  .ico { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; font-size: 22px; color: #fff; }
-  .mb { background: linear-gradient(140deg, #5fbfa8, #147b6f); font-size: 24px; box-shadow: 0 4px 12px rgba(20,123,111,.3); }
+  * { box-sizing: border-box; margin: 0; }
+  /* 录制视口 390×751：顶部 59px 状态栏、底部 34px 指示条由外框盖上，页面自己留出这两段。
+     版式按 prototype 的钉钉工作台等比放大，让卡片把整屏撑满而不是堆在上半截。 */
+  body { font-family: -apple-system, "PingFang SC", "Hiragino Sans GB", sans-serif; background: #f2f3f5; color: #191919; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+  header { background: #fff; padding: 71px 20px 16px; border-bottom: 1px solid #e6e8ea; display: flex; align-items: center; gap: 12px; flex: none; }
+  header .lg { width: 28px; height: 28px; border-radius: 7px; background: #0089ff; color: #fff; font-size: 15px; font-weight: 700; display: grid; place-items: center; }
+  header .t { font-size: 19px; font-weight: 600; }
+  header .co { margin-left: auto; font-size: 13px; color: #8a8f94; }
+  main { flex: 1; min-height: 0; padding: 18px 18px 0; display: flex; flex-direction: column; gap: 14px; }
+  .wcsec { background: #fff; border-radius: 14px; padding: 17px 16px 18px; }
+  .wcsec .st { font-size: 14px; color: #8a8f94; margin-bottom: 14px; }
+  .apps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px 10px; }
+  .app { text-align: center; opacity: .34; border: 0; background: none; padding: 0; font: inherit; color: inherit; }
+  .app.live { opacity: 1; }
+  .app .ai { width: 52px; height: 52px; border-radius: 14px; margin: 0 auto 8px; display: grid; place-items: center; font-size: 26px; background: #eef0f2; }
+  .app.live .ai { background: url("icon.png") center / cover no-repeat; box-shadow: 0 6px 16px rgba(62, 152, 107, .3); }
+  .app .an { font-size: 13px; color: #333; }
+  .app.live .an { font-weight: 600; }
+  .badge { display: inline-block; background: #fa5151; color: #fff; font-size: 10px; padding: 1px 5px; border-radius: 8px; margin-left: 3px; vertical-align: top; }
+  .wctab { flex: none; display: flex; background: #fff; border-top: 1px solid #e6e8ea; padding: 9px 0 calc(8px + 34px); }
+  .wctab div { flex: 1; text-align: center; color: #9aa0a6; font-size: 11.5px; line-height: 1.5; }
+  .wctab .ti { display: block; font-size: 24px; margin-bottom: 2px; filter: grayscale(1); opacity: .5; }
+  .wctab .on { color: #1e7aff; font-weight: 600; }
+  .wctab .on .ti { filter: none; opacity: 1; }
 </style>
 </head>
 <body>
-  <header><div><h1>工作台</h1><div class="org">星原科技</div></div><div style="font-size:20px;color:#8f959e">⌕</div></header>
-  <div class="search">搜索应用</div>
-  <section>
-    <h2>常用应用</h2>
-    <div class="grid">
-      <div class="app"><div class="ico" style="background:#4c8bf5">📅</div>日程</div>
-      <div class="app"><div class="ico" style="background:#f5a623">📝</div>审批</div>
-      <div class="app"><div class="ico" style="background:#5b7cf6">🕘</div>考勤打卡</div>
-      <div class="app"><div class="ico" style="background:#3cb371">📁</div>文档</div>
-      <div class="app" id="mindbridge"><div class="ico mb">🌿</div>MindBridge</div>
-      <div class="app"><div class="ico" style="background:#e06666">📣</div>公告</div>
-      <div class="app"><div class="ico" style="background:#8e7cc3">👥</div>通讯录</div>
-      <div class="app"><div class="ico" style="background:#6fa8dc">🧾</div>报销</div>
+  <header><div class="lg">钉</div><div class="t">工作台</div><div class="co">星原科技</div></header>
+  <main>
+    <div class="wcsec">
+      <div class="st">常用应用</div>
+      <div class="apps">
+        <div class="app"><div class="ai">🕘</div><div class="an">考勤打卡</div></div>
+        <div class="app"><div class="ai">📋</div><div class="an">审批</div></div>
+        <div class="app"><div class="ai">📅</div><div class="an">日程</div></div>
+        <div class="app"><div class="ai">📁</div><div class="an">文档</div></div>
+        <div class="app"><div class="ai">👥</div><div class="an">通讯录</div></div>
+        <div class="app"><div class="ai">✅</div><div class="an">待办</div></div>
+        <div class="app"><div class="ai">📊</div><div class="an">汇报</div></div>
+        <div class="app"><div class="ai">🏖</div><div class="an">请假</div></div>
+      </div>
     </div>
-  </section>
-  <section>
-    <h2>人事行政</h2>
-    <div class="grid">
-      <div class="app"><div class="ico" style="background:#76a5af">🏖</div>请假</div>
-      <div class="app"><div class="ico" style="background:#c27ba0">🎁</div>福利</div>
-      <div class="app"><div class="ico" style="background:#93c47d">🍱</div>订餐</div>
-      <div class="app"><div class="ico" style="background:#a4c2f4">🚗</div>用车</div>
+    <div class="wcsec">
+      <div class="st">员工关爱</div>
+      <div class="apps">
+        <button class="app live" id="mindbridge" type="button"><div class="ai"></div><div class="an">MindBridge<span class="badge">1</span></div></button>
+        <div class="app"><div class="ai">🏥</div><div class="an">体检</div></div>
+        <div class="app"><div class="ai">🎁</div><div class="an">福利</div></div>
+      </div>
     </div>
-  </section>
+  </main>
+  <div class="wctab">
+    <div><span class="ti">💬</span>消息</div>
+    <div class="on"><span class="ti">🔳</span>工作台</div>
+  </div>
   <script>
     document.getElementById('mindbridge').addEventListener('click', () => { setTimeout(() => { location.href = 'http://localhost:8788/'; }, 260); });
   </script>

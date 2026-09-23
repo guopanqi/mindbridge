@@ -479,6 +479,40 @@ function renderIndustryPane(data) {
           ]))),
         ]),
       ]) : null,
+
+      // 八行业总览：一张表横向比较，「高表现活动」只给行业聚合里满意度最高的那一项，不落到企业。
+      el('div', { class: 'cardC' }, [
+        el('h4', {}, [el('span', { text: `${ind.benchmarks.length} 行业 Benchmark 总览` }), el('span', { class: 'src', text: '跨企业匿名统计' })]),
+        el('div', { class: 'cs', text: '快速比较各行业的服务使用与活动效果；「高表现活动」只展示行业聚合结果。点某一行可切换上方浏览的行业。' }),
+        el('table', { class: 'industry-all' }, [
+          el('thead', {}, [el('tr', {}, [
+            el('th', { text: '行业' }), el('th', { text: '企业样本' }), el('th', { text: '员工样本' }),
+            el('th', { text: '树洞月活' }), el('th', { text: '活动完成率' }), el('th', { text: '满意度' }), el('th', { text: '高表现活动' }),
+          ])]),
+          el('tbody', {}, ind.benchmarks.map((b) => {
+            const effects = ind.detail[b.industry]?.effects || [];
+            const best = [...effects].sort((x, y) => y.avgRating - x.avgRating || y.completionRate - x.completionRate)[0];
+            const row = el('tr', { class: b.industry === selected ? 'is-current' : '' }, [
+              el('td', { text: b.industry }),
+              el('td', { class: 'mono', text: String(b.companies) }),
+              el('td', { class: 'mono', text: b.employees.toLocaleString() }),
+              ...(b.eligible ? [
+                el('td', { class: 'mono', text: `${b.useRate}%` }),
+                el('td', { class: 'mono', text: `${b.completionRate}%` }),
+                el('td', { class: 'mono', text: Number(b.avgRating).toFixed(1) }),
+                el('td', { text: best ? `${best.activity}（${best.avgRating} / 5）` : '—' }),
+              ] : [el('td', { class: 'masked', attrs: { colspan: 4 }, text: '样本未达门槛 · 不予出数' })]),
+            ]);
+            row.addEventListener('click', () => { selected = b.industry; void renderInner(); });
+            return row;
+          })),
+        ]),
+      ]),
+
+      el('div', { class: 'privacy-rule' }, [
+        el('b', { text: '行业数据边界：' }),
+        el('span', { text: '不向任何企业披露其他企业名称、客户编码或单家企业明细；不进入员工姓名、工号、倾诉原文或个人活动记录；企业数或员工样本量不足时不生成 Benchmark；行业数据仅用于同行参照、服务配置与疗愈效果分析。' }),
+      ]),
     );
   }
 

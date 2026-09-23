@@ -34,5 +34,9 @@
   {
     "name": "工间舒展操引导",
     "activityId": "stretch-guide"
+  },
+  {
+    "name": "午间正念工作坊",
+    "activityId": "mindfulness-workshop"
   }
 ]

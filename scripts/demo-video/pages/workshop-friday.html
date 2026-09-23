@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>周五午间正念工作坊</title>
+  <style>
+    * { box-sizing: border-box; }
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #0d1a17; }
+    /* 图是 2:3，手机视口更瘦长：整张放进去（contain），不裁人。上下留白用应用同色的墨绿底，
+       字幕落在下方留白里，不压在画面上。 */
+    .scene {
+      position: relative; width: 100%; height: 100%;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 72px 0 60px; gap: 22px;
+    }
+    .frame {
+      position: relative; width: 100%; flex: 0 1 auto; min-height: 0;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .frame img {
+      max-width: 100%; max-height: 100%; width: auto; height: auto;
+      object-fit: contain; display: block;
+      border-radius: 14px; box-shadow: 0 18px 48px rgba(0, 0, 0, .45);
+    }
+    .caption { flex: 0 0 auto; text-align: center; color: #f7f1e5; padding: 0 24px; }
+    .caption strong { display: block; font: 700 23px/1.35 -apple-system, "PingFang SC", sans-serif; letter-spacing: .05em; }
+    .caption span { display: block; margin-top: 8px; font: 500 12.5px/1.5 -apple-system, "PingFang SC", sans-serif; color: #f3d9a8; letter-spacing: .08em; }
+  </style>
+</head>
+<body>
+  <main class="scene">
+    <div class="frame">
+      <img src="./mindfulness-workshop-friday.png" alt="八位员工与一位带领者围坐参加午间正念工作坊的插画" />
+    </div>
+    <div class="caption">
+      <strong>周五 · 午间正念工作坊</strong>
+      <span>场景示意 · 非真实参与者</span>
+    </div>
+  </main>
+</body>
+</html>

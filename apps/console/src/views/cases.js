@@ -71,7 +71,7 @@ function renderCaseCard(item, onReload) {
   card.append(
     el('div', { class: 'cid' }, [
       el('span', { text: item.caseCode }),
-      el('span', { class: `lvl ${isDone ? 'g' : 'r'}`, text: isDone ? '已闭环' : (RISK_LABEL[item.riskLevel] || item.riskLevel) }),
+      el('span', { class: `lvl ${isDone ? 'g' : riskClass}`, text: isDone ? '已闭环' : (RISK_LABEL[item.riskLevel] || item.riskLevel) }),
     ]),
     el('div', { class: 'meta', text: `触发 ${formatTime(item.at)} · ${isDone ? '已完成处置' : '员工已授权转接'}` }),
   );
@@ -138,8 +138,9 @@ function renderCaseCard(item, onReload) {
     } else if (item.contextStatus === 'pending') {
       card.append(el('div', { class: 'locked granted', style: 'background:#fefbf4; border-color:#f1e3c3; color:#8a6018;', text: '已向员工发起对话查看申请，等待员工在手机端确认...' }));
     } else {
-      const reasonInput = el('input', { attrs: { type: 'text', placeholder: '填写查看理由（如：评估危机并制定支持计划），员工端将看到此提示' }, style: 'flex:1;' });
-      const reqBox = el('div', { style: 'display:flex; gap:8px; margin-top:10px;' }, [
+      // 理由会原样出现在员工手机上，所以 placeholder 写短、完整说明放 title：窄屏下一行放不下整句。
+      const reasonInput = el('input', { attrs: { type: 'text', placeholder: '填写查看理由，员工端会看到', title: '例如：评估危机并制定支持计划' } });
+      const reqBox = el('div', { class: 'ctx-req' }, [
         reasonInput,
         el('button', {
           class: 'bt small', text: '申请查看上下文', attrs: { type: 'button' },
