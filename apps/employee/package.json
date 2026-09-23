@@ -10,7 +10,7 @@
     "dev": "wrangler pages dev public",
     "predeploy": "npm run check",
     "deploy": "wrangler pages deploy public --project-name mindbridge-app --branch main",
-    "db:migrate:care": "wrangler d1 migrations apply mindbridge-care --remote",
+    "db:migrate:care": "wrangler d1 migrations apply mindbridge-beta-care --remote",
     "db:migrate:identity": "wrangler d1 migrations apply mindbridge-identity --remote",
     "build:sdk": "node scripts/build-sdk.mjs",
     "build:app": "node scripts/build-app.mjs",

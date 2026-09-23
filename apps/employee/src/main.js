@@ -4,7 +4,7 @@ import { $, closeSheet, reducedMotion } from './dom.js';
 import { clearChat, focusComposer, loadChat, renderChat } from './views/chat.js';
 import { loadWall, renderWall } from './views/wall.js';
 import { loadActivities, renderActivities } from './views/activities.js';
-import { loadMe, renderMe, privacySheet } from './views/me.js';
+import { loadMe, renderMe, privacySheet, setPrivacyEntryChannel } from './views/me.js';
 import { askContext } from './views/context-prompt.js';
 import { openActivity } from './views/activity.js';
 import { clearCache, refresh } from './store.js';
@@ -71,6 +71,7 @@ function showFailure(code) {
 }
 
 async function enterApp(session) {
+  setPrivacyEntryChannel(session?.entryChannel);
   const me = await api.me();
   $('#display-name').textContent = me.displayName;
   $('#organization-label').textContent = session?.entryChannel === 'beta_web'
@@ -148,7 +149,7 @@ export async function boot({ reason } = {}) {
       pendingInvite = inviteToken;
       url.searchParams.delete('invite');
       window.history.replaceState(null, '', url.toString());
-      $('#boot-detail').textContent = '正在验证邀请并建立匿名身份。';
+      $('#boot-detail').textContent = '正在加入公开测试组织。产品团队会按匿名代号分析使用记录；进入后可查看完整隐私说明。';
       document.querySelector('#boot-steps [data-step="verify"]').lastChild.textContent = '确认测试组织邀请';
       document.querySelector('#boot-steps [data-step="strip"]').lastChild.textContent = '不收集姓名或微信身份';
       await api.authenticateInvite(inviteToken);
