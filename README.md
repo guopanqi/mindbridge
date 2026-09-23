@@ -10,15 +10,14 @@
 
 | 目录 | 是什么 | 部署到 |
 |---|---|---|
-| `apps/employee/` | 员工端 H5 + Care Domain API | Cloudflare Pages `mindbridge-app`，对外地址 `mindbridge-beta.pages.dev` |
-| `apps/beta-host/` | 新地址的转发层，不另存数据 | Cloudflare Pages `mindbridge-beta` |
+| `apps/employee/` | 员工端 H5 + Care Domain API | Cloudflare Pages `mindbridge-beta` |
 | `apps/console/` | HR 看板 + 疗愈师个案台 | Cloudflare Pages `mindbridge-console` |
 | `apps/bot-stream/` | 钉钉 Stream 私聊接收器，共用员工端对话服务 | 常驻 Node 进程 |
 | `docs/` | 当前架构、内测操作与研究数据字典 | — |
 | `路演/` | 比赛与路演材料：PPT、视频、原型、赛题。不参与产品发布 | — |
 | `assets/` | 截图与图标 | — |
 
-员工端现在对外用 `https://mindbridge-beta.pages.dev/`。旧地址 `https://mindbridge-app-8j6.pages.dev/` 在内部测试结束前继续开着。活动内容由 `apps/employee/content/activities/*.json` 维护，经校验后导入 D1。路演原型在 `路演/原型/`，里面的数据是写死的，不作为产品数据来源。
+员工端直接部署到 `https://mindbridge-beta.pages.dev/`。旧项目 `mindbridge-app` 暂时保留供已发出的旧邀请链接使用，不再接收新部署。活动内容由 `apps/employee/content/activities/*.json` 维护，经校验后导入 D1。路演原型在 `路演/原型/`，里面的数据是写死的，不作为产品数据来源。
 
 ## 架构边界（不可破坏）
 

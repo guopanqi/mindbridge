@@ -9,7 +9,7 @@
     "lab": "node scripts/harness-lab.mjs",
     "dev": "wrangler pages dev public",
     "predeploy": "npm run check",
-    "deploy": "wrangler pages deploy public --project-name mindbridge-app --branch main",
+    "deploy": "wrangler pages deploy public --project-name mindbridge-beta --branch main",
     "db:migrate:care": "wrangler d1 migrations apply mindbridge-beta-care --remote",
     "db:migrate:identity": "wrangler d1 migrations apply mindbridge-identity --remote",
     "build:sdk": "node scripts/build-sdk.mjs",

@@ -4,7 +4,7 @@ DINGTALK_SSO_SECRET=""
 STAFF_LOOKUP_KEY_V1=""
 # 32 字节随机值的 base64url 编码
 STAFF_SUBJECT_KEY_V1=""
-# 与 mindbridge-app 侧保持一致
+# 与 mindbridge-beta 侧保持一致
 INTERNAL_SERVICE_TOKEN=""
 # 本地联调时指向 http://localhost:8788
 CARE_API_ORIGIN=""

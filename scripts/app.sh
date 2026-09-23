@@ -38,7 +38,7 @@ for app in "${TARGETS[@]}"; do
       (
         cd "apps/$app"
         project=mindbridge-console
-        [[ "$app" != employee ]] || project=mindbridge-app
+        [[ "$app" != employee ]] || project=mindbridge-beta
         node_modules/.bin/wrangler pages deploy public --project-name "$project" --branch main --commit-dirty=true
       )
       node scripts/app-health.mjs "$app" --verify-assets ;;

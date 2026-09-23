@@ -2,7 +2,7 @@
 
 > 组织、入口与地址的唯一说明在 `docs/组织-入口-地址.md`，这里不重复。本端只讲角色、边界、部署与验证。
 
-工作人员实名入口。与员工端（Pages 项目 `mindbridge-app`，对外地址 `https://mindbridge-beta.pages.dev/`）**分处两个 Cloudflare Pages 项目、两个 origin**，
+工作人员实名入口。与员工端（Pages 项目 `mindbridge-beta`，对外地址 `https://mindbridge-beta.pages.dev/`）**分处两个 Cloudflare Pages 项目、两个 origin**，
 两端的会话 Cookie 互不可见。
 
 | 入口 | 到哪 | 身份 |

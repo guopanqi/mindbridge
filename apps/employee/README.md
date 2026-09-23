@@ -2,7 +2,7 @@
 
 > 组织、入口与邀请链接以 [`docs/组织-入口-地址.md`](../../docs/组织-入口-地址.md) 为准；本页说明员工端运行与维护。
 
-对外地址用 `https://mindbridge-beta.pages.dev/`（旧 `mindbridge-app-8j6` 只保留过渡）。钉钉免登和网页邀请是进入组织的两种方式，聊天、广场、活动和报表均按组织隔离。
+对外地址用 `https://mindbridge-beta.pages.dev/`（直接部署在 Pages 项目 `mindbridge-beta`）。钉钉免登和网页邀请是进入组织的两种方式，聊天、广场、活动和报表均按组织隔离。
 
 ## 对话卡片状态
 
