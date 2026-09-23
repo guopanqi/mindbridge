@@ -24,7 +24,7 @@ async function careFetch(env, path, init = {}) {
 export async function onRequestGet({ request, env }) {
   try {
     const staff = await requireStaff(request, env, 'healer');
-    const body = await careFetch(env, '/api/internal/cases');
+    const body = await careFetch(env, `/api/internal/cases?staffId=${encodeURIComponent(staff.staffId)}`);
     await audit(env, staff.staffId, 'view_cases', 'report', 'case_list', 'ok');
     return json(body);
   } catch (error) {

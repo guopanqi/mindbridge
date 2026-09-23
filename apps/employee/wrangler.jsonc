@@ -9,6 +9,7 @@
     "DINGTALK_ROBOT_CODE": "dingoyuuq9d3413qqbel",
     "DINGTALK_CORP_ID": "ding585edf06dbd4a79fc7ca53aad90ff185",
     "DINGTALK_ORG_ID": "org_enterprise_primary",
+    "DEFAULT_HEALER_STAFF_ID": "stf_demo_healer",
     "ANON_KEY_VERSION": "v1",
     "IDENTITY_ENCRYPTION_KEY_VERSION": "v1",
     "SESSION_TTL_SECONDS": "1800",

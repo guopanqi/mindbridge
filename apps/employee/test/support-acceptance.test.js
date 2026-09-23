@@ -72,12 +72,13 @@ async function fixture() {
     CARE_CONTENT_KEY_V1: CONTENT_KEY,
     CARE_CONTENT_KEY_VERSION: 'v1',
     INTERNAL_SERVICE_TOKEN: SERVICE_TOKEN,
+    DEFAULT_HEALER_STAFF_ID: 'staff_acceptance',
   };
   const employeeRequest = (path, init = {}) => new Request(`https://employee.test${path}`, {
     ...init,
     headers: { cookie: `__Host-mb_session=${SESSION_TOKEN}`, ...(init.headers || {}) },
   });
-  const healerRequest = (init = {}) => new Request('https://employee.test/api/internal/cases', {
+  const healerRequest = (init = {}) => new Request('https://employee.test/api/internal/cases?staffId=staff_acceptance', {
     ...init,
     headers: { authorization: `Bearer ${SERVICE_TOKEN}`, ...(init.headers || {}) },
   });
@@ -219,7 +220,21 @@ test('支持链路：MB 编号可见、受理结束后员工状态同步', async
   assert.equal(visible.body.cases[0].caseCode, created.body.caseCode);
   assert.equal(visible.body.cases[0].riskLevel, 'red');
   assert.equal(visible.body.cases[0].status, 'pending');
+  assert.equal(db.prepare('SELECT assigned_staff_id FROM appointments WHERE id=?').get(created.body.id).assigned_staff_id, 'staff_acceptance');
   assert.deepEqual(visible.body.cases[0].textSnippets, [], '个案默认列表不得携带对话片段');
+
+  const otherList = await listCases({
+    env,
+    request: new Request('https://employee.test/api/internal/cases?staffId=another_healer', {
+      headers: { authorization: `Bearer ${SERVICE_TOKEN}` },
+    }),
+  });
+  assert.equal((await otherList.json()).cases.length, 0);
+  const otherClaim = await caseAction({
+    env,
+    request: healerRequest({ method: 'POST', body: JSON.stringify({ action: 'claim', caseCode: created.body.caseCode, staffId: 'another_healer' }) }),
+  });
+  assert.equal(otherClaim.status, 403);
 
   for (const action of ['claim', 'start', 'close']) {
     const result = await body(await caseAction({
@@ -307,7 +322,7 @@ test('支持链路：上下文必须二次授权，撤销后疗愈师不可再�
     }),
   }));
   assert.equal(crossStaff.status, 403);
-  assert.equal(crossStaff.body.reasonCode, 'CONTEXT_NOT_AUTHORIZED');
+  assert.equal(crossStaff.body.reasonCode, 'CASE_NOT_ASSIGNED');
 
   const revoked = await body(await updateConsent({
     env,

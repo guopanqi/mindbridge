@@ -85,14 +85,15 @@ export async function onRequestPost({ request, env }) {
     const code = caseCode();
     const statements = [
       env.CARE_DB.prepare(
-        `INSERT INTO appointments (id, case_code, anon_id, conversation_id, risk_level, status, share_context, note_cipher, content_key_version, created_at, updated_at, data_origin, organization_id)
-         SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        `INSERT INTO appointments (id, case_code, anon_id, conversation_id, risk_level, status, share_context, note_cipher, content_key_version, created_at, updated_at, data_origin, organization_id, assigned_staff_id)
+         SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
          WHERE NOT EXISTS (SELECT 1 FROM appointments WHERE anon_id=? AND status IN ('requested','claimed','active'))
          ${source ? 'AND EXISTS (SELECT 1 FROM messages WHERE id=? AND anon_id=? AND body_cipher=?)' : ''}`
       ).bind(
         id, code, anonId, source?.row.conversation_id || latest?.id || null,
         riskLevel, 'requested', shareContext ? 1 : 0,
-        sealed?.cipher || null, sealed?.version || null, now, now, 'live', organizationId, anonId,
+        sealed?.cipher || null, sealed?.version || null, now, now, 'live', organizationId,
+        env.DEFAULT_HEALER_STAFF_ID || 'stf_demo_healer', anonId,
         ...(source ? [source.row.id, anonId, source.row.body_cipher] : [])
       ),
       aggregateStatement(env, { eventType: 'appointment_requested', level: riskLevel, at: now, organizationId, ifChanged: true }),

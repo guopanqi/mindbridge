@@ -28,6 +28,8 @@
 `node scripts/provision-healer.mjs "登录名" "资质说明" --remote` 创建全局账号；疗愈师在
 `https://mindbridge-console.pages.dev/healer/` 输入登录名即可进入，无邀请码、密码或专属链接。
 账号仍落在 staff 库，共用 `staff_id` 与审计。登录名必须唯一；现有「李佳」账号已预置。
+评审聚合页使用 `?login=李佳` 自动进入；这个参数只是公开登录名，不是专用密钥。
+内测期新提交的红色支持个案默认分配给李佳，其他疗愈师账号不能受理。
 
 ## 不可破坏的边界
 

@@ -47,11 +47,24 @@ async function enterWorkspace(session) {
 }
 
 async function boot() {
-  // 清掉历史链接上的密钥；旧入口统一落到账号登录页。
   const url = new URL(window.location.href);
-  if (url.searchParams.has('k')) {
+  // 聚合页可传登录名作为快捷入口；它只是公开账号名，不是密钥。
+  const quickLogin = url.searchParams.get('login')?.trim();
+  if (url.searchParams.has('k') || quickLogin) {
     url.searchParams.delete('k');
+    url.searchParams.delete('login');
     window.history.replaceState({}, '', url.toString());
+  }
+  if (quickLogin) {
+    $('#signin-name').value = quickLogin;
+    try {
+      await api.signInAsHealer({ username: quickLogin });
+    } catch (error) {
+      showGate('账号无法进入',
+        error instanceof ApiError && error.userMessage ? error.userMessage : '请检查疗愈师登录名。',
+        error instanceof ApiError ? error.code : null);
+      return;
+    }
   }
   try {
     const session = await api.session();

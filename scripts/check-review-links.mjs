@@ -16,7 +16,7 @@ function checkContract(found) {
   const expected = [
     ['mindbridge-beta.pages.dev', '/', 'invite'],
     ['mindbridge-console.pages.dev', '/', 'orgKey'],
-    ['mindbridge-console.pages.dev', '/healer/', null],
+    ['mindbridge-console.pages.dev', '/healer/', 'login'],
   ];
   found.forEach((url, index) => {
     const [host, path, key] = expected[index];
@@ -24,7 +24,8 @@ function checkContract(found) {
     assert.equal(url.host, host);
     assert.equal(url.pathname, path);
     assert.deepEqual([...url.searchParams.keys()], key ? [key] : []);
-    if (key) assert.ok(url.searchParams.get(key)?.length >= 16, `${key} 缺失`);
+    if (key === 'login') assert.equal(url.searchParams.get(key), '李佳');
+    else if (key) assert.ok(url.searchParams.get(key)?.length >= 16, `${key} 缺失`);
   });
 }
 
@@ -55,7 +56,7 @@ if (remote) {
     const checks = [
       ['https://mindbridge-beta.pages.dev/api/auth/invite', { token: deployed[0].searchParams.get('invite') }],
       ['https://mindbridge-console.pages.dev/api/auth/org', { token: deployed[1].searchParams.get('orgKey') }],
-      ['https://mindbridge-console.pages.dev/api/auth/healer', { username: '评审疗愈师' }],
+      ['https://mindbridge-console.pages.dev/api/auth/healer', { username: deployed[2].searchParams.get('login') }],
     ];
     for (const [index, [address, body]] of checks.entries()) {
       const response = await fetch(address, {

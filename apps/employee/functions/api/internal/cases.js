@@ -33,7 +33,7 @@ const messageAad = (conversationId) => `care:message:${conversationId}`;
 const TIME_FORMAT = new Intl.DateTimeFormat('zh-CN', { timeZone: 'Asia/Shanghai', hour: '2-digit', minute: '2-digit', hour12: false });
 const formatTime = (ts) => TIME_FORMAT.format(new Date(ts));
 
-async function listCases(env) {
+async function listCases(env, staffId) {
   const { results } = await env.CARE_DB.prepare(
     `SELECT a.id, a.case_code, a.conversation_id, a.risk_level, a.status, a.share_context, a.note_cipher,
             a.content_key_version, a.created_at, a.claimed_by, a.claimed_at, a.closed_at,
@@ -45,8 +45,10 @@ async function listCases(env) {
               ELSE status END FROM context_requests c WHERE c.appointment_id = a.id ORDER BY created_at DESC LIMIT 1) AS context_status
      FROM appointments a LEFT JOIN organizations o ON o.id = a.organization_id
      WHERE a.status != 'cancelled' AND a.risk_level = 'red'
+       AND (a.assigned_staff_id IS NULL OR a.assigned_staff_id = ?)
+       AND (a.claimed_by IS NULL OR a.claimed_by = ?)
      ORDER BY a.created_at DESC LIMIT 50`
-  ).bind(Date.now()).all();
+  ).bind(Date.now(), staffId, staffId).all();
   const cases = [];
   for (const row of results || []) {
     // 预约备注是员工主动填写要给疗愈师看的内容，属于已授权范围。
@@ -109,8 +111,12 @@ async function listCases(env) {
 
 export async function onRequestGet({ request, env }) {
   if (!authorize(request, env)) return json({ ok: false, reasonCode: 'UNAUTHORIZED' }, 401);
+  const staffId = new URL(request.url).searchParams.get('staffId');
+  if (!staffId || !/^[A-Za-z0-9_-]{3,100}$/.test(staffId)) {
+    return json({ ok: false, reasonCode: 'STAFF_ID_INVALID' }, 400);
+  }
   try {
-    return json({ ok: true, cases: await listCases(env), minSample: MIN_SAMPLE });
+    return json({ ok: true, cases: await listCases(env, staffId), minSample: MIN_SAMPLE });
   } catch {
     console.error(JSON.stringify({ event: 'cases_list_failed', reasonCode: 'INTERNAL_ERROR' }));
     return json({ ok: false, reasonCode: 'INTERNAL_ERROR' }, 500);
@@ -131,10 +137,13 @@ export async function onRequestPost({ request, env }) {
   }
   try {
     const appointment = await env.CARE_DB
-      .prepare('SELECT id, anon_id, conversation_id, status, claimed_by, created_at, log_json FROM appointments WHERE case_code = ?')
+      .prepare('SELECT id, anon_id, conversation_id, status, claimed_by, assigned_staff_id, created_at, log_json FROM appointments WHERE case_code = ?')
       .bind(caseCode).first();
     if (!appointment) return json({ ok: false, reasonCode: 'CASE_NOT_FOUND' }, 404);
     if (appointment.status === 'cancelled') return json({ ok: false, reasonCode: 'CASE_NOT_FOUND' }, 404);
+    if (appointment.assigned_staff_id && appointment.assigned_staff_id !== staffId) {
+      return json({ ok: false, reasonCode: 'CASE_NOT_ASSIGNED' }, 403);
+    }
     if (appointment.claimed_by && appointment.claimed_by !== staffId) {
       return json({ ok: false, reasonCode: 'CASE_ALREADY_CLAIMED' }, 409);
     }
