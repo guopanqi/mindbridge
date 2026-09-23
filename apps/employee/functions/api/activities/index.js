@@ -23,7 +23,7 @@ const helpfulnessOf = (value) => {
   return value;
 };
 
-async function loadContext(env, anonId, eventId) {
+async function loadContext(env, anonId, eventId, organizationId = null) {
   const event = await env.CARE_DB.prepare(
     `SELECT e.id, e.resource_name, e.resource_level, e.state,
             e.stage_index, e.helpfulness, e.activity_id, e.content_version, e.activity_snapshot_json
@@ -35,7 +35,7 @@ async function loadContext(env, anonId, eventId) {
   if (!activityId) throw new ApiError('ACTIVITY_UNAVAILABLE', 409, '这个资源还没有配置可参与的引导流程');
   if (event.activity_snapshot_json) return { event, activity: JSON.parse(event.activity_snapshot_json) };
   const activity = await env.CARE_DB
-    .prepare(`SELECT * FROM activities WHERE id = ? AND ${activityAvailableSql('activities')}`).bind(activityId).first();
+    .prepare(`SELECT * FROM activities WHERE id = ? AND ${activityAvailableSql('activities', organizationId)}`).bind(activityId).first();
   if (!activity) throw new ApiError('ACTIVITY_UNAVAILABLE', 404, '活动内容暂时不可用');
   return { event, activity };
 }
@@ -74,7 +74,7 @@ export async function onRequestGet({ request, env }) {
     const { anonId } = session;
     const eventId = new URL(request.url).searchParams.get('eventId');
     if (!eventId) throw new ApiError('EVENT_ID_REQUIRED', 400, '缺少推荐标识');
-    const { event, activity } = await loadContext(env, anonId, eventId);
+    const { event, activity } = await loadContext(env, anonId, eventId, session.organizationId);
     await writeProductEvent(env, session, 'activity_opened', {
       objectType: 'activity', objectId: activity.id, contentVersion: activity.content_version,
     });
@@ -91,7 +91,7 @@ export async function onRequestPost({ request, env }) {
     const body = await readJson(request);
     const eventId = body?.eventId;
     if (typeof eventId !== 'string' || !eventId) throw new ApiError('EVENT_ID_REQUIRED', 400, '缺少推荐标识');
-    const { event, activity } = await loadContext(env, anonId, eventId);
+    const { event, activity } = await loadContext(env, anonId, eventId, session.organizationId);
     const now = Date.now();
     const statements = [];
     const unchanged = () => json({ ok: true, activity: shapeActivity(activity, event) });
@@ -131,7 +131,7 @@ export async function onRequestPost({ request, env }) {
         at: now, objectType: 'activity', objectId: activity.id, contentVersion: activity.content_version,
       });
       if (researchEvent) statements.push(researchEvent);
-      // 回访按真实自然日间隔排期，不做演示加速。
+      // 回访按真实自然日间隔排期，不做时间加速。
       if (helpfulness) {
         const feedbackEvent = productEventStatement(env, session, 'activity_feedback_submitted', {
           at: now, objectType: 'activity', objectId: activity.id, contentVersion: activity.content_version,
@@ -172,7 +172,7 @@ export async function onRequestPost({ request, env }) {
     if (typeof body.note === 'string' && body.note) requireText(body.note, { min: 1, max: 2000, field: 'note' });
 
     await env.CARE_DB.batch(statements);
-    const refreshed = await loadContext(env, anonId, eventId);
+    const refreshed = await loadContext(env, anonId, eventId, session.organizationId);
     return json({ ok: true, activity: shapeActivity(refreshed.activity, refreshed.event) });
   } catch (error) {
     return handleError(error, 'activity_progress_failed');

@@ -6,7 +6,8 @@
   "compatibility_flags": ["nodejs_compat"],
   "vars": {
     "DINGTALK_CORP_ID": "ding585edf06dbd4a79fc7ca53aad90ff185",
-    "CARE_API_ORIGIN": "https://mindbridge-app-8j6.pages.dev",
+    "DINGTALK_ORG_ID": "org_enterprise_primary",
+    "CARE_API_ORIGIN": "https://mindbridge-beta.pages.dev",
     "STAFF_SESSION_TTL_SECONDS": "3600",
     "REVIEW_DEMO": "off"
   },

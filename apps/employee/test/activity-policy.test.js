@@ -25,10 +25,12 @@ async function setup(t) {
     { ...sample, id: 'draft', title: '尚未开放的灯塔', available: false },
   ];
   for (const a of docs) { db.exec(activitySql(a)); db.exec(catalogSql({ name: `资源-${a.id}`, activityId: a.id })); }
+  db.exec("DELETE FROM intervention_matrix WHERE emotion = '焦虑'");
   db.exec("INSERT INTO intervention_matrix (emotion,l1_name,l2_name,updated_at) VALUES ('焦虑','旧L1展示名','旧L2展示名',0)");
   db.prepare('INSERT INTO sessions (session_digest, anon_id, expires_at, created_at, last_seen_at) VALUES (?, ?, ?, ?, ?)').run(await sha256Base64Url('policy-test'), 'person', Date.now() + 60000, 0, 0);
   const env = {
     INTERNAL_SERVICE_TOKEN: 'policy-test-internal-token-32-chars',
+    DINGTALK_ORG_ID: 'org_enterprise_primary',
     CARE_DB: {
       prepare(sql) {
         let args = [];
@@ -51,7 +53,7 @@ async function setup(t) {
     return { status: response.status, body: await response.json() };
   };
   const put = body => invoke(configPut, 'PUT', body, true);
-  const recommend = assessment => executeTool(env, { name: 'search_activities', arguments: { query: '灯塔', limit: 3 } }, assessment);
+  const recommend = assessment => executeTool(env, { name: 'search_activities', arguments: { query: '灯塔', limit: 3 } }, { organizationId: env.DINGTALK_ORG_ID, ...assessment });
   return { db, docs, env, invoke, put, recommend };
 }
 

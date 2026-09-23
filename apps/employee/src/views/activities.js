@@ -46,7 +46,7 @@ async function open(item, reload) {
 
 /**
  * @param {any} item
- * @param {() => void} reload
+ * @param {(mutated?: boolean) => void} reload
  * @param {{ reason?: string }} [options]
  */
 function card(item, reload, options = {}) {
@@ -90,7 +90,7 @@ function card(item, reload, options = {}) {
             try {
               await api.activityProgress({ eventId: item.id, action: 'skip' });
               toast('已跳过。');
-              reload();
+              reload(true);
             } catch {
               toast('操作没有成功，请稍后再试。');
             }
@@ -110,7 +110,7 @@ function section(title, sub, nodes, emptyText) {
 }
 
 function render() {
-  const reload = () => void loadActivities();
+  const reload = (mutated = false) => void loadActivities(mutated);
   // 「推荐」只放真的被推荐过的：自己从活动库点进来但还没开始的，
   // 属于自己挑的、待参加的东西，放进推荐区会让人以为系统在推他没要过的活动。
   const offered = items.filter((item) => item.state === 'offered' && item.source !== 'self_browse');
@@ -146,7 +146,7 @@ export function renderActivities(container) {
   root = container;
 }
 
-export async function loadActivities() {
+export async function loadActivities(force = false) {
   // 同 me：先用缓存把列表画出来，再回源刷新。两个页面共用一次 bootstrap 请求。
   const snapshot = cached();
   if (snapshot) {
@@ -155,7 +155,7 @@ export async function loadActivities() {
   }
   if (hydrated) render();
   try {
-    items = (await refresh()).resources;
+    items = (await refresh(force)).resources;
     hydrated = true;
     render();
   } catch (error) {

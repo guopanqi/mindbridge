@@ -10,8 +10,8 @@ const browser = {
   requestAnimationFrame: 'readonly', AbortController: 'readonly', Request: 'readonly',
   Response: 'readonly', URL: 'readonly', crypto: 'readonly', TextEncoder: 'readonly',
   TextDecoder: 'readonly', btoa: 'readonly', atob: 'readonly', matchMedia: 'readonly',
-  localStorage: 'readonly', navigator: 'readonly', location: 'readonly', Event: 'readonly',
-  CustomEvent: 'readonly', FormData: 'readonly', Headers: 'readonly', WebSocket: 'readonly',
+  localStorage: 'readonly', navigator: 'readonly', location: 'readonly', history: 'readonly',
+  Event: 'readonly', CustomEvent: 'readonly', FormData: 'readonly', Headers: 'readonly', WebSocket: 'readonly',
   performance: 'readonly', structuredClone: 'readonly', queueMicrotask: 'readonly',
   URLSearchParams: 'readonly', AbortSignal: 'readonly', DOMException: 'readonly',
   ReadableStream: 'readonly', HTMLElement: 'readonly', Node: 'readonly',
@@ -28,7 +28,7 @@ export default [
     // 构建产物、第三方 vendor 包、wrangler 临时目录都不是我们维护的代码。
     ignores: [
       '**/node_modules/**', '**/.wrangler/**', '**/public/app.js', '**/public/vendor/**',
-      'prototype/**', 'PPT/**', 'docs/**',
+      '路演/**', 'docs/**',
     ],
   },
   {

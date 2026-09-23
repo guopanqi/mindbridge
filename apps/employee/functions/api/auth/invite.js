@@ -8,7 +8,7 @@ import { writeProductEvent } from '../_lib/product-events.js';
 export async function onRequestPost({ request, env }) {
   try {
     const { token } = await readJson(request, 512);
-    if (typeof token !== 'string' || !/^[A-Za-z0-9_-]{32,128}$/.test(token)) {
+    if (typeof token !== 'string' || !/^[A-Za-z0-9_-]{16,128}$/.test(token)) {
       throw new ApiError('INVITE_INVALID', 400, '邀请链接无效');
     }
     const digest = await sha256Base64Url(token);
@@ -30,11 +30,13 @@ export async function onRequestPost({ request, env }) {
       ).bind(await sha256Base64Url(previous), invite.organization_id).first();
     }
 
+    const keepCredential = Boolean(previous && /^[A-Za-z0-9_-]{40,100}$/.test(previous));
     let browserCredential = previous;
     let anonId = membership?.anon_id;
     const isNewMember = !anonId;
     if (isNewMember) {
-      browserCredential = randomToken();
+      // 已有设备凭证时沿用它，只为这个组织新建假名。换发凭证会让浏览器再也回不到原来的组织。
+      browserCredential = keepCredential ? previous : randomToken();
       anonId = newId('mbbeta');
       // D1 batch 在同一事务中串行完成名额检查、加入与计数；满额时两条语句均不写入。
       const [inserted] = await env.CARE_DB.batch([

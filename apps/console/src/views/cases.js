@@ -5,7 +5,7 @@ let root;
 let allCases = [];
 let activeFilter = 'pending';
 let slaInterval = null;
-// 登录者本人的身份，由工作台在进入时注入；拿不到时退回演示用的预置疗愈师。
+// 登录者本人的身份，由工作台在进入时注入；拿不到时退回内测用的预置疗愈师。
 let identity = { displayName: '李佳', credential: 'UNIHEAL 国际疗愈师 · UH-2024-0871' };
 
 export function setHealerIdentity(next) {
@@ -71,9 +71,10 @@ function renderCaseCard(item, onReload) {
   card.append(
     el('div', { class: 'cid' }, [
       el('span', { text: item.caseCode }),
-      el('span', { class: `lvl ${isDone ? 'g' : riskClass}`, text: isDone ? '已闭环' : (RISK_LABEL[item.riskLevel] || item.riskLevel) }),
+      el('span', { class: `lvl ${isDone ? 'g' : riskClass}`, text: isDone ? '已结束' : (RISK_LABEL[item.riskLevel] || item.riskLevel) }),
+      el('span', { class: 'tg', text: `来源：${item.organizationName || '待确认'}` }),
     ]),
-    el('div', { class: 'meta', text: `触发 ${formatTime(item.at)} · ${isDone ? '已完成处置' : '员工已授权转接'}` }),
+    el('div', { class: 'meta', text: `触发 ${formatTime(item.at)} · ${isDone ? '本次支持已结束' : '员工已提交支持请求'}` }),
   );
 
   // 情绪标签
@@ -160,20 +161,20 @@ function renderCaseCard(item, onReload) {
     }
   }
 
-  // 处置日志
+  // 跟进记录
   if (item.log && item.log.length) {
     card.append(el('div', { class: 'meta', style: 'margin-top:10px; line-height:1.7; background:#fafbfc; padding:6px 10px; border-radius:6px;' }, item.log.map((l) => el('div', { text: `· ${l}` }))));
   }
 
-  // 处置动作栏
+  // 支持动作栏
   if (!isDone) {
     const actRow = el('div', { class: 'acts' });
     if (item.status === 'pending') {
       actRow.append(el('button', {
-        class: 'bt pri', text: '开始联系', attrs: { type: 'button' },
+        class: 'bt pri', text: '开始跟进', attrs: { type: 'button' },
         on: {
           click: () => handleAction({ action: 'start', caseCode: item.caseCode }, () => {
-            toast('已开始联系 · 处置记录已写入审计日志');
+            toast('已开始跟进 · 支持记录将写入审计日志');
             activeFilter = 'active';
             onReload();
           }),
@@ -181,10 +182,10 @@ function renderCaseCard(item, onReload) {
       }));
     } else if (item.status === 'active') {
       actRow.append(el('button', {
-        class: 'bt pri', text: '标记已闭环', attrs: { type: 'button' },
+        class: 'bt pri', text: '结束本次支持', attrs: { type: 'button' },
         on: {
           click: () => handleAction({ action: 'close', caseCode: item.caseCode }, () => {
-            toast('个案已闭环');
+            toast('本次支持已结束');
             activeFilter = 'done';
             onReload();
           }),
@@ -211,14 +212,14 @@ function renderCaseCard(item, onReload) {
           if (!val) return toast('请先输入备忘内容。');
           handleAction({ action: 'note', caseCode: item.caseCode, text: val }, () => {
             noteInp.value = '';
-            toast('已记录处置备忘');
+            toast('已记录跟进备忘');
             onReload();
           });
         },
       },
     }));
 
-    actRow.append(el('span', { class: 'logtxt', text: '处置记录将写入审计日志' }));
+    actRow.append(el('span', { class: 'logtxt', text: '支持记录将写入审计日志' }));
     card.append(actRow);
   }
 
@@ -257,7 +258,7 @@ function renderWorkspace() {
     }),
     el('button', {
       class: activeFilter === 'done' ? 'on' : '', attrs: { 'data-f': 'done' },
-      html: `已闭环 <b id="h-d">${doneList.length}</b>`,
+      html: `已结束 <b id="h-d">${doneList.length}</b>`,
     }),
   ]);
 
@@ -274,7 +275,7 @@ function renderWorkspace() {
 
   const caseBox = el('div', { class: 'cases' });
   if (!currentList.length) {
-    caseBox.append(el('div', { class: 'empty', html: '此分类下暂无个案。<br><span style="font-size:12px; color:var(--mut2)">个案由员工<b>主动授权</b>后生成 —— 系统不会未经同意建单。</span>' }));
+      caseBox.append(el('div', { class: 'empty', html: '此分类下暂无个案。<br><span style="font-size:12px; color:var(--mut2)">个案由员工<b>主动预约</b>后生成 —— 系统不会未经同意创建个案。</span>' }));
   } else {
     currentList.forEach((item) => {
       caseBox.append(renderCaseCard(item, () => loadCases()));

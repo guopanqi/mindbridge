@@ -55,7 +55,7 @@ export async function onRequestGet({ request, env }) {
       replies = results || [];
     }
 
-    // 明文只允许出现在演示 seed 行上；真实行即使被写坏也不会被当作明文读出。
+    // 明文只允许出现在模拟基线 seed 行上；真实行即使被写坏也不会被当作明文读出。
     const readable = (row, version) => (
       version === PLAIN_VERSION && row.data_origin !== 'demo_seed' ? null : version
     );

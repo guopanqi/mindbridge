@@ -6,10 +6,16 @@ let days = 90;
 let dataOrigin = 'live';
 let currentPane = 'dash';
 let cachedData = null;
+let organizationKind = 'enterprise';
+
+export function setOrganizationKind(kind) {
+  organizationKind = kind === 'beta' ? 'beta' : 'enterprise';
+  dataOrigin = 'live';
+}
 
 const SUPPRESSED_TEXT = (min) => `样本不足 ${min} 人，不予展示`;
 const numberText = (value, suffix = '') => value === null || value === undefined ? '不予展示' : `${value}${suffix}`;
-const originNote = (data) => data.origin === 'demo_seed' ? '当前为模拟基线，不代表真实员工使用；不与真实事件混合计算。' : '当前仅统计真实事件；小于 10 人或无法验证独立样本量的指标不予展示。';
+const originNote = (data) => data.origin === 'demo_seed' ? '当前为本组织演示数据，不代表真实使用；与真实数据分别统计。' : '当前仅统计本组织真实使用；样本不足 10 人的指标不予展示。';
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 // 8 行业 Benchmark 常模库（取自 Demo）
@@ -121,7 +127,7 @@ function renderDashPane(data) {
 
   return el('div', { class: 'inner' }, [
     el('div', { class: 'demo-banner' }, [
-      el('b', { text: '⚠ 演示数据说明：' }),
+      el('b', { text: data.origin === 'demo_seed' ? '演示数据：' : '数据口径：' }),
       el('span', { text: originNote(data) }),
     ]),
     el('div', { class: 'kpis' }, [
@@ -248,21 +254,21 @@ function renderDashPane(data) {
       el('div', { class: 'cs', text: '每日对话中绿色的占比越高，温度越高。10 分表示当天全部对话都是绿色。心情打卡入口已下线，这条曲线不再依赖员工额外填写。' }),
       trendChart(data.moodTrend, min),
     ]),
-    el('div', { class: 'cardC' }, [
-      el('h4', { text: '数据来源分离' }),
-      el('div', { class: 'cs', text: '模拟基线与真实事件分别统计，可分别清理。真实事件样本不足时同样受阈值保护，这不是故障。' }),
+    organizationKind === 'beta' && data.origins.demo_seed?.eventCount ? el('div', { class: 'cardC' }, [
+      el('h4', { text: '本组织演示数据' }),
+      el('div', { class: 'cs', text: '评审演示数据只属于当前组织，与真实使用分别统计。' }),
       el('div', { class: 'origin-grid' }, [
-        originCard('模拟基线', data.origins.demo_seed, '预置演示数据，用于呈现 200 人规模下的形态'),
-        originCard('真实数据', data.origins.live, '与模拟基线分开统计；无法验证独立样本量的事件计数不展示'),
+        originCard('演示数据', data.origins.demo_seed, '用于展示组织报表的完整形态，不代表真实使用'),
+        originCard('真实数据', data.origins.live, '评审实际使用；样本不足时不展示具体指标'),
       ]),
-    ]),
+    ]) : null,
     el('div', { class: 'blind' }, [
       el('h5', { text: '你在本系统中看不到什么' }),
       el('ul', {}, [
         el('li', { text: '任何员工的姓名、工号、账号' }),
         el('li', { text: '任何一条倾诉或发帖的原文' }),
         el('li', { text: '任何一条聊天记录、聊天对象、消息条数' }),
-        el('li', { text: '红色个案的详情与处置内容' }),
+        el('li', { text: '红色个案的详情与跟进内容' }),
         el('li', { text: '样本不足 10 人的部门数据' }),
       ]),
     ]),
@@ -567,9 +573,9 @@ function renderCfgPane() {
         ...(config.activityCatalog || []).map(item => {
           const box = el('input', { attrs: { type: 'checkbox', 'aria-label': item.title } });
           box.checked = item.enabled === 1;
-          box.disabled = item.content_available !== 1;
+          box.disabled = item.content_available !== 1 || item.globally_enabled !== 1;
           box.addEventListener('change', () => void save({ kind: 'activity', activityId: item.id, enabled: box.checked }, '活动开放状态已保存'));
-          return el('label', { class: 'cs' }, [box, el('span', { text: `${item.title}${item.content_available !== 1 ? '（内容未发布）' : ''}` })]);
+          return el('label', { class: 'cs' }, [box, el('span', { text: `${item.title}${item.content_available !== 1 || item.globally_enabled !== 1 ? '（内容暂未开放）' : ''}` })]);
         }),
       ]),
       el('div', { class: 'cardC' }, [
@@ -609,7 +615,7 @@ function renderCfgPane() {
             ]))),
           ]),
         ]),
-        el('div', { class: 'rhynote', html: '<b>红色一级不可配置。</b>危机判定与是否转接疗愈师由独立于配置的规则引擎决定，HR 无法调整触发条件，也无法关闭危机流程。' }),
+        el('div', { class: 'rhynote', html: '<b>红色一级不可配置。</b>危机判定与是否请求疗愈师支持由独立于配置的规则引擎决定，HR 无法调整触发条件，也无法关闭危机流程。' }),
       ]),
     );
   }
@@ -759,14 +765,21 @@ export function renderDashboard(container) {
   root = container;
   clear(root);
 
-  // HR 5-tab 导航栏
-  const navbar = el('div', { class: 'hr-navbar', attrs: { role: 'tablist' } }, [
-    el('button', { class: 'hr-nav-btn on', text: '组织看板', attrs: { 'data-pane': 'dash', role: 'tab', 'aria-selected': 'true' } }),
-    el('button', { class: 'hr-nav-btn', text: '活动效果', attrs: { 'data-pane': 'activities', role: 'tab', 'aria-selected': 'false' } }),
-    el('button', { class: 'hr-nav-btn', text: '行业洞察', attrs: { 'data-pane': 'industry', role: 'tab', 'aria-selected': 'false' } }),
-    el('button', { class: 'hr-nav-btn', text: '干预阶梯配置', attrs: { 'data-pane': 'cfg', role: 'tab', 'aria-selected': 'false' } }),
-    el('button', { class: 'hr-nav-btn', text: '办公数据感知', attrs: { 'data-pane': 'sensing', role: 'tab', 'aria-selected': 'false' } }),
-  ]);
+  // HR 导航：公开组织与企业共用看板与配置；钉钉考勤感知只对企业开放。
+  const tabs = [
+    ['dash', '组织看板'],
+    ['activities', '活动效果'],
+    ['industry', '行业洞察'],
+    ['cfg', '干预阶梯配置'],
+  ];
+  if (organizationKind === 'enterprise') tabs.push(['sensing', '办公数据感知']);
+  if (!tabs.some(([pane]) => pane === currentPane)) currentPane = 'dash';
+
+  const navbar = el('div', { class: 'hr-navbar', attrs: { role: 'tablist' } }, tabs.map(([pane, label]) => el('button', {
+    class: `hr-nav-btn${pane === currentPane ? ' on' : ''}`,
+    text: label,
+    attrs: { 'data-pane': pane, role: 'tab', 'aria-selected': String(pane === currentPane) },
+  })));
 
   navbar.addEventListener('click', (e) => {
     const btn = e.target.closest('.hr-nav-btn');
@@ -790,14 +803,16 @@ function switchPane(pane) {
   const container = root.querySelector('.pane-container');
   if (!container || !cachedData) return;
   clear(container);
-  const source = el('select', { attrs: { 'aria-label': '数据来源' } });
-  for (const [value, label] of [['live', '真实数据（小样本遮蔽）'], ['demo_seed', '模拟基线（非真实使用）']]) {
-    const option = el('option', { text: label, attrs: { value } });
-    option.selected = value === dataOrigin;
-    source.append(option);
+  if (organizationKind === 'beta' && cachedData.origins.demo_seed?.eventCount) {
+    const source = el('select', { attrs: { 'aria-label': '数据来源' } });
+    for (const [value, label] of [['live', '真实数据（小样本遮蔽）'], ['demo_seed', '本组织演示数据']]) {
+      const option = el('option', { text: label, attrs: { value } });
+      option.selected = value === dataOrigin;
+      source.append(option);
+    }
+    source.addEventListener('change', () => { dataOrigin = source.value; void loadDashboard(); });
+    container.append(source);
   }
-  source.addEventListener('change', () => { dataOrigin = source.value; void loadDashboard(); });
-  container.append(source);
   if (pane === 'dash') container.append(renderDashPane(cachedData));
   if (pane === 'activities') container.append(renderActivitiesPane(cachedData));
   if (pane === 'industry') container.append(renderIndustryPane(cachedData));

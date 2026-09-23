@@ -37,7 +37,8 @@ export async function requireStaff(request, env, requiredRole) {
   const digest = await sha256Base64Url(token);
   const now = Date.now();
   const row = await env.STAFF_DB.prepare(
-    `SELECT s.staff_id, s.display_name, s.credential, s.roles, s.status
+    `SELECT s.staff_id, s.display_name, s.credential, s.roles, s.status,
+            ss.organization_id, ss.organization_kind, ss.organization_name
      FROM staff_sessions ss JOIN staff s ON s.staff_id = ss.staff_id
      WHERE ss.session_digest = ? AND ss.expires_at > ?`
   ).bind(digest, now).first();
@@ -49,7 +50,29 @@ export async function requireStaff(request, env, requiredRole) {
   }
   await env.STAFF_DB.prepare('UPDATE staff_sessions SET last_seen_at = ? WHERE session_digest = ?')
     .bind(now, digest).run();
-  return { staffId: row.staff_id, displayName: row.display_name, credential: row.credential, roles };
+  return {
+    staffId: row.staff_id,
+    displayName: row.display_name,
+    credential: row.credential,
+    roles,
+    organizationId: row.organization_id || null,
+    organizationKind: row.organization_kind || null,
+    organizationName: row.organization_name || null,
+  };
+}
+
+export async function createStaffSession(env, {
+  staffId, rawToken, ttlSeconds, organizationId = null, organizationKind = null, organizationName = null,
+}) {
+  const now = Date.now();
+  await env.STAFF_DB.prepare(
+    `INSERT INTO staff_sessions
+      (session_digest, staff_id, expires_at, created_at, last_seen_at, organization_id, organization_kind, organization_name)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+  ).bind(
+    await sha256Base64Url(rawToken), staffId, now + ttlSeconds * 1000, now, now,
+    organizationId, organizationKind, organizationName,
+  ).run();
 }
 
 // 审计条目只记录报表名或匿名个案编号，不含员工原文，也不含 anon_id。

@@ -23,7 +23,8 @@ export async function renewBetaSession(request, env) {
     `SELECT m.anon_id, m.organization_id FROM beta_memberships m
      JOIN organizations o ON o.id = m.organization_id
      WHERE m.browser_credential_digest = ? AND m.revoked_at IS NULL
-       AND o.status = 'active' AND o.kind = 'beta'`
+       AND o.status = 'active' AND o.kind = 'beta'
+     ORDER BY m.last_seen_at DESC, m.anon_id DESC LIMIT 1`
   ).bind(digest).first();
   if (!membership) return null;
   await env.CARE_DB.prepare('UPDATE beta_memberships SET last_seen_at = ? WHERE anon_id = ?')

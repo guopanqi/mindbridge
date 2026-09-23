@@ -8,6 +8,7 @@
 import { json } from '../_lib/http.js';
 import { newId, dayBucket } from '../_lib/care.js';
 import { MIN_SAMPLE } from '../_lib/metrics.js';
+import { enterpriseOrganizationId } from '../_lib/organizations.js';
 import {
   aggregateAttendance, appAccessToken, fetchAttendance, formatMinutes, listUserIds,
 } from '../_lib/dingtalk-rhythm.js';
@@ -34,7 +35,7 @@ async function attendanceEnabled(env) {
      JOIN organizations o ON o.id = c.organization_id
      WHERE c.organization_id = ? AND c.capability = 'dingtalk_attendance'
        AND o.kind = 'enterprise' AND o.status = 'active'`
-  ).bind(env.DINGTALK_ORG_ID || 'org_enterprise_primary').first();
+  ).bind(enterpriseOrganizationId(env)).first();
   return row?.enabled === 1;
 }
 
@@ -105,7 +106,7 @@ export async function onRequestPost({ request, env }) {
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'live', ?)
          ON CONFLICT(organization_id, bucket_day, metric, data_origin) DO UPDATE SET
            value = excluded.value, sample_size = excluded.sample_size, created_at = excluded.created_at`
-      ).bind(newId('rhy'), env.DINGTALK_ORG_ID || 'org_enterprise_primary', day, metric, value, summary.sampleSize, unit, 'dingtalk_attendance', now)));
+      ).bind(newId('rhy'), enterpriseOrganizationId(env), day, metric, value, summary.sampleSize, unit, 'dingtalk_attendance', now)));
     }
 
     return json({

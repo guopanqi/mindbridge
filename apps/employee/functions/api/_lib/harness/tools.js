@@ -10,11 +10,11 @@ const TOPIC_ACTIVITY_IDS = [
   [/职业|工作|主管/, ['value-anchor', 'identity-group']],
 ];
 
-export async function searchActivities(env, args = {}, { excludeIds = [] } = {}) {
+export async function searchActivities(env, args = {}, { excludeIds = [], organizationId = null } = {}) {
   const limit = Math.max(1, Math.min(LIMIT_MAX, Number(args.limit) || 2));
   const excluded = [...new Set(excludeIds)].filter(id => typeof id === 'string').slice(-12);
   const excludeSql = excluded.length ? ` AND id NOT IN (${excluded.map(() => '?').join(',')})` : '';
-  const availableSql = `${activityAvailableSql('activities')}${excludeSql}`;
+  const availableSql = `${activityAvailableSql('activities', organizationId)}${excludeSql}`;
   const rawQuery = typeof args.query === 'string' ? args.query.trim().slice(0, 200) : '';
   const preferredIds = TOPIC_ACTIVITY_IDS.find(([pattern]) => pattern.test(rawQuery))?.[1] || null;
   if (preferredIds) {
@@ -23,7 +23,7 @@ export async function searchActivities(env, args = {}, { excludeIds = [] } = {})
       const placeholders = candidates.map(() => '?').join(',');
       const { results } = await env.CARE_DB.prepare(
         `SELECT id, title, kind, level, form, duration, description, schedule, location
-         FROM activities WHERE ${activityAvailableSql('activities')} AND id IN (${placeholders})`
+         FROM activities WHERE ${activityAvailableSql('activities', organizationId)} AND id IN (${placeholders})`
       ).bind(...candidates).all();
       const byId = new Map((results || []).map((item) => [item.id, item]));
       const available = candidates.map((id) => byId.get(id)).filter(Boolean);
@@ -62,7 +62,7 @@ export async function searchActivities(env, args = {}, { excludeIds = [] } = {})
   }
   if (results?.length) return { activities: results, status: 'available' };
   if (excluded.length) {
-    const { results: any } = await env.CARE_DB.prepare(`SELECT id FROM activities WHERE ${activityAvailableSql('activities')} LIMIT ?`).bind(1).all();
+    const { results: any } = await env.CARE_DB.prepare(`SELECT id FROM activities WHERE ${activityAvailableSql('activities', organizationId)} LIMIT ?`).bind(1).all();
     if (any?.length) return { activities: [], status: 'exhausted' };
   }
   return { activities: [], status: 'unavailable' };
@@ -86,16 +86,23 @@ export async function executeTool(env, toolCall, assessment = {}) {
   if (toolCall.name !== 'search_activities') throw new Error('TOOL_NOT_ALLOWED');
   // 明确浏览活动与自动情绪干预是两种意图。浏览使用与活动库一致的启停规则，
   // 不应被某个情绪的一对一默认映射锁死在同一个活动里。
-  if (assessment.explicitRequest) return searchActivities(env, toolCall.arguments, { excludeIds: assessment.excludeIds });
+  if (assessment.explicitRequest) return searchActivities(env, toolCall.arguments, { excludeIds: assessment.excludeIds, organizationId: assessment.organizationId });
   if (assessment.emotion) {
-    const policy = await env.CARE_DB.prepare('SELECT enabled, l1_activity_id, l2_activity_id FROM intervention_matrix WHERE emotion=?').bind(assessment.emotion).first();
+    const policy = assessment.organizationId
+      ? await env.CARE_DB.prepare(`SELECT COALESCE(o.enabled, m.enabled) AS enabled,
+          CASE WHEN o.organization_id IS NULL THEN m.l1_activity_id ELSE o.l1_activity_id END AS l1_activity_id,
+          CASE WHEN o.organization_id IS NULL THEN m.l2_activity_id ELSE o.l2_activity_id END AS l2_activity_id
+          FROM intervention_matrix m LEFT JOIN organization_intervention_matrix o
+            ON o.organization_id = ? AND o.emotion = m.emotion WHERE m.emotion = ?`)
+        .bind(assessment.organizationId, assessment.emotion).first()
+      : await env.CARE_DB.prepare('SELECT enabled, l1_activity_id, l2_activity_id FROM intervention_matrix WHERE emotion=?').bind(assessment.emotion).first();
     if (policy?.enabled === 0) return { activities: [], status: 'policy_disabled' };
     const id = assessment.level === 'yellow' ? policy?.l2_activity_id : policy?.l1_activity_id;
     if (id) {
-      const activity = await env.CARE_DB.prepare(`SELECT * FROM activities WHERE id=? AND level=? AND ${activityAvailableSql('activities')}`).bind(id, assessment.level === 'yellow' ? 'L2' : 'L1').first();
+      const activity = await env.CARE_DB.prepare(`SELECT * FROM activities WHERE id=? AND level=? AND ${activityAvailableSql('activities', assessment.organizationId)}`).bind(id, assessment.level === 'yellow' ? 'L2' : 'L1').first();
       if (activity && assessment.excludeIds?.includes(activity.id)) return { activities: [], status: 'configured_repeated' };
       return { activities: activity ? [activity] : [], status: activity ? 'available' : 'configured_unavailable' };
     }
   }
-  return searchActivities(env, toolCall.arguments, { excludeIds: assessment.excludeIds });
+  return searchActivities(env, toolCall.arguments, { excludeIds: assessment.excludeIds, organizationId: assessment.organizationId });
 }

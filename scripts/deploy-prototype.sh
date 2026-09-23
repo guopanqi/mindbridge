@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 将 `prototype/` 中的交互原型发布到 Cloudflare Pages。
+# 将 `路演/原型/` 中的交互原型发布到 Cloudflare Pages。
 # 用法：./scripts/deploy-prototype.sh
 # 可选：./scripts/deploy-prototype.sh 其他-pages-项目名
 
@@ -13,7 +13,7 @@ fi
 
 PROJECT_NAME="${1:-mindbridge-demo}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SITE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)/prototype"
+SITE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)/路演/原型"
 
 if ! command -v npx >/dev/null 2>&1; then
   echo "未找到 npx。请先安装 Node.js（建议 LTS 版本）。" >&2

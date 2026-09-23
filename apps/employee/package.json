@@ -13,12 +13,7 @@
     "db:migrate:care": "wrangler d1 migrations apply mindbridge-beta-care --remote",
     "db:migrate:identity": "wrangler d1 migrations apply mindbridge-identity --remote",
     "build:sdk": "node scripts/build-sdk.mjs",
-    "build:app": "node scripts/build-app.mjs",
-    "seed:generate": "node scripts/generate-seed.mjs",
-    "seed:apply:local": "wrangler d1 execute mindbridge-care --local --file seed/demo_seed.sql",
-    "seed:apply": "wrangler d1 execute mindbridge-care --remote --file seed/demo_seed.sql",
-    "seed:reset:local": "wrangler d1 execute mindbridge-care --local --file scripts/reset-seed.sql",
-    "seed:reset": "wrangler d1 execute mindbridge-care --remote --file scripts/reset-seed.sql"
+    "build:app": "node scripts/build-app.mjs"
   },
   "devDependencies": {
     "esbuild": "^0.28.2",

@@ -2,6 +2,9 @@
 //
 // 文案取自原型。这个选择只关联匿名身份，且只影响回应措辞与推荐排序，
 // 不参与风险判定——这一点必须在界面上说清楚。
+//
+// 「暂不选择」同样记为一次明确决定（服务端 context_tag='none'），否则每次
+// 重进都会被整屏弹窗挡住底部导航。用户随时可在「我的 → 修改」里更改。
 import { api } from '../api.js';
 import { clear, el } from '../dom.js';
 
@@ -15,21 +18,50 @@ const OPTIONS = [
 ];
 
 export function askContext(onDone) {
-  const overlay = el('div', { class: 'ctx-overlay', attrs: { role: 'dialog', 'aria-modal': 'true' } });
+  const previousFocus = document.activeElement;
+  const overlay = el('div', {
+    class: 'ctx-overlay',
+    attrs: { role: 'dialog', 'aria-modal': 'true', 'aria-labelledby': 'ctx-title' },
+  });
   const finish = async (tag) => {
     overlay.remove();
-    if (tag) {
-      try {
-        await api.setContext(tag);
-      } catch {
-        // 设置失败不该挡住员工进入，通用推荐仍然可用。
-      }
+    document.removeEventListener('keydown', onKey, true);
+    // 选择与跳过都持久化：跳过记为 'none'，下次进入不再打扰。
+    // 设置失败不该挡住员工进入，通用推荐仍然可用。
+    try {
+      await api.setContext(tag || 'none');
+    } catch {
+      // 忽略：入口流程不受影响。
     }
+    if (previousFocus instanceof HTMLElement && document.contains(previousFocus)) previousFocus.focus();
     onDone?.();
   };
 
+  // 弹窗打开期间焦点锁在内部；Esc 等同于「暂不选择」。
+  const onKey = (event) => {
+    if (!document.contains(overlay)) return;
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      void finish(null);
+      return;
+    }
+    if (event.key !== 'Tab') return;
+    const items = [...overlay.querySelectorAll('button')].filter((b) => !b.disabled);
+    if (!items.length) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  };
+  document.addEventListener('keydown', onKey, true);
+
   overlay.append(el('div', { class: 'ctx-sheet' }, [
-    el('h2', { text: '哪种状态更接近你？' }),
+    el('h2', { attrs: { id: 'ctx-title' }, text: '哪种状态更接近你？' }),
     el('p', { class: 'ctx-sub', text: '告诉我们你当前的角色，助手能提供更贴切的回应；随时可以更改或清空。它不参与风险判定，企业端仅展示 10 人以上的宏观统计，绝无法反推到个人。' }),
     el('div', { class: 'ctx-options' }, OPTIONS.map(([tag, icon, title, desc]) => el('button', {
       class: 'ctx-option', attrs: { type: 'button' }, on: { click: () => void finish(tag) },
@@ -49,6 +81,7 @@ export function askContext(onDone) {
     ]),
   ]));
   document.body.append(overlay);
+  overlay.querySelector('.ctx-option')?.focus();
   return overlay;
 }
 

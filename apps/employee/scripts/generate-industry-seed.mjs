@@ -1,4 +1,4 @@
-// 行业基准演示数据。全部标记 data_origin='demo_seed'，可与真实数据分别清理。
+// 行业基准模拟数据。全部标记 data_origin='demo_seed'，可与真实数据分别清理。
 import { writeFileSync } from 'node:fs';
 
 const BENCH = {

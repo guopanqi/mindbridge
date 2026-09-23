@@ -48,7 +48,6 @@ export const api = {
   setContext: (contextTag) => post('/api/me', { contextTag }),
   chatHistory: () => request('/api/chat'),
   sendChat: (text) => post('/api/chat', { text }),
-  clearChat: () => request('/api/chat', { method: 'DELETE' }),
   dismissChatCard: (messageId) => post('/api/chat/card', { messageId, action: 'dismiss' }),
   wall: () => request('/api/wall'),
   createPost: (text) => post('/api/wall', { text }),
@@ -69,6 +68,7 @@ export const api = {
   authorizations: () => request('/api/authorizations'),
   decideAuthorization: (id, approve) => post('/api/authorizations', { id, approve }),
   setConsent: (scope, granted) => post('/api/consents', { scope, granted }),
+  submitSuggestion: (text) => post('/api/suggestions', { text }),
 };
 
 export async function getSession() {

@@ -10,7 +10,7 @@ import {
 
 export async function onRequestGet({ request, env }) {
   try {
-    const { anonId } = await requireSession(request, env);
+    const { anonId, organizationId } = await requireSession(request, env);
     await ensureProfile(env, anonId);
     const { results } = await env.CARE_DB.prepare(
       `SELECT a.id, a.title, a.kind, a.form, a.duration, a.description, a.suited_for, a.core_method,
@@ -18,7 +18,7 @@ export async function onRequestGet({ request, env }) {
               (SELECT COUNT(*) FROM resource_events e
                 WHERE e.anon_id = ? AND e.state = 'completed'
                   AND e.activity_id = a.id) AS done_count
-       FROM activities a WHERE ${activityAvailableSql('a')}
+       FROM activities a WHERE ${activityAvailableSql('a', organizationId)}
        ORDER BY a.level, a.kind, a.title`
     ).bind(anonId).all();
     return json({
@@ -53,7 +53,7 @@ export async function onRequestPost({ request, env }) {
       throw new ApiError('ACTIVITY_ID_REQUIRED', 400, '缺少活动标识');
     }
     const activity = await env.CARE_DB
-      .prepare(`SELECT id, title, level FROM activities WHERE id = ? AND ${activityAvailableSql('activities')}`)
+      .prepare(`SELECT id, title, level FROM activities WHERE id = ? AND ${activityAvailableSql('activities', organizationId)}`)
       .bind(activityId).first();
     if (!activity) throw new ApiError('ACTIVITY_UNAVAILABLE', 404, '这个资源暂时不可用');
 

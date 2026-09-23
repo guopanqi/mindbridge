@@ -8,8 +8,9 @@
 // code 是一次性的，这里显式记录已使用的 code 摘要来防重放。
 import { hmacBase64Url, randomToken, sha256Base64Url } from '../_lib/crypto.js';
 import { encryptText } from '../_lib/crypto.js';
+import { enterpriseOrganizationId } from '../_lib/care.js';
 import { json, staffCookie } from '../_lib/http.js';
-import { ApiError, audit, handleError, newId, readJson } from '../_lib/staff.js';
+import { ApiError, audit, createStaffSession, handleError, newId, readJson } from '../_lib/staff.js';
 
 const TIMEOUT_MS = 8000;
 const CODE_MAX = 1024;
@@ -112,12 +113,16 @@ export async function onRequestPost({ request, env }) {
 
     const staffId = await resolveStaff(env, identity);
     const raw = randomToken();
-    const digest = await sha256Base64Url(raw);
     const ttl = Math.max(600, Math.min(Number.parseInt(env.STAFF_SESSION_TTL_SECONDS || '3600', 10) || 3600, 43200));
-    const now = Date.now();
-    await env.STAFF_DB.prepare(
-      'INSERT INTO staff_sessions (session_digest, staff_id, expires_at, created_at, last_seen_at) VALUES (?, ?, ?, ?, ?)'
-    ).bind(digest, staffId, now + ttl * 1000, now, now).run();
+    const orgId = enterpriseOrganizationId(env);
+    await createStaffSession(env, {
+      staffId,
+      rawToken: raw,
+      ttlSeconds: ttl,
+      organizationId: orgId,
+      organizationKind: 'enterprise',
+      organizationName: '钉钉企业组织',
+    });
     await audit(env, staffId, 'sign_in', 'console', 'dingtalk_omp', 'ok');
 
     return json(

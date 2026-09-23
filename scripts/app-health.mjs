@@ -9,7 +9,7 @@ const targets = {
     assets: ['index.html', 'app.js', 'styles.css', 'healer/index.html', 'healer/app.js'],
   },
   employee: {
-    origin: 'https://mindbridge-app-8j6.pages.dev',
+    origin: 'https://mindbridge-beta.pages.dev',
     service: 'mindbridge-stage-2',
     assets: ['index.html', 'app.js', 'styles.css'],
   },

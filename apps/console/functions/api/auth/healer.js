@@ -1,25 +1,22 @@
 // 疗愈师登录，换取实名工作人员会话。
 //
 // 两条路径：
-// - accessKey：预设的长期入口密钥，可重复使用，用于日常与演示（打开链接即登录）；
+// - accessKey：预设的长期入口密钥，可重复使用，用于日常与内测体验（打开链接即登录）；
 // - accessCode：一次性邀请码，用于新疗愈师入职。
 // 两者都只存摘要，都能被单独吊销。
 import { randomToken, sha256Base64Url } from '../_lib/crypto.js';
 import { json, staffCookie } from '../_lib/http.js';
-import { ApiError, audit, handleError, newId, readJson } from '../_lib/staff.js';
+import { ApiError, audit, createStaffSession, handleError, newId, readJson } from '../_lib/staff.js';
 
 async function issueSession(env, staffId, method) {
   const raw = randomToken();
-  // 疗愈师会话给足时长：演示或值班期间不应该被迫中途重新登录。
+  // 疗愈师会话给足时长：内测体验或值班期间不应该被迫中途重新登录。
   const fallback = method === 'access_key' ? '43200' : '3600';
   const ttl = Math.max(600, Math.min(
     Number.parseInt(env.STAFF_SESSION_TTL_SECONDS || fallback, 10) || Number.parseInt(fallback, 10),
     43200
   ));
-  const now = Date.now();
-  await env.STAFF_DB.prepare(
-    'INSERT INTO staff_sessions (session_digest, staff_id, expires_at, created_at, last_seen_at) VALUES (?, ?, ?, ?, ?)'
-  ).bind(await sha256Base64Url(raw), staffId, now + ttl * 1000, now, now).run();
+  await createStaffSession(env, { staffId, rawToken: raw, ttlSeconds: ttl });
   await audit(env, staffId, 'sign_in', 'console', method, 'ok');
   return { raw, ttl };
 }

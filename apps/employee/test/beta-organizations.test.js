@@ -8,6 +8,7 @@ import { onRequestGet as sessionGet } from '../functions/api/session.js';
 import { onRequestGet as wallGet, onRequestPost as wallPost } from '../functions/api/wall/index.js';
 import { onRequestPost as replyPost } from '../functions/api/wall/reply.js';
 import { onRequestPost as reactPost } from '../functions/api/wall/react.js';
+import { onRequestDelete as cancelAppointment, onRequestPost as createAppointment } from '../functions/api/appointments/index.js';
 
 function d1(sqlite) {
   return {
@@ -83,4 +84,62 @@ test('邀请身份可续会话，广场在两个公开组织之间严格隔离',
   assert.equal(renewedBody.organizationName, '组织0');
   assert.ok(cookie(renewed, '__Host-mb_session'));
   assert.equal(sqlite.prepare("SELECT COUNT(*) AS n FROM product_events WHERE event_name='wall_post_created' AND organization_id='org_0'").get().n, 1);
+
+  const switched = await join({ request: req('/api/auth/invite', 'POST', { token: tokens[1] }, aDevice), env });
+  assert.equal(switched.status, 200);
+  assert.equal(cookie(switched, '__Host-mb_device'), aDevice);
+  assert.equal(sqlite.prepare('SELECT join_count FROM beta_invites WHERE id = ?').get('inv_0').join_count, 1);
+  assert.equal(sqlite.prepare('SELECT join_count FROM beta_invites WHERE id = ?').get('inv_1').join_count, 2);
+  const switchedSession = cookie(switched, '__Host-mb_session');
+  assert.equal((await wallGet({ request: req('/api/wall', 'GET', null, switchedSession), env })).status, 200);
+  assert.equal((await (await wallGet({ request: req('/api/wall', 'GET', null, switchedSession), env })).json()).posts.length, 0);
+
+  await new Promise((resolve) => setTimeout(resolve, 5));
+  const returned = await join({ request: req('/api/auth/invite', 'POST', { token: tokens[0] }, aDevice), env });
+  assert.equal(returned.status, 200);
+  assert.equal(cookie(returned, '__Host-mb_device'), aDevice);
+  assert.equal(sqlite.prepare('SELECT join_count FROM beta_invites WHERE id = ?').get('inv_0').join_count, 1);
+  const returnedSession = cookie(returned, '__Host-mb_session');
+  const returnedWall = await (await wallGet({ request: req('/api/wall', 'GET', null, returnedSession), env })).json();
+  assert.equal(returnedWall.posts.length, 1);
+  assert.equal(returnedWall.posts[0].mine, true);
+  const home = await sessionGet({ request: req('/api/session', 'GET', null, aDevice), env });
+  assert.equal((await home.json()).organizationId, 'org_0');
+
+  const created = await createAppointment({
+    request: req('/api/appointments', 'POST', { riskLevel: 'red', shareContext: false, note: '测试预约' }, returnedSession),
+    env,
+  });
+  assert.equal(created.status, 200);
+  const appointmentId = (await created.json()).id;
+  assert.equal(sqlite.prepare("SELECT COUNT(*) AS n FROM product_events WHERE event_name='appointment_requested' AND object_id=?").get(appointmentId).n, 1);
+  assert.equal((await cancelAppointment({
+    request: req(`/api/appointments?id=${encodeURIComponent(appointmentId)}`, 'DELETE', null, returnedSession),
+    env,
+  })).status, 200);
+  assert.equal(sqlite.prepare("SELECT COUNT(*) AS n FROM product_events WHERE event_name='appointment_cancelled' AND object_id=?").get(appointmentId).n, 1);
+  assert.equal(sqlite.prepare('SELECT note_cipher IS NOT NULL AS sealed FROM appointments WHERE id=?').get(appointmentId).sealed, 1);
+});
+
+test('16 位短邀请码可加入，过短格式直接拒绝', async (t) => {
+  const { randomBytes } = await import('node:crypto');
+  const sqlite = new DatabaseSync(':memory:');
+  t.after(() => sqlite.close());
+  const dir = new URL('../migrations/care/', import.meta.url);
+  for (const f of readdirSync(dir).sort().filter((name) => name.endsWith('.sql'))) sqlite.exec(readFileSync(new URL(f, dir), 'utf8'));
+  const now = Date.now();
+  const shortToken = randomBytes(12).toString('base64url');
+  assert.equal(shortToken.length, 16);
+  sqlite.prepare("INSERT INTO organizations(id,display_name,kind,status,created_at,updated_at) VALUES (?,?,'beta','active',?,?)")
+    .run('org_short', '短码组织', now, now);
+  sqlite.prepare('INSERT INTO beta_invites(id,organization_id,token_digest,created_at) VALUES (?,?,?,?)')
+    .run('inv_short', 'org_short', await sha256Base64Url(shortToken), now);
+  const env = { CARE_DB: d1(sqlite), CARE_CONTENT_KEY_V1: toBase64Url(crypto.getRandomValues(new Uint8Array(32))), APP_VERSION: 'test' };
+
+  const joined = await join({ request: req('/api/auth/invite', 'POST', { token: shortToken }), env });
+  assert.equal(joined.status, 200);
+  assert.equal(sqlite.prepare('SELECT join_count FROM beta_invites WHERE id = ?').get('inv_short').join_count, 1);
+
+  const tooShort = await join({ request: req('/api/auth/invite', 'POST', { token: 'abc123' }), env });
+  assert.equal(tooShort.status, 400);
 });

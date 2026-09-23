@@ -94,7 +94,7 @@ async function addConsent(env, db, id = 'msg_consent') {
     .run(id, 'conv_support_acceptance', 'anon_support_acceptance', 'consent', sealed.cipher, sealed.version, 'red', Date.now(), 'live');
 }
 
-test('对话转接：刷新恢复、接单/结案/取消投影，同卡重试不重复预约', async () => {
+test('对话转接：刷新恢复、受理/结束/取消投影，同卡重试不重复预约', async () => {
   const { db, env, employeeRequest } = await fixture();
   await addConsent(env, db);
   const create = () => createAppointment({ env, request: employeeRequest('/api/appointments', { method: 'POST', body: JSON.stringify({ messageId: 'msg_consent', shareContext: true }) }) });
@@ -111,7 +111,7 @@ test('对话转接：刷新恢复、接单/结案/取消投影，同卡重试不
   db.close();
 });
 
-test('旧转接卡只显示已有预约，不伪造关联；拒绝其他人的卡片', async () => {
+test('旧支持卡只显示已有预约，不伪造关联；拒绝其他人的卡片', async () => {
   const { db, env, employeeRequest } = await fixture();
   await addConsent(env, db);
   await createAppointment({ env, request: employeeRequest('/api/appointments', { method: 'POST', body: '{}' }) });
@@ -148,7 +148,7 @@ test('活动卡读取当前参与与评价，按匿名主体隔离', async () =>
   db.close();
 });
 
-test('转接卡关联写入失败时预约及授权整体回滚', async () => {
+test('支持卡关联写入失败时预约及授权整体回滚', async () => {
   const { db, env, employeeRequest } = await fixture();
   await addConsent(env, db);
   db.exec("CREATE TRIGGER fail_card_update BEFORE UPDATE ON messages BEGIN SELECT RAISE(ABORT, 'test rollback'); END");
@@ -159,7 +159,7 @@ test('转接卡关联写入失败时预约及授权整体回滚', async () => {
   db.close();
 });
 
-test('一人一条未闭环预约，已接单或跟进不能重复；结案后可以再约', async () => {
+test('一人一条未结束预约，已受理或跟进不能重复；结束后可以再约', async () => {
   const { db, env, employeeRequest } = await fixture();
   const create = () => createAppointment({ env, request: employeeRequest('/api/appointments', {
     method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ shareContext: true }),
@@ -183,25 +183,41 @@ test('一人一条未闭环预约，已接单或跟进不能重复；结案后�
   db.close();
 });
 
-test('支持链路：MB 编号可见、接单闭环后员工状态同步', async () => {
+test('支持链路：MB 编号可见、受理结束后员工状态同步', async () => {
   const { db, env, employeeRequest, healerRequest } = await fixture();
+  const rejected = await body(await createAppointment({
+    env,
+    request: employeeRequest('/api/appointments', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ riskLevel: 'yellow', shareContext: false }),
+    }),
+  }));
+  assert.equal(rejected.status, 400);
+  assert.equal(rejected.body.reasonCode, 'HEALER_RED_ONLY');
+
   const created = await body(await createAppointment({
     env,
     request: employeeRequest('/api/appointments', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ riskLevel: 'yellow', shareContext: true, note: '合成验收备注' }),
+      body: JSON.stringify({ riskLevel: 'red', shareContext: true, note: '合成验收备注' }),
     }),
   }));
   assert.equal(created.status, 200);
   assert.match(created.body.caseCode, /^MB-[A-Z2-9]{6}$/);
 
+  // 历史误建的黄色个案不得进入疗愈师台。
+  db.prepare("INSERT INTO appointments (id, case_code, anon_id, risk_level, status, share_context, created_at, updated_at, data_origin) VALUES ('apt_yellow','MB-YELLOW','anon_fixture','yellow','requested',0,?,?, 'live')")
+    .run(Date.now(), Date.now());
   const visible = await body(await listCases({
     env,
     request: healerRequest(),
   }));
   assert.equal(visible.status, 200);
+  assert.equal(visible.body.cases.length, 1);
   assert.equal(visible.body.cases[0].caseCode, created.body.caseCode);
+  assert.equal(visible.body.cases[0].riskLevel, 'red');
   assert.equal(visible.body.cases[0].status, 'pending');
   assert.deepEqual(visible.body.cases[0].textSnippets, [], '个案默认列表不得携带对话片段');
 
@@ -233,7 +249,7 @@ test('支持链路：上下文必须二次授权，撤销后疗愈师不可再�
     request: employeeRequest('/api/appointments', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ riskLevel: 'yellow', shareContext: true }),
+      body: JSON.stringify({ riskLevel: 'red', shareContext: true }),
     }),
   }));
   const caseCode = created.body.caseCode;
@@ -326,7 +342,7 @@ test('支持链路：撤销预约在各状态均使个案不可见，取消后�
       request: employeeRequest('/api/appointments', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ riskLevel: 'yellow', shareContext: false }),
+        body: JSON.stringify({ riskLevel: 'red', shareContext: false }),
       }),
     }));
     const caseCode = created.body.caseCode;
@@ -385,7 +401,7 @@ test('支持链路：已批准上下文过期后再次读取必须拒绝', async
     request: employeeRequest('/api/appointments', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ riskLevel: 'yellow', shareContext: true }),
+      body: JSON.stringify({ riskLevel: 'red', shareContext: true }),
     }),
   }));
   const caseCode = created.body.caseCode;
@@ -415,7 +431,7 @@ test('支持链路：即使是历史撤销记录未同步 request 状态，读�
     request: employeeRequest('/api/appointments', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ riskLevel: 'yellow', shareContext: true }),
+      body: JSON.stringify({ riskLevel: 'red', shareContext: true }),
     }),
   }));
   const caseCode = created.body.caseCode;
@@ -440,31 +456,28 @@ test('支持链路：即使是历史撤销记录未同步 request 状态，读�
 });
 
 test('HR 内部配置：低于 k=10 的 live 命中与节奏样本不得返回精确值', async () => {
-  const rows = {
-    matrix: [{ emotion: '焦虑', icon: 'A', l1_name: 'L1', l1_desc: '', l2_name: 'L2', l2_desc: '', l3_action: '', enabled: 1, updated_at: 1, updated_by: 'test' }],
-    catalog: [],
-    signals: [],
-    hits: [{ emotion: '焦虑', n: 1 }],
-    rhythm: [{ metric: 'median_off_duty_minutes', value: 123, sample_size: 1, unit: 'minutes', created_at: 1 }],
-  };
-  const db = {
-    prepare(sql) {
-      const key = sql.includes('intervention_matrix') ? 'matrix'
-        : sql.includes('resource_catalog') ? 'catalog'
-          : sql.includes('sensing_signals') ? 'signals'
-            : sql.includes('aggregate_events') ? 'hits' : 'rhythm';
-      return { bind() { return this; }, async all() { return { results: rows[key] }; } };
-    },
-  };
-  const response = await readConfig({
-    env: { CARE_DB: db, INTERNAL_SERVICE_TOKEN: SERVICE_TOKEN },
-    request: new Request('https://employee.test/api/internal/config', { headers: { authorization: `Bearer ${SERVICE_TOKEN}` } }),
-  });
-  const result = await response.json();
-  assert.equal(response.status, 200);
-  assert.equal(result.minSample, 10);
-  assert.ok(!Number.isFinite(result.matrix[0].hits), '低样本 hits 不得泄露精确次数');
-  assert.ok(result.rhythmSamples.every((row) => !Number.isFinite(row.value) && !Number.isFinite(row.sample_size)), '低样本 rhythm 不得泄露 value/sample_size');
+  const sqlite = new DatabaseSync(':memory:');
+  try {
+    const dir = new URL('../migrations/care/', import.meta.url);
+    for (const file of readdirSync(dir).sort().filter((name) => name.endsWith('.sql'))) {
+      sqlite.exec(readFileSync(new URL(file, dir), 'utf8'));
+    }
+    const now = Date.now();
+    sqlite.prepare("INSERT INTO organizations (id, display_name, kind, status, created_at, updated_at) VALUES ('org_enterprise_primary', '钉钉企业组织', 'enterprise', 'active', ?, ?)").run(now, now);
+    sqlite.prepare("UPDATE intervention_matrix SET icon='A', l1_name='L1', l2_name='L2', enabled=1 WHERE emotion='焦虑'").run();
+    sqlite.prepare("INSERT INTO org_rhythm (id, bucket_day, metric, value, sample_size, unit, source, data_origin, created_at, organization_id) VALUES ('r1', '2026-09-23', 'median_off_duty_minutes', 123, 1, 'minutes', 'test', 'live', ?, 'org_enterprise_primary')").run(now);
+    const response = await readConfig({
+      env: { CARE_DB: d1(sqlite), INTERNAL_SERVICE_TOKEN: SERVICE_TOKEN, DINGTALK_ORG_ID: 'org_enterprise_primary' },
+      request: new Request('https://employee.test/api/internal/config', { headers: { authorization: `Bearer ${SERVICE_TOKEN}` } }),
+    });
+    const result = await response.json();
+    assert.equal(response.status, 200);
+    assert.equal(result.minSample, 10);
+    assert.ok(!Number.isFinite(result.matrix[0].hits), '低样本 hits 不得泄露精确次数');
+    assert.ok(result.rhythmSamples.every((row) => !Number.isFinite(row.value) && !Number.isFinite(row.sample_size)), '低样本 rhythm 不得泄露 value/sample_size');
+  } finally {
+    sqlite.close();
+  }
 });
 
 async function metricsFixture(livePeople, demoPeople = 0) {
@@ -474,12 +487,16 @@ async function metricsFixture(livePeople, demoPeople = 0) {
     db.exec(readFileSync(new URL(file, dir), 'utf8'));
   }
   const now = Date.now();
-  db.prepare(
-    'INSERT INTO tenant_profile(id, display_name, headcount, industry, data_origin, updated_at) VALUES (?, ?, ?, ?, ?, ?)'
-  ).run('demo', '合成验收租户', livePeople + demoPeople + 100, 'test', 'demo_seed', now);
+  for (const [id, kind] of [['org_enterprise_primary', 'enterprise'], ['org_review', 'beta']]) {
+    db.prepare("INSERT INTO organizations(id,display_name,kind,status,created_at,updated_at) VALUES (?,?,?,'active',?,?)")
+      .run(id, id, kind, now, now);
+  }
   const addPeople = (count, origin) => {
+    const organizationId = origin === 'live' ? 'org_enterprise_primary' : 'org_review';
     for (let index = 0; index < count; index += 1) {
       const anonId = `${origin}_support_${index}`;
+      db.prepare('INSERT INTO subject_organizations(anon_id,organization_id,entry_channel,created_at,last_seen_at) VALUES (?,?,?,?,?)')
+        .run(anonId, organizationId, origin === 'live' ? 'dingtalk' : 'beta_web', now, now);
       db.prepare(
         'INSERT INTO profiles(anon_id, display_name, context_tag, created_at, updated_at, data_origin) VALUES (?, ?, ?, ?, ?, ?)'
       ).run(anonId, '合成人员', 'none', now, now, origin);
@@ -491,14 +508,14 @@ async function metricsFixture(livePeople, demoPeople = 0) {
         'INSERT INTO risk_events(id, anon_id, conversation_id, level, rule, emotion, engine, created_at, data_origin) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
       ).run(`risk_${origin}_${index}`, anonId, null, 'yellow', 'synthetic', '焦虑', 'test', now, origin);
       db.prepare(
-        'INSERT INTO aggregate_events(id, event_type, emotion, level, bucket_day, created_at, data_origin) VALUES (?, ?, ?, ?, ?, ?, ?)'
-      ).run(`agg_${origin}_${index}`, 'chat_message', '焦虑', 'yellow', new Date(now).toISOString().slice(0, 10), now, origin);
+        'INSERT INTO aggregate_events(id, event_type, emotion, level, bucket_day, created_at, data_origin, organization_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+      ).run(`agg_${origin}_${index}`, 'chat_message', '焦虑', 'yellow', new Date(now).toISOString().slice(0, 10), now, origin, organizationId);
     }
   };
   addPeople(livePeople, 'live');
   addPeople(demoPeople, 'demo_seed');
-  const env = { CARE_DB: d1(db), INTERNAL_SERVICE_TOKEN: SERVICE_TOKEN };
-  const request = (origin) => new Request(`https://employee.test/api/internal/metrics?days=7&origin=${origin}`, {
+  const env = { CARE_DB: d1(db), INTERNAL_SERVICE_TOKEN: SERVICE_TOKEN, DINGTALK_ORG_ID: 'org_enterprise_primary' };
+  const request = (origin) => new Request(`https://employee.test/api/internal/metrics?days=7&origin=${origin}${origin === 'demo_seed' ? '&organizationId=org_review' : ''}`, {
     headers: { authorization: `Bearer ${SERVICE_TOKEN}` },
   });
   return { db, env, request };
@@ -519,7 +536,7 @@ test('HR metrics：live 样本 1/4/5/9 人均按 k=10 抑制，10 人才放行',
       assert.equal(result.temperature.value, null, `count=${count}`);
     } else {
       assert.equal(result.origins.live.activeUsers.value, 10);
-      assert.equal(result.coverage.rate, 9.1);
+      assert.equal(result.coverage.rate, null);
       assert.equal(typeof result.temperature.value, 'number');
     }
     db.close();

@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="referrer" content="no-referrer" />
+  <title>公开组织配置 · MindBridge</title>
+  <script>
+    // 旧管理链接兼容：公开组织与企业共用 console，按组织会话取数。
+    (function () {
+      var consoleOrigin = 'https://mindbridge-console.pages.dev';
+      var key = new URLSearchParams(location.hash.slice(1)).get('key')
+        || new URLSearchParams(location.search).get('orgKey')
+        || new URLSearchParams(location.search).get('key');
+      var target = new URL('/', consoleOrigin);
+      if (key) target.searchParams.set('orgKey', key);
+      location.replace(target.href);
+    })();
+  </script>
+</head>
+<body>
+  <p>正在打开管理后台…</p>
+</body>
+</html>

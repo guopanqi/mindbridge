@@ -1,4 +1,4 @@
--- 清除全部演示数据。真实数据（data_origin='live'）不受影响。
+-- 清除全部模拟数据。真实数据（data_origin='live'）不受影响。
 DELETE FROM post_reactions WHERE data_origin = 'demo_seed';
 DELETE FROM post_replies WHERE data_origin = 'demo_seed';
 DELETE FROM posts WHERE data_origin = 'demo_seed';

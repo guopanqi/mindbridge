@@ -3,7 +3,7 @@ import { buildInstructions, PROMPT_VERSION } from './instructions.js';
 import { applyStatePatch, validateDecision } from './model-contract.js';
 import { executeTool } from './tools.js';
 
-export async function runConversationHarness({ env, gateway, userState, recentMessages, currentMessage, channel = 'h5', profileContext = 'none', now = Date.now(), clock = () => Date.now() }) {
+export async function runConversationHarness({ env, gateway, userState, recentMessages, currentMessage, channel = 'h5', profileContext = 'none', organizationId = null, now = Date.now(), clock = () => Date.now() }) {
   // 首次调用、契约重试和工具后的措辞调用共享预算，不为每次调用重置计时。
   const deadlineAt = clock() + 8_000;
   const requestId = `mdl_${crypto.randomUUID().replace(/-/g, '')}`;
@@ -33,7 +33,7 @@ export async function runConversationHarness({ env, gateway, userState, recentMe
       && !/其他|别的|换/.test(currentMessage);
     const toolResult = await executeTool(env, decision.toolCall, {
       emotion: decision.statePatch.setEmotion, level: decision.supportAssessment.level,
-      explicitRequest, excludeIds: repeatNamed ? [] : userState?.recentRecommendations || [],
+      explicitRequest, excludeIds: repeatNamed ? [] : userState?.recentRecommendations || [], organizationId,
     });
     activity = toolResult.activities?.[0] || null;
     if (explicitRequest || !activity) {

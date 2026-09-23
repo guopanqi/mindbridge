@@ -36,6 +36,11 @@ export const api = {
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ code }),
   }),
+  signInWithOrgKey: (token) => request('/api/auth/org', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ token }),
+  }),
   signInAsDemo: (name, password) => request('/api/auth/demo', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },

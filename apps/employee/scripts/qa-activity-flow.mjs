@@ -256,10 +256,10 @@ try {
     await enter();
     assert.equal(await page.getByRole('button', { name: '继续活动', exact: true }).count(), 1);
     await page.getByRole('button', { name: '安排疗愈师', exact: true }).click();
-    await page.locator('.support-summary-label').getByText('等待接单', { exact: true }).waitFor();
+    await page.locator('.support-summary-label').getByText('等待响应', { exact: true }).waitFor();
     await page.reload();
     await enter();
-    assert.equal(await page.locator('.support-summary-label').textContent(), '等待接单', '页面重进保持已提交');
+    assert.equal(await page.locator('.support-summary-label').textContent(), '等待响应', '页面重进保持已提交');
     assert.equal(await page.locator('.consent button').count(), 0, '已有预约只展示状态，不保留选择按钮');
     await page.setViewportSize({ width: 320, height: 568 });
     await page.screenshot({ path: join(screenshots, 'support-summary.png'), fullPage: true });
@@ -295,5 +295,5 @@ try {
     await page.close();
   }
   assert.deepEqual(errors, []);
-  console.log(`PASS: 活动播放与结算、失败重试、退出清理；对话卡片提交/响应丢失后确认、刷新恢复、接单/结案/取消与活动状态。截图：${screenshots}`);
+  console.log(`PASS: 活动播放与结算、失败重试、退出清理；对话卡片提交/响应丢失后确认、刷新恢复、受理/结束/取消与活动状态。截图：${screenshots}`);
 } finally { await browser.close(); server.close(); }

@@ -11,6 +11,13 @@ export async function onRequestGet({ request, env }) {
       displayName: staff.displayName,
       credential: staff.credential,
       roles: staff.roles,
+      organization: staff.organizationId
+        ? {
+          id: staff.organizationId,
+          name: staff.organizationName,
+          kind: staff.organizationKind || 'enterprise',
+        }
+        : null,
     });
   } catch (error) {
     if (error?.code === 'STAFF_SESSION_REQUIRED') return json({ ok: true, authenticated: false }, 401);

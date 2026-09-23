@@ -104,14 +104,14 @@ test('呼吸是180秒一段加一道收尾提问；媒体和选择内容均可�
   assert.ok(questions.stages.every(stage => stage.type === 'choice'));
 });
 
-test('可拓展媒体配置必须有安全的真实地址或完整演示时间线', () => {
+test('可拓展媒体配置必须有安全的真实地址或完整模拟时间线', () => {
   const media = { type: 'media', title: '测试视频', presentation: 'video', src: '/media/demo.mp4' };
   validateActivity({ ...sample, stages: [media] });
   validateActivity({ ...sample, stages: [{ ...media, src: 'https://media.example/demo.mp4' }] });
   for (const src of ['javascript:alert(1)', '//other.example/demo.mp4', '/\\other.example/video.mp4']) {
     assert.throws(() => validateActivity({ ...sample, stages: [{ ...media, src }] }));
   }
-  const demo = { type: 'media', title: '演示', presentation: 'audio' };
+  const demo = { type: 'media', title: '模拟', presentation: 'audio' };
   assert.throws(() => validateActivity({ ...sample, stages: [demo] }));
   validateActivity({ ...sample, stages: [{ ...demo, segments: [{ title: '开始', seconds: 3 }] }] });
 });

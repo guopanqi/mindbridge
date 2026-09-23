@@ -38,11 +38,14 @@ async function listCases(env) {
     `SELECT a.id, a.case_code, a.conversation_id, a.risk_level, a.status, a.share_context, a.note_cipher,
             a.content_key_version, a.created_at, a.claimed_by, a.claimed_at, a.closed_at,
             a.work_profile_json, a.tags_json, a.response_minutes, a.log_json, a.sla_at,
+            a.organization_id, o.display_name AS org_name,
             (SELECT COUNT(*) FROM case_notes n WHERE n.appointment_id = a.id) AS note_count,
             (SELECT CASE WHEN status IN ('pending','approved') AND expires_at <= ? THEN 'expired'
               WHEN EXISTS (SELECT 1 FROM consent_grants g WHERE g.anon_id=c.anon_id AND g.scope='share_context_with_healer' AND g.revoked_at>=COALESCE(c.decided_at,c.created_at)) THEN 'revoked'
               ELSE status END FROM context_requests c WHERE c.appointment_id = a.id ORDER BY created_at DESC LIMIT 1) AS context_status
-     FROM appointments a WHERE a.status != 'cancelled' ORDER BY a.created_at DESC LIMIT 50`
+     FROM appointments a LEFT JOIN organizations o ON o.id = a.organization_id
+     WHERE a.status != 'cancelled' AND a.risk_level = 'red'
+     ORDER BY a.created_at DESC LIMIT 50`
   ).bind(Date.now()).all();
   const cases = [];
   for (const row of results || []) {
@@ -63,8 +66,8 @@ async function listCases(env) {
     if (row.log_json) {
       try { log = JSON.parse(row.log_json); } catch {}
     } else {
-      log = [`${formatTime(row.created_at)} 员工已授权转接`];
-      if (row.claimed_at) log.push(`${formatTime(row.claimed_at)} 疗愈师已接单`);
+      log = [`${formatTime(row.created_at)} 员工已提交支持请求`];
+      if (row.claimed_at) log.push(`${formatTime(row.claimed_at)} 已受理 · 处理中`);
       if (row.closed_at) log.push(`${formatTime(row.closed_at)} 完成首次会谈 · 已安排后续疗愈`);
     }
 
@@ -93,6 +96,8 @@ async function listCases(env) {
       textSnippets,
       claimed: Boolean(row.claimed_by),
       claimedBy: row.claimed_by,
+      organizationId: row.organization_id || null,
+      organizationName: row.org_name || null,
       noteFromEmployee: note,
       noteCount: row.note_count,
       contextStatus,
@@ -147,7 +152,7 @@ export async function onRequestPost({ request, env }) {
         return json({ ok: false, reasonCode: 'CASE_ALREADY_CLAIMED' }, 409);
       }
       const newStatus = action === 'start' ? 'active' : 'claimed';
-      const actionMsg = action === 'start' ? `${timeStr} 疗愈师已开始联系` : `${timeStr} 疗愈师已接单`;
+      const actionMsg = action === 'start' ? `${timeStr} 疗愈师已开始跟进` : `${timeStr} 疗愈师已受理 · 处理中`;
       logs.push(actionMsg);
       const result = await env.CARE_DB.prepare("UPDATE appointments SET status = ?, claimed_by = ?, claimed_at = COALESCE(claimed_at, ?), log_json = ?, updated_at = ? WHERE id = ? AND status IN ('requested','claimed','active') AND (claimed_by IS NULL OR claimed_by = ?)")
           .bind(newStatus, staffId, now, JSON.stringify(logs), now, appointment.id, staffId).run();
@@ -157,7 +162,7 @@ export async function onRequestPost({ request, env }) {
 
     if (action === 'close') {
       const respMinutes = Math.max(1, Math.round((now - appointment.created_at) / 60000));
-      logs.push(`${timeStr} 疗愈师标记个案闭环`);
+      logs.push(`${timeStr} 本次支持已结束`);
       const result = await env.CARE_DB.prepare(
         "UPDATE appointments SET status = 'done', closed_at = ?, response_minutes = ?, log_json = ?, updated_at = ? WHERE id = ? AND status IN ('claimed','active') AND claimed_by = ?"
       ).bind(now, respMinutes, JSON.stringify(logs), now, appointment.id, staffId).run();

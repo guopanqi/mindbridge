@@ -1,13 +1,14 @@
 import { api, ApiError, getSession } from './api.js';
 import { BUILD_ID } from './build-id.js';
 import { $, closeSheet, reducedMotion } from './dom.js';
-import { clearChat, focusComposer, loadChat, renderChat } from './views/chat.js';
+import { focusComposer, loadChat, renderChat } from './views/chat.js';
 import { loadWall, renderWall } from './views/wall.js';
 import { loadActivities, renderActivities } from './views/activities.js';
 import { loadMe, renderMe, privacySheet, setPrivacyEntryChannel } from './views/me.js';
 import { askContext } from './views/context-prompt.js';
 import { openActivity } from './views/activity.js';
 import { clearCache, refresh } from './store.js';
+import { bareEntryCode } from './entry-mode.js';
 
 const MIN_BOOT_MS = 1200;
 const AUTH_TIMEOUT_MS = 12_000;
@@ -22,6 +23,7 @@ const FAILURE_TEXT = {
   APP_CONFIGURATION_MISSING: '应用配置不完整，请联系管理员。',
   INVITE_INVALID: '邀请链接无效或已失效，请联系邀请人。',
   INVITE_FULL: '本次邀请名额已满，请联系邀请人。',
+  INVITE_REQUIRED: '请使用邀请链接进入。链接失效或打不开时，请联系邀请人。',
 };
 
 let booting = false;
@@ -111,7 +113,7 @@ async function showView(view) {
       if (view === 'chat') { renderChat($('#view-chat')); await loadChat(); focusComposer(); return; }
       if (view === 'wall') { renderWall($('#view-wall')); await loadWall(); return; }
       if (view === 'activities') { renderActivities($('#view-activities')); await loadActivities(); return; }
-      renderMe($('#view-me'), { onClearChat: clearChat });
+      renderMe($('#view-me'));
       await loadMe();
       return;
     }
@@ -150,7 +152,7 @@ export async function boot({ reason } = {}) {
       pendingInvite = inviteToken;
       url.searchParams.delete('invite');
       window.history.replaceState(null, '', url.toString());
-      $('#boot-detail').textContent = '正在加入公开测试组织。产品团队会按匿名代号分析使用记录；进入后可查看完整隐私说明。';
+      $('#boot-detail').textContent = '正在加入公开测试组织。同一浏览器可在多个组织各记一个匿名身份，用原邀请链接可回到原组织；产品团队会按匿名代号分析使用记录，进入后可查看完整隐私说明。';
       document.querySelector('#boot-steps [data-step="verify"]').lastChild.textContent = '确认测试组织邀请';
       document.querySelector('#boot-steps [data-step="strip"]').lastChild.textContent = '不收集姓名或微信身份';
       await api.authenticateInvite(inviteToken);
@@ -162,13 +164,24 @@ export async function boot({ reason } = {}) {
     }
 
     let session = await getSession();
-    // 正常入口不能沿用此前的评审身份；清掉后继续执行原有钉钉免登。
+    // 正常入口不能沿用此前的体验身份；清掉后继续执行原有钉钉免登。
     if (!reviewRequested && !inviteToken && session.authenticated && session.review) {
       await api.signOut();
       session = { authenticated: false, review: false };
     }
     const alive = session.authenticated;
     if (!alive) {
+      const blocked = bareEntryCode(navigator.userAgent);
+      if (blocked) {
+        $('#boot-detail').textContent = '这个入口需要邀请链接。';
+        const verify = document.querySelector('#boot-steps [data-step="verify"]');
+        const strip = document.querySelector('#boot-steps [data-step="strip"]');
+        const anon = document.querySelector('#boot-steps [data-step="anon"]');
+        if (verify?.lastChild) verify.lastChild.textContent = '打开邀请人发给你的链接';
+        if (strip?.lastChild) strip.lastChild.textContent = '不需要钉钉或微信授权';
+        if (anon?.lastChild) anon.lastChild.textContent = '进入后只使用随机代号';
+        throw new ApiError(blocked);
+      }
       await establishSession();
       session = await getSession();
       const elapsed = Date.now() - startedAt;

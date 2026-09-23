@@ -1,6 +1,6 @@
 import { json } from '../_lib/http.js';
-import { ensureProfile, handleError, readJson, requireSession } from '../_lib/care.js';
-import { clearConversation, handleInbound, loadMessages } from '../_lib/conversation/service.js';
+import { ApiError, ensureProfile, handleError, readJson, requireSession } from '../_lib/care.js';
+import { handleInbound, loadMessages } from '../_lib/conversation/service.js';
 import { hydrateCards } from '../_lib/conversation/card-state.js';
 
 export async function onRequestGet({ request, env }) {
@@ -24,7 +24,8 @@ export async function onRequestPost({ request, env }) {
 
 export async function onRequestDelete({ request, env }) {
   try {
-    const { anonId } = await requireSession(request, env);
-    return json(await clearConversation(env, anonId));
+    await requireSession(request, env);
+    // 内测要保留倾诉记录，界面上不再提供清空；直接调用接口同样拒绝。
+    throw new ApiError('CLEAR_DISABLED', 403, '内测期间不能清空倾诉记录');
   } catch (error) { return handleError(error, 'chat_clear_failed'); }
 }

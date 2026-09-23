@@ -1,12 +1,15 @@
 # MindBridge 管理后台（console）
 
-工作人员实名入口。与员工端 `mindbridge-app` **分处两个 Cloudflare Pages 项目、两个 origin**，
+> 组织、入口与地址的唯一说明在 `docs/组织-入口-地址.md`，这里不重复。本端只讲角色、边界、部署与验证。
+
+工作人员实名入口。与员工端（Pages 项目 `mindbridge-app`，对外地址 `https://mindbridge-beta.pages.dev/`）**分处两个 Cloudflare Pages 项目、两个 origin**，
 两端的会话 Cookie 互不可见。
 
 | 入口 | 到哪 | 身份 |
 | --- | --- | --- |
 | 钉钉工作台点 MindBridge | 员工端树洞 | 匿名 `anon_id` |
-| oa.dingtalk.com → 应用管理 | 本项目 | 实名 `staff_id`，带角色与审计 |
+| oa.dingtalk.com → 应用管理 | 本项目（企业组织） | 实名 `staff_id`，会话绑定企业组织 |
+| 公开组织管理链接 `/?orgKey=...` | 本项目（公开组织） | 实名 `staff_id`，会话绑定该公开组织 |
 
 同一个人从两个入口进来是两个独立主体。业务系统里没有任何代码路径把它们关联起来
 （identity relay 与 staff 库分处两个数据库、两把密钥，且没有任何接口做这种连接）。
@@ -15,9 +18,11 @@
 
 | 角色 | 看得到 | 授予方式 |
 | --- | --- | --- |
-| `admin` | 审计记录、生成疗愈师邀请码 | 钉钉管理后台免登后自动获得 |
+| `admin` | 审计记录、生成疗愈师邀请码；配置干预阶梯 | 钉钉管理后台免登后自动获得；公开组织管理链接也会授予（审计台对企业会话开放） |
 | `hr_viewer` | 员工关怀看板（仅聚合） | 路演阶段随 admin 一并授予 |
 | `healer` | 匿名个案台 | 管理员生成一次性邀请码 |
+
+公开组织管理链接进入后角色同样是 `admin,hr_viewer`，但会话绑定该组织：看板与配置只读本组织，不开放企业审计台与钉钉办公数据感知。
 
 疗愈师通常不在客户的钉钉组织内，因此走邀请码登录；存储仍落在 staff 库，共用 `staff_id` 与审计，
 不额外维护第二套身份体系。
@@ -32,6 +37,7 @@
 - 疗愈师默认只看到匿名个案编号、风险级别和员工主动填写的说明。**查看对话原文必须由员工本人
   在员工端同意**，服务端硬拒绝未授权的读取，且每次查看（含被拒绝的尝试）都写审计。
 - 审计条目只记录报表名或匿名个案编号，不含员工原文，也不含 `anon_id`。
+- 公开/临时（beta）组织与企业报表完全隔离：其聊天、广场、活动和研究事件不得进入企业 HR 报表；疗愈师个案需核对来源组织。详见 `docs/组织-入口-地址.md`。
 - `SSOSecret` 敏感级别等同 AppSecret，泄漏即可伪造管理员身份；只走 Pages Secret。
 - SSO `code` 一次性，服务端记录已用 code 的摘要防重放；换取会话后前端立即从地址栏抹掉。
 
@@ -47,7 +53,7 @@ npm run deploy
 curl -s https://mindbridge-console.pages.dev/api/health
 ```
 
-`INTERNAL_SERVICE_TOKEN` 必须与 `mindbridge-app` 侧完全一致。
+`INTERNAL_SERVICE_TOKEN` 必须与员工端一侧完全一致。
 `/api/health` 会同时确认 `careBindingAbsent: true`。
 
 **注意**：Pages Secret 写入后不会作用于已存在的部署，必须再 `npm run deploy` 一次才生效。

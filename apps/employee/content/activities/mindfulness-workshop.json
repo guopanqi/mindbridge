@@ -1,11 +1,11 @@
 {
   "id": "mindfulness-workshop",
-  "contentVersion": 1,
+  "contentVersion": 2,
   "title": "午间正念工作坊",
   "description": "疗愈师带领的 8 人小组，不用自我介绍，也不用聊工作，来闭着眼睛坐一小时就行。",
   "kind": "offline",
   "level": "L2",
-  "available": true,
+  "available": false,
   "form": "线下小组",
   "duration": "60 分钟",
   "scoreLabel": "紧绷感",

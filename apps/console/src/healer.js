@@ -67,8 +67,8 @@ async function boot() {
     try {
       await api.signInAsDemo('李佳', '');
     } catch (error) {
-      showGate('评审入口无法打开',
-        error instanceof ApiError && error.userMessage ? error.userMessage : '演示登录没有完成。',
+      showGate('入口已停用',
+        error instanceof ApiError && error.userMessage ? error.userMessage : '内测体验登录没有完成。',
         error instanceof ApiError ? error.code : null);
       return;
     }
@@ -86,7 +86,7 @@ async function boot() {
   showGate('疗愈师工作台', '请使用企业管理员提供的入口链接打开本页面。链接等同于登录凭证，请不要转发。', null);
 }
 
-// 演示登录：预置账号「李佳」，密码不校验。真实上线时这条路径可以用 DEMO_LOGIN=off 关掉。
+// 内测体验登录：预置账号「李佳」，密码不校验。真实上线时这条路径可以用 DEMO_LOGIN=off 关掉。
 async function signInWithName() {
   const name = $('#signin-name').value.trim();
   if (!name) return toast('请填写姓名。');

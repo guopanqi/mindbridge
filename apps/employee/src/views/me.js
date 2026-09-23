@@ -18,7 +18,6 @@ let state = { contextTag: 'none' };
 let data = {
   resources: [], retentionDays: 180, appointments: [], consents: [], authorizations: [],
 };
-let onClearChat = async () => {};
 let hydrated = false;
 let entryChannel = 'dingtalk';
 
@@ -53,7 +52,7 @@ function contextPicker(reload) {
           await api.setContext(tag);
           state.contextTag = tag;
           closeSheet();
-          reload();
+          reload(true);
           toast('已更新。这只影响回应的措辞，不会改变风险判定。');
         } catch {
           toast('更新没有成功，请稍后再试。');
@@ -78,7 +77,7 @@ function authorizationPanel(reload) {
           class: 'primary small', text: '同意查看', attrs: { type: 'button' },
           on: {
             click: async () => {
-              try { await api.decideAuthorization(item.id, true); toast('已同意。你随时可以在这里撤销后续请求。'); reload(); }
+              try { await api.decideAuthorization(item.id, true); toast('已同意。你随时可以在这里撤销后续请求。'); reload(true); }
               catch { toast('操作没有成功，请稍后再试。'); }
             },
           },
@@ -87,7 +86,7 @@ function authorizationPanel(reload) {
           class: 'secondary small', text: '不同意', attrs: { type: 'button' },
           on: {
             click: async () => {
-              try { await api.decideAuthorization(item.id, false); toast('已拒绝。'); reload(); }
+              try { await api.decideAuthorization(item.id, false); toast('已拒绝。'); reload(true); }
               catch { toast('操作没有成功，请稍后再试。'); }
             },
           },
@@ -98,8 +97,8 @@ function authorizationPanel(reload) {
 }
 
 const STATUS_LABEL = {
-  requested: '等待接单',
-  claimed: '疗愈师已接单',
+  requested: '等待响应',
+  claimed: '处理中',
   active: '疗愈师正在跟进',
   done: '已结束',
   closed: '已结束',
@@ -123,7 +122,7 @@ function appointmentPanel(reload) {
           on: {
             click: async () => {
               if (!await confirmSheet('取消本次预约？', '已授权的对话查阅权限将一并同步撤销。', { confirmLabel: '取消预约', cancelLabel: '保留' })) return;
-              try { await api.cancelAppointment(item.id); reload(); } catch { toast('取消没有成功。'); }
+              try { await api.cancelAppointment(item.id); reload(true); } catch { toast('取消没有成功。'); }
             },
           },
         }) : null,
@@ -136,9 +135,9 @@ function appointmentPanel(reload) {
           const button = event.currentTarget;
           button.disabled = true;
           try {
-            const result = await api.requestAppointment({ riskLevel: 'yellow', shareContext: false });
+            const result = await api.requestAppointment({ riskLevel: 'red', shareContext: false });
             toast(`已提交，个案编号 ${result.caseCode}。`);
-            reload();
+            reload(true);
           } catch (error) {
             button.disabled = false;
             toast(error instanceof ApiError && error.userMessage ? error.userMessage : '提交没有成功。');
@@ -173,7 +172,7 @@ function consentPanel(reload) {
         try {
           await api.setConsent(item.scope, wanted);
           toast(wanted ? '已授权。' : '已撤销。');
-          reload();
+          reload(true);
         } catch (error) {
           const code = error instanceof ApiError ? error.code : '';
           if (code === 'SERVER_TIMEOUT' || code === 'NETWORK_ERROR') {
@@ -187,7 +186,7 @@ function consentPanel(reload) {
               toast(current && current.granted === wanted
                 ? '网络中断，但这次修改已经生效。'
                 : '网络中断，这次修改没有生效，请重试。');
-              reload();
+              reload(true);
             } catch {
               toast('网络中断，暂时无法确认这次修改是否生效。请稍后回到这里查看当前状态。');
             }
@@ -212,25 +211,58 @@ function privacyNodes() {
   if (entryChannel === 'beta_web') return [
     el('p', { text: '这是邀请制公开测试。我们不要求姓名、手机号或微信授权；同一浏览器用随机代号记录你的使用，清除浏览器数据或换设备后无法找回原身份。邀请链接只证明你持有链接，不核验你是否为该企业员工。' }),
     el('p', { text: '聊天只对你本人显示；同一测试组织的参与者能看到你发布的广场内容。请不要输入本人或他人的姓名、联系方式等可识别信息。' }),
-    el('p', { text: '产品团队可按组织和匿名代号关联聊天、广场、活动与反馈，用于排查问题和改进产品；必要时可按受控权限查看原文。测试组织联系人只接收达到最小样本量的汇总，不会获得个人轨迹或聊天原文。' }),
-    el('p', { text: '倾诉原文默认保留 180 天，之后按批次清理。你可以在「我的」中提前清空聊天。预约疗愈师及分享聊天上下文需要你另行主动操作和授权。' }),
+    el('p', { text: '你的数据始终是匿名的。我们不会获取你的个人信息，但可能会利用你的一些操作来改进产品。' }),
+    el('p', { text: '同一浏览器打开另一家邀请会切换组织，每个组织是独立匿名身份；用原邀请链接可回到原身份，不会多占名额。' }),
+    el('p', { text: '倾诉原文默认保留 180 天，之后按批次清理。预约疗愈师及分享聊天上下文需要你另行主动操作和授权。' }),
     el('p', { class: 'build-id', text: `版本 ${BUILD_ID}` }),
   ];
   return [
     el('p', { text: '你的钉钉姓名与工号不会进入系统。登录仅用于确认在职，在此之后，你全程只代表一个随机的匿名代号。' }),
-    el('p', { text: '聊天仅对你本人显示；同企业成员能看到你发布的广场内容。产品团队可按匿名代号分析使用情况，并在受控权限下排查原文。你可以随时在「我的」中清空聊天。' }),
+    el('p', { text: '聊天仅对你本人显示；同企业成员能看到你发布的广场内容。你的数据始终是匿名的。我们不会获取你的个人信息，但可能会利用你的一些操作来改进产品。' }),
     el('p', { text: '公司与 HR 只能看到达到最小样本量的汇总，看不到个人轨迹和对话原文；若预约心理疗愈师，须经你本人主动同意，对方才能查阅相关内容。倾诉原文默认保留 180 天。' }),
     el('p', { class: 'build-id', text: `版本 ${BUILD_ID}` }),
   ];
 }
 
-export function renderMe(container, options = {}) {
-  root = container;
-  if (options.onClearChat) onClearChat = options.onClearChat;
+function openFeedback() {
+  const box = el('textarea', {
+    attrs: {
+      maxlength: '500',
+      rows: '5',
+      placeholder: '哪里不顺、想改什么，直接写。不必留姓名或联系方式。',
+      'aria-label': '反馈内容',
+    },
+  });
+  const send = el('button', { class: 'primary', text: '提交反馈', attrs: { type: 'button' } });
+  send.addEventListener('click', async () => {
+    const text = box.value.trim();
+    if (!text) {
+      toast('先写一点再提交。');
+      return;
+    }
+    send.disabled = true;
+    try {
+      await api.submitSuggestion(text);
+      closeSheet();
+      toast('已收到，谢谢。');
+    } catch (error) {
+      send.disabled = false;
+      toast(error instanceof ApiError && error.userMessage ? error.userMessage : '提交没有成功，请稍后再试。');
+    }
+  });
+  openSheet('反馈建议', [
+    el('p', { text: '写给产品团队。我们看不到你的姓名，只会用来改进产品。' }),
+    box,
+    send,
+  ]);
 }
 
-export async function loadMe() {
-  const reload = () => void loadMe();
+export function renderMe(container) {
+  root = container;
+}
+
+export async function loadMe(force = false) {
+  const reload = (mutated = false) => void loadMe(mutated);
   // 有缓存就先画出来，网络回来再重画一次；不要让人对着空白等一个来回。
   const snapshot = cached();
   if (snapshot) {
@@ -239,7 +271,7 @@ export async function loadMe() {
   }
   if (hydrated) paint(reload);
   try {
-    apply(await refresh());
+    apply(await refresh(force));
     hydrated = true;
   } catch (error) {
     if (error instanceof ApiError && error.code === 'SESSION_REQUIRED') throw error;
@@ -272,23 +304,16 @@ function paint(reload) {
     appointmentPanel(reload),
     consentPanel(reload),
     el('section', { class: 'panel' }, [
-      el('h2', { text: '你的数据' }),
-      el('p', { class: 'panel-sub', text: `倾诉原文默认保留 ${body.retentionDays} 天，到期自动删除。你也可以随时在这里全部清空。` }),
+      el('h2', { text: '反馈建议' }),
+      el('p', { class: 'panel-sub', text: '使用中有哪里不顺、想加什么，都可以写在这里。' }),
       el('button', {
-        class: 'secondary', text: '清空我的倾诉记录', attrs: { type: 'button' },
-        on: {
-          click: async () => {
-            if (!await confirmSheet('清空我的倾诉记录？', '清空后无法恢复。预约和授权不会被一起删除，可以在上面单独取消。', { confirmLabel: '清空' })) return;
-            try {
-              await onClearChat();
-              toast('已清空。');
-              reload();
-            } catch {
-              toast('清空没有成功，请稍后再试。');
-            }
-          },
-        },
+        class: 'secondary', text: '写一条反馈', attrs: { type: 'button' },
+        on: { click: () => openFeedback() },
       }),
+    ]),
+    el('section', { class: 'panel' }, [
+      el('h2', { text: '你的数据' }),
+      el('p', { class: 'panel-sub', text: `倾诉原文默认保留 ${body.retentionDays} 天，到期自动删除。你的数据始终是匿名的。` }),
       el('button', {
         class: 'ghost wide', text: '查看数据与隐私说明', attrs: { type: 'button' },
         on: { click: () => openSheet('关于你的隐私与数据', privacyNodes()) },

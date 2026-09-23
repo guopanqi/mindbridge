@@ -4,7 +4,7 @@ export async function readConsentCard(env, anonId, messageId) {
   const row = await env.CARE_DB.prepare("SELECT id, conversation_id, body_cipher, content_key_version FROM messages WHERE id=? AND anon_id=? AND role='consent'").bind(messageId, anonId).first();
   if (!row) throw new ApiError('CARD_NOT_FOUND', 404, '这张卡片不存在，请刷新对话。');
   const card = JSON.parse(await openBody(env, row.body_cipher, row.content_key_version, `care:message:${row.conversation_id}`));
-  if (!card?.actions?.some(action => action.action === 'request_appointment')) throw new ApiError('CARD_ACTION_INVALID', 400, '这张卡片不支持转接。');
+  if (!card?.actions?.some(action => action.action === 'request_appointment')) throw new ApiError('CARD_ACTION_INVALID', 400, '这张卡片不支持预约。');
   return { row, card };
 }
 

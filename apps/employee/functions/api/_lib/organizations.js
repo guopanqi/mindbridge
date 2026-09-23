@@ -2,6 +2,15 @@ export function enterpriseOrganizationId(env) {
   return env.DINGTALK_ORG_ID || 'org_enterprise_primary';
 }
 
+export async function ensureEnterpriseOrganization(env) {
+  const organizationId = enterpriseOrganizationId(env);
+  const now = Date.now();
+  await env.CARE_DB.prepare(
+    "INSERT INTO organizations (id, display_name, kind, status, created_at, updated_at) VALUES (?, ?, 'enterprise', 'active', ?, ?) ON CONFLICT(id) DO NOTHING"
+  ).bind(organizationId, '钉钉企业组织', now, now).run();
+  return organizationId;
+}
+
 export async function ensureEnterpriseSubject(env, anonId) {
   const organizationId = enterpriseOrganizationId(env);
   const now = Date.now();

@@ -55,6 +55,12 @@ function plan(now) {
       binds: [now - 86400000, BATCH],
     },
     {
+      table: 'beta_admin_sessions',
+      reason: '过期公开组织管理会话',
+      sql: 'DELETE FROM beta_admin_sessions WHERE session_digest IN (SELECT session_digest FROM beta_admin_sessions WHERE expires_at < ? LIMIT ?)',
+      binds: [now - 86400000, BATCH],
+    },
+    {
       table: 'follow_ups',
       reason: '早已到期且从未被读到的回访',
       sql: "DELETE FROM follow_ups WHERE id IN (SELECT id FROM follow_ups WHERE state = 'scheduled' AND due_at < ? LIMIT ?)",
@@ -70,6 +76,12 @@ function plan(now) {
       table: 'experience_feedback',
       reason: '逐人体验反馈超过 180 天',
       sql: 'DELETE FROM experience_feedback WHERE id IN (SELECT id FROM experience_feedback WHERE offered_at < ? LIMIT ?)',
+      binds: [now - 180 * 86400000, BATCH],
+    },
+    {
+      table: 'suggestions',
+      reason: '产品建议超过 180 天',
+      sql: 'DELETE FROM suggestions WHERE id IN (SELECT id FROM suggestions WHERE created_at < ? LIMIT ?)',
       binds: [now - 180 * 86400000, BATCH],
     },
   ];

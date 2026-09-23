@@ -1,4 +1,4 @@
--- 演示租户档案。headcount 是模拟基线人数，UI 必须持续标注它是模拟值。
+-- 模拟租户档案。headcount 是模拟基线人数，UI 必须持续标注它是模拟值。
 CREATE TABLE IF NOT EXISTS tenant_profile (
   id TEXT PRIMARY KEY,
   display_name TEXT NOT NULL,

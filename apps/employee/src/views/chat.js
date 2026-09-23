@@ -104,11 +104,11 @@ function consentCard(card, messageId) {
   if (!card) return null;
   const status = card.support?.status;
   const submitted = ['requested', 'claimed', 'active', 'closed', 'done', 'cancelled', 'unavailable'].includes(status);
-  const statusLabel = ({ requested: '已提交 · 等待接单', claimed: '疗愈师已接单', active: '正在跟进', closed: '本次服务已结束', done: '本次服务已结束', cancelled: '本次预约已取消', unavailable: '预约记录不可用' })[status];
+  const statusLabel = ({ requested: '已提交 · 等待响应', claimed: '处理中', active: '正在跟进', closed: '本次支持已结束', done: '本次支持已结束', cancelled: '本次预约已取消', unavailable: '预约记录不可用' })[status];
   if (submitted) return el('div', { class: `card consent${card.tone === 'urgent' ? ' urgent' : ''}` }, [
     el('p', { class: 'card-title', text: '专业支持预约' }),
     el('div', { class: 'support-summary', attrs: { role: 'status' } }, [
-      el('p', { class: 'support-summary-label', text: status === 'requested' ? '等待接单' : statusLabel }),
+      el('p', { class: 'support-summary-label', text: status === 'requested' ? '等待响应' : statusLabel }),
       card.support.caseCode ? el('p', { class: 'support-summary-code', text: `个案编号 ${card.support.caseCode}` }) : null,
     ]),
     el('p', { class: 'card-desc', text: '可在「我的」查看预约详情。' }),
@@ -159,7 +159,7 @@ function privacyNote() {
   lastStampAt = 0; // 每次重画对话流都从头算时间戳间隔
   return el('div', { class: 'privacy-note', attrs: { 'aria-label': '隐私说明' } }, [
     el('i', { class: 'dot', attrs: { 'aria-hidden': 'true' } }),
-    el('p', { class: 't', html: '你在这里说的每一句话，都属于隐私。<span>真实身份与心理服务数据隔离，你可以随时清空本次对话。</span>' }),
+    el('p', { class: 't', html: '你在这里说的每一句话，都属于隐私。<span>真实身份与心理服务数据隔离。你的数据始终是匿名的。</span>' }),
   ]);
 }
 
@@ -375,13 +375,6 @@ export async function loadChat() {
     if (error instanceof ApiError && error.code === 'SESSION_REQUIRED') throw error;
     toast('历史记录暂时读不出来，你仍然可以继续说。');
   }
-}
-
-export async function clearChat() {
-  await api.clearChat();
-  clear(stream);
-  stream.append(privacyNote());
-  append([{ role: 'assistant', text: '记录已清空。想从头说起也可以，我在。' }]);
 }
 
 export function focusComposer() {

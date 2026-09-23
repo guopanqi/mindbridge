@@ -1,4 +1,4 @@
-// 活动目录逐行取自 prototype/mindbridge-prototype.html，作为演示活动的出厂内容。
+// 活动目录逐行取自 路演/原型/mindbridge-prototype.html，作为内测活动的出厂内容。
 // 引导文案属于内容资产，不要用模型生成内容覆盖。
 
 export const ACTIVITIES={

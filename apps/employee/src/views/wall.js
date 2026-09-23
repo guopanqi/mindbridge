@@ -5,14 +5,23 @@ let feed;
 let posts = null;
 let composer;
 const expanded = new Set();
+// 回复框在刷新时会整体重渲染（先画缓存、网络回来再画一次；切走再回来也一样）。
+// 不留草稿的话，正在输入的字会被静默清空，点发送等于没点。按帖子记住未发出的字。
+const drafts = new Map();
 
 function replyBox(post, onDone) {
   const input = el('input', { attrs: { type: 'text', maxlength: 200, placeholder: '回一句温暖的话…', 'aria-label': '回复内容' } });
+  input.value = drafts.get(post.id) || '';
+  input.addEventListener('input', () => {
+    if (input.value) drafts.set(post.id, input.value);
+    else drafts.delete(post.id);
+  });
   const submit = async () => {
     const text = input.value.trim();
     if (!text) return;
     try {
       await api.reply(post.id, text);
+      drafts.delete(post.id);
       input.value = '';
       onDone();
     } catch (error) {

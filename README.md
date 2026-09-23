@@ -11,16 +11,15 @@
 
 | 目录 | 是什么 | 部署到 |
 |---|---|---|
-| `apps/employee/` | 员工端 H5 + Care Domain API | Cloudflare Pages `mindbridge-app` |
+| `apps/employee/` | 员工端 H5 + Care Domain API | Cloudflare Pages `mindbridge-app`，对外地址 `mindbridge-beta.pages.dev` |
+| `apps/beta-host/` | 新地址的转发层，不另存数据 | Cloudflare Pages `mindbridge-beta` |
 | `apps/console/` | HR 看板 + 疗愈师个案台 | Cloudflare Pages `mindbridge-console` |
 | `apps/bot-stream/` | 钉钉 Stream 私聊接收器，共用员工端对话服务 | 常驻 Node 进程 |
-| `prototype/` | **交互原型**，只读参考，不是产品 | Pages `mindbridge-demo` |
-| `docs/` | 技术债台账、路演需求、产品方案、比赛材料 | — |
+| `docs/` | 当前架构、内测操作与研究数据字典 | — |
+| `路演/` | 比赛与路演材料：PPT、视频、原型、赛题。不参与产品发布 | — |
 | `assets/` | 截图与图标 | — |
-| `archive/`、`PPT/` | 历史产物，只进不出 | — |
 
-`prototype/mindbridge-prototype.html` 是只读交互原型。活动内容现在由 `apps/employee/content/activities/*.json`
-维护，经校验与幂等导入写入 D1；不再通过修改原型或生成脚本来维护活动。
+员工端现在对外用 `https://mindbridge-beta.pages.dev/`。旧地址 `https://mindbridge-app-8j6.pages.dev/` 在内部测试结束前继续开着。活动内容由 `apps/employee/content/activities/*.json` 维护，经校验后导入 D1。路演原型在 `路演/原型/`，里面的数据是写死的，不作为产品数据来源。
 
 ## 架构边界（不可破坏）
 
@@ -71,7 +70,7 @@ npm run dev:employee     # 构建并启动本地 8788，另开终端
 发布明确使用生产分支 `main`，会包含当前工作区未提交的应用改动；两端发布不是原子事务，失败即停止，不自动回滚已成功的一端。
 脚本按 Cloudflare Pages 的 Direct Upload 流程构建后发布 Functions 和静态资源，随后核对生产地址的健康状态及 HTML/JS/CSS 内容。
 数据库迁移、种子数据、活动内容导入均不会自动执行；它们仍需单独明确操作，避免普通部署意外改数据。
-原型发布继续使用 `bash scripts/deploy-prototype.sh`，不包含在 `deploy:all` 中。
+路演原型发布继续使用 `bash scripts/deploy-prototype.sh`，不包含在 `deploy:all` 中。
 
 ```bash
 cd apps/employee && npm install && npm run check     # 构建 + 29 项单测
@@ -88,28 +87,19 @@ cd apps/console && npx wrangler pages dev public --port 8789
 本地无法走钉钉免登。验证员工端时，直接往本地 care 库 `sessions` 表插一行，
 再在浏览器里设同名 Cookie。详见各项目 README。
 
-## 进度
-
-| 阶段 | 状态 |
-|---|---|
-| Stage 1 钉钉真实免登与匿名身份 | 已完成，生产验证 |
-| Stage 2 员工端闭环（树洞 / 广场 / 资源库 / 活动 / 预约 / 授权） | 已完成 |
-| Stage 3 HR 看板 + 演示数据体系 | 已完成 |
-| Stage 4 疗愈师个案台 + 二次授权 + 审计 | 已完成 |
-| Stage 5 钉钉机器人 + 外部大模型 | H5 模型链路已上线；Stream 已真实连接，双入口收发闭环待验收 |
-
-**验收边界**：0017–0019 迁移及 6 个文字活动已导入远端并部署。人工支持/HR 已通过隔离 D1 + HTTP 回归，
-不等于真实钉钉与疗愈师真机闭环全部通过。详见 `docs/stage5-channels-implementation.md`。
-
 ## 读文档的顺序
 
-1. `docs/mindbridge-app-临时处理与技术债.md` — **先读这个**。所有临时处理、已知缺口、
-   有意的取舍都在这里，且有维护规则约束它不许与代码漂移
-2. `docs/路演需求.md` — 只服务于路演、不进产品主干的需求
-3. `apps/employee/README.md`、`apps/console/README.md` — 各自的配置与验收方式
+1. `docs/README.md` — 当前工程文档索引
+2. `docs/组织-入口-地址.md` — 组织、入口、评审聚合页及相关链接的唯一说明
+3. `docs/公开组织内测执行与测试手册.md` — 创建测试组织及执行内测
+4. `docs/内测组织与研究数据字典.md` — 匿名身份、研究事件与分析口径
+5. 各应用 README — 本地运行、配置与发布
 
-## 两条不要犯的错
+路演和比赛材料不在这条阅读顺序里，见 `路演/README.md`。
 
-- **不要把原型当产品**：`prototype/` 里的数据全是写死的，产品里任何一个数字都必须有真实来源。
+## 关键约束
+
+- **不要把原型当产品**：`路演/原型/` 里的数据全是写死的，产品里任何一个数字都必须有真实来源。
   查不到就显示"未接入 / 样本不足"，绝不显示看起来像真的假数字。
-- **不要跳过技术债台账**：改了某项技术债对应的代码，必须在同一次提交里更新对应条目。
+- 面向组织的业务数据必须按组织范围读写；公开组织没有钉钉办公数据权限。
+- 评审演示数据归属于评审组织，行业对照明确标记为模拟数据，不能混入真实组织指标。

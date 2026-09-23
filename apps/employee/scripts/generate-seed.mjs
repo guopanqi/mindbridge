@@ -1,4 +1,4 @@
-// 生成路演演示数据。所有行都带 data_origin='demo_seed'，可被单独查询与清理。
+// 生成内测模拟基线数据。所有行都带 data_origin='demo_seed'，可被单独查询与清理。
 //
 // 禁止：不得包含真实员工姓名、工号、联系方式或可识别案例；
 // 不得伪造钉钉考勤、病假或聊天接口返回。这里只生成本系统自己会产生的事件。
@@ -9,7 +9,7 @@ const HEADCOUNT = 200;
 const TENANT = { name: '星原科技', industry: '互联网/IT' };
 const ORIGIN = 'demo_seed';
 
-// 确定性随机，保证每次生成的演示数据一致，便于反复彩排。
+// 确定性随机，保证每次生成的模拟数据一致，便于反复验证。
 let state = 20260903;
 function rnd() {
   state = (state * 1664525 + 1013904223) % 4294967296;
@@ -25,8 +25,8 @@ const RESOURCES = [
   ['情绪红绿灯正念工作坊', 'L2'], ['能量唤醒工作坊', 'L2'], ['跨团队疗愈小组', 'L2'],
   ['身份重塑叙事疗愈小组', 'L2'], ['拳力以赴·解压拳击', 'L2'],
 ];
-// 演示用的广场内容：泛化表达，不指向任何真实个人或事件。
-// 演示用广场内容：按议题分组，泛化表达，不指向任何真实个人或事件。
+// 内测模拟用的广场内容：泛化表达，不指向任何真实个人或事件。
+// 内测模拟广场内容：按议题分组，泛化表达，不指向任何真实个人或事件。
 const POST_POOL = {
   '加班强度': [
     '连着两周赶版本，今天终于按时下班了，居然有点不适应。',
@@ -86,7 +86,7 @@ const now = Date.now();
 const startOfDay = (offset) => now - offset * DAY_MS;
 const bucket = (ts) => new Date(ts).toISOString().slice(0, 10);
 
-// 演示部门分布：法务部刻意只有 3 人，用来在部门概览里真实触发最小样本抑制。
+// 模拟部门分布：法务部刻意只有 3 人，用来在部门概览里真实触发最小样本抑制。
 // 每个部门给一个压力偏置与参与倾向，让部门概览真的有差异。
 // bias 为正表示压力更大（打卡分数更高 → 情绪温度更低）。
 const DEPARTMENTS = [
@@ -108,7 +108,7 @@ for (let i = 0; i < CONTEXT_TAGS.length; i++) {
 const deptRoster = [];
 for (const [name, size] of DEPARTMENTS) for (let i = 0; i < size; i++) deptRoster.push(name);
 
-// 演示人群：仅生成本系统内部的匿名主体，不含任何组织身份字段。
+// 模拟人群：仅生成本系统内部的匿名主体，不含任何组织身份字段。
 const people = [];
 const deptOf = {};
 // 只有一部分人真正使用过 MindBridge——覆盖率必须是算出来的，不能是 100%。
@@ -161,11 +161,11 @@ for (let d = DAYS - 1; d >= 0; d--) {
     // 与「个案需本人同意才建立」的实际转化量对不上，看板上像是大量漏接。
     const level = roll > 0.9955 ? 'red' : roll > 0.86 - bias ? 'yellow' : 'green';
     emit(`INSERT INTO aggregate_events (id, event_type, emotion, level, bucket_day, created_at, data_origin) VALUES ('${id('agg')}', 'chat_message', '${esc(emotion)}', '${level}', '${day}', ${at}, '${ORIGIN}');`);
-    // 覆盖率与部门温度以「真的开口说过话的人」为分母，所以演示数据也要落到 messages。
-    // body_cipher 是占位值：演示租户没有真实会话密钥，指标侧也从不解密正文。
+    // 覆盖率与部门温度以「真的开口说过话的人」为分母，所以模拟数据也要落到 messages。
+    // body_cipher 是占位值：模拟租户没有真实会话密钥，指标侧也从不解密正文。
     emit(`INSERT INTO messages (id, conversation_id, anon_id, role, body_cipher, content_key_version, risk_level, created_at, data_origin) VALUES ('${id('msg')}', 'demo_conv', '${anonId}', 'user', 'demo_seed_placeholder', 'demo', '${level}', ${at}, '${ORIGIN}');`);
     if (level !== 'green') {
-      emit(`INSERT INTO risk_events (id, anon_id, conversation_id, level, rule, emotion, engine, created_at, data_origin) VALUES ('${id('risk')}', '${anonId}', NULL, '${level}', '演示数据 · 规则命中', '${esc(emotion)}', 'rules-v1', ${at}, '${ORIGIN}');`);
+      emit(`INSERT INTO risk_events (id, anon_id, conversation_id, level, rule, emotion, engine, created_at, data_origin) VALUES ('${id('risk')}', '${anonId}', NULL, '${level}', '模拟数据 · 规则命中', '${esc(emotion)}', 'rules-v1', ${at}, '${ORIGIN}');`);
       emit(`INSERT INTO aggregate_events (id, event_type, emotion, level, bucket_day, created_at, data_origin) VALUES ('${id('agg')}', 'risk_flagged', '${esc(emotion)}', '${level}', '${day}', ${at}, '${ORIGIN}');`);
     }
     if (rnd() > 0.55 || inPush(d)) {
@@ -186,8 +186,8 @@ for (let d = DAYS - 1; d >= 0; d--) {
   }
 }
 
-// 广场演示帖子以明文存储，content_key_version 标为 'plain'。
-// 这是一个显式豁免：演示文案本身不含任何敏感信息，且必须能被所有演示账号读到。
+// 广场模拟帖子以明文存储，content_key_version 标为 'plain'。
+// 这是一个显式豁免：模拟文案本身不含任何敏感信息，且必须能被所有模拟账号读到。
 // 真实员工帖子永远走加密路径；读取侧只在 data_origin='demo_seed' 时才接受 'plain'。
 const REPLIES = ['我也是，抱抱。', '听起来真的不容易。', '我懂这种感觉。', '谢谢你说出来。', '这两天我也一样。', '要不要一起去楼下走走。'];
 let postSeq = 0;
@@ -216,8 +216,8 @@ for (let d = DAYS - 1; d >= 0; d--) {
   }
 }
 
-// 补充红色个案，使接管率与 SLA 指标自洽：
-// 共 6 例，1 例待响应且仍在 SLA 内（不算漏接），2 例处理中，3 例已闭环。
+// 补充红色个案，使响应率与 SLA 指标自洽：
+// 共 6 例，1 例待响应且仍在 SLA 内（不算遗漏），2 例处理中，3 例已结束。
 const EXTRA_CASES = [
   ['MB-T4R7N2', 'active', '研发中心', 3, null],
   ['MB-Q8V1C5', 'done', '制造中心', 26, 22],
@@ -227,7 +227,7 @@ EXTRA_CASES.forEach(([code, status, dept, hoursAgo, resp], idx) => {
   const at = now - hoursAgo * 3600000;
   const sla = at + 4 * 3600000;
   const closed = resp ? at + resp * 60000 : null;
-  const log = JSON.stringify([`${new Date(at).toTimeString().slice(0, 5)} 员工授权转接，个案建立`]);
+  const log = JSON.stringify([`${new Date(at).toTimeString().slice(0, 5)} 员工已提交支持请求，个案已建立`]);
   emit(`INSERT OR REPLACE INTO appointments (id, case_code, anon_id, conversation_id, risk_level, status, share_context, note_cipher, content_key_version, department, work_profile_json, tags_json, response_minutes, log_json, sla_at, claimed_by, claimed_at, closed_at, created_at, updated_at, data_origin) VALUES ('app_seed_1${idx}', '${code}', '${people[10 + idx]}', NULL, 'red', '${status}', 0, NULL, NULL, '${esc(dept)}', '{}', '[]', ${resp ?? 'NULL'}, '${esc(log)}', ${sla}, 'staff_healer_01', ${at + 240000}, ${closed ?? 'NULL'}, ${at}, ${now}, '${ORIGIN}');`);
 });
 

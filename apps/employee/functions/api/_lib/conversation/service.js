@@ -49,7 +49,7 @@ async function loadConversationMessages(env, conversationId, limit = 20) {
   return out;
 }
 
-async function respondWithHarness(env, { text, conversation, profileContext, now, channel }) {
+async function respondWithHarness(env, { text, conversation, profileContext, now, channel, organizationId }) {
   let harness;
   let revision;
   let loadedState = emptyUserState();
@@ -68,6 +68,7 @@ async function respondWithHarness(env, { text, conversation, profileContext, now
       currentMessage: text,
       channel,
       profileContext,
+      organizationId,
       now,
     });
   } catch (error) {
@@ -186,6 +187,7 @@ export async function handleInbound({ env, anonId, text, channel = 'h5', request
 
     const engineOutput = await respondWithHarness(env, {
       text, conversation, profileContext: profile.context_tag, now, channel,
+      organizationId: session?.organizationId || env.DINGTALK_ORG_ID || null,
     });
     const result = engineOutput.result;
     const userSealed = await sealBody(env, text, aad);

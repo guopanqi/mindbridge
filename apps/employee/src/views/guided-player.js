@@ -2,7 +2,7 @@ import { el } from '../dom.js';
 
 const time = value => `${Math.floor(value / 60)}:${String(Math.floor(value % 60)).padStart(2, '0')}`;
 
-// 本地、静音的演示播放器。分段字幕和时长均来自活动内容；没有外部媒体请求。
+// 本地、静音的模拟播放器。分段字幕和时长均来自活动内容；没有外部媒体请求。
 export function renderGuidedPlayer(stage, { complete, cleanup }) {
   const segments = stage.segments || (stage.parts || []).map(part => ({ title: part.name, hint: part.hint, seconds: part.seconds || 12 }));
   const total = segments.reduce((sum, segment) => sum + segment.seconds, 0);
@@ -22,10 +22,10 @@ export function renderGuidedPlayer(stage, { complete, cleanup }) {
     : el('div', { class: 'demo-wave', attrs: { 'aria-hidden': 'true' } }, Array.from({ length: 21 }, (_, i) => el('i', { style: `--bar:${i % 7};--delay:-${i * .13}s` })));
   const screen = el('div', { class: `demo-screen ${video ? 'video' : 'audio'}` }, [art, title, caption]);
   const root = el('div', { class: 'demo-player' }, [
-    el('p', { class: 'media-label', text: video ? '视频引导 · 演示片段' : '音频引导 · 演示片段' }),
+    el('p', { class: 'media-label', text: video ? '视频引导' : '音频引导' }),
     screen, seek,
     el('div', { class: 'media-controls' }, [toggle, restart, clock]),
-    el('p', { class: 'act-note', text: `本段为 ${time(total)} 的静音演示，跟随字幕即可。` }),
+    el('p', { class: 'act-note', text: `这一段大约 ${time(total)}，跟着字幕做即可。` }),
   ]);
   let elapsed = 0;
   let playing = !document.hidden;

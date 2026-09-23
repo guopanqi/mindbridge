@@ -4,13 +4,18 @@ import { api } from './api.js';
 
 let cache = null;
 let inflight = null;
+let seq = 0;
 
 export const cached = () => cache;
 
-export function refresh() {
+// 写操作成功后必须看一次新数据：直接复用进行中的旧请求会把变更前的快照再画一遍，
+// 新建的预约/授权看起来就像没生效。force 跳过请求去重，且只有最新一次回源才写缓存。
+export function refresh(force = false) {
+  if (force) inflight = null;
   if (!inflight) {
+    const mine = ++seq;
     inflight = api.bootstrap()
-      .then((body) => { cache = body; return body; })
+      .then((body) => { if (mine === seq) cache = body; return body; })
       .finally(() => { inflight = null; });
   }
   return inflight;

@@ -32,6 +32,7 @@ pnpm-debug.log*
 
 # Repository-local disposable work area
 scratch/
+*.tmp.mjs
 
 # 二进制产物不进仓库：已经进去的删不掉，只会让 clone 越来越重。
 # PPT 与文档产物请放在共享盘或 Release，仓库里只留可编辑的源文件（.md/.js）。
@@ -45,3 +46,10 @@ apps/employee/.lab-sessions/
 # 根级工具链依赖（lint / typecheck）
 /node_modules/
 scripts/demo-video/out/
+
+# 路演中间产物：只留源文件（deck脚本/大纲/录制脚本）与当前成品，构建缓存不进仓库
+.ppt-build/
+.codex-ppt-overview/
+.codex-audit/
+路演/视频/out/
+路演/PPT/预览/

@@ -5,7 +5,7 @@ const ACTION_LABEL = {
   sign_in: '登录管理后台',
   view_dashboard: '查看关怀看板',
   view_cases: '查看个案列表',
-  claim_case: '接单个案',
+  claim_case: '受理个案',
   access_denied: '权限不足被拒绝',
 };
 

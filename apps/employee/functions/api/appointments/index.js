@@ -6,9 +6,10 @@ import {
   ApiError, aggregateStatement, ensureProfile, handleError, newId,
   openBody, readJson, requireSession, requireText, sealBody,
 } from '../_lib/care.js';
+import { productEventStatement } from '../_lib/product-events.js';
 
-// 真人服务是稀缺队列，不是可以并发占用的工单池。一个人同一时间只保留
-// 一条未闭环预约；被接单/跟进同样属于未闭环，避免重复占用疗愈师容量。
+// 真人支持需要专注的陪伴时间，一个人同一时间只保留
+// 一条未结束预约；已被受理/跟进同样属于未结束，避免重复占用支持资源。
 const MAX_OPEN = 1;
 const noteAad = (id) => `care:appointment:${id}`;
 
@@ -48,7 +49,8 @@ export async function onRequestGet({ request, env }) {
 
 export async function onRequestPost({ request, env }) {
   try {
-    const { anonId, organizationId } = await requireSession(request, env);
+    const session = await requireSession(request, env);
+    const { anonId, organizationId } = session;
     await ensureProfile(env, anonId);
     const body = await readJson(request);
     const source = body?.messageId ? await readConsentCard(env, anonId, requireText(body.messageId, { min: 1, max: 100, field: 'messageId' })) : null;
@@ -59,13 +61,17 @@ export async function onRequestPost({ request, env }) {
     }
     const shareContext = body?.shareContext === true;
     const note = body?.note ? requireText(body.note, { min: 1, max: 300, field: 'note' }) : null;
-    const riskLevel = ['green', 'yellow', 'red'].includes(body?.riskLevel) ? body.riskLevel : 'yellow';
+    // 疗愈师工作台只接红色专业支持；黄色是自助/二级干预，不应建疗愈师个案。
+    if (body?.riskLevel && body.riskLevel !== 'red') {
+      throw new ApiError('HEALER_RED_ONLY', 400, '疗愈师预约仅用于需要专业支持的情况');
+    }
+    const riskLevel = 'red';
 
     const open = await env.CARE_DB
       .prepare("SELECT COUNT(*) AS n FROM appointments WHERE anon_id = ? AND status IN ('requested','claimed','active')")
       .bind(anonId).first();
     if ((open?.n || 0) >= MAX_OPEN) {
-      throw new ApiError('APPOINTMENT_LIMIT', 429, '你已有一条未结束的预约（即使疗愈师已经接单也一样）。请先等待、取消，或等这次服务结束后再约。');
+      throw new ApiError('APPOINTMENT_LIMIT', 429, '你已有一条正在进行中的预约，请在「我的预约」查看进度，结束或取消后可再次预约。');
     }
 
     const id = newId('apt');
@@ -91,6 +97,10 @@ export async function onRequestPost({ request, env }) {
       ),
       aggregateStatement(env, { eventType: 'appointment_requested', level: riskLevel, at: now, organizationId, ifChanged: true }),
     ];
+    const requested = productEventStatement(env, session, 'appointment_requested', {
+      at: now, objectType: 'appointment', objectId: id, ifChanged: true,
+    });
+    if (requested) statements.push(requested);
     if (shareContext) {
       statements.push(env.CARE_DB.prepare(
         'INSERT INTO consent_grants (id, anon_id, scope, granted_at, data_origin) SELECT ?, ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM appointments WHERE id=?)'
@@ -107,16 +117,24 @@ export async function onRequestPost({ request, env }) {
 
 export async function onRequestDelete({ request, env }) {
   try {
-    const { anonId } = await requireSession(request, env);
+    const session = await requireSession(request, env);
+    const { anonId } = session;
     const id = new URL(request.url).searchParams.get('id');
     if (!id) throw new ApiError('APPOINTMENT_ID_REQUIRED', 400, '缺少预约标识');
     const now = Date.now();
-    const [result] = await env.CARE_DB.batch([
+    const statements = [
       env.CARE_DB.prepare(
-        "UPDATE appointments SET status = 'cancelled', share_context=0, cancelled_at = COALESCE(cancelled_at, ?), updated_at = ? WHERE id = ? AND anon_id = ?"
+        "UPDATE appointments SET status = 'cancelled', share_context=0, cancelled_at = COALESCE(cancelled_at, ?), updated_at = ? WHERE id = ? AND anon_id = ? AND status != 'cancelled'"
       ).bind(now, now, id, anonId),
-      env.CARE_DB.prepare("UPDATE context_requests SET status='revoked', decided_at=? WHERE appointment_id=? AND anon_id=? AND status IN ('pending','approved')").bind(now, id, anonId),
-    ]);
+    ];
+    const cancelled = productEventStatement(env, session, 'appointment_cancelled', {
+      at: now, objectType: 'appointment', objectId: id, ifChanged: true,
+    });
+    if (cancelled) statements.push(cancelled);
+    statements.push(env.CARE_DB.prepare(
+      "UPDATE context_requests SET status='revoked', decided_at=? WHERE appointment_id=? AND anon_id=? AND status IN ('pending','approved')"
+    ).bind(now, id, anonId));
+    const [result] = await env.CARE_DB.batch(statements);
     if (!result.meta?.changes) throw new ApiError('APPOINTMENT_NOT_FOUND', 404, '这条预约不存在');
     return json({ ok: true });
   } catch (error) {

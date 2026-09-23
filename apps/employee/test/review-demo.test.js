@@ -18,7 +18,7 @@ class RecordingDb {
   }
 }
 
-test('评审入口开启时签发独立匿名会话', async () => {
+test('体验通道开启时签发独立匿名会话', async () => {
   const db = new RecordingDb();
   const response = await onRequestPost({ env: { REVIEW_DEMO: 'on', CARE_DB: db } });
   const body = await response.json();
@@ -31,7 +31,7 @@ test('评审入口开启时签发独立匿名会话', async () => {
   assert.match(db.operations[0].params[1], /^mbreview_[a-f0-9]{32}$/);
 });
 
-test('评审入口关闭时不写数据库', async () => {
+test('体验通道关闭时不写数据库', async () => {
   const db = new RecordingDb();
   const response = await onRequestPost({ env: { REVIEW_DEMO: 'off', CARE_DB: db } });
   const body = await response.json();

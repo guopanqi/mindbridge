@@ -7,6 +7,7 @@
 //    经过一次 API 的假数据会被误当成真数据，这比前端写死更危险。
 import { json } from '../_lib/http.js';
 import { MIN_SAMPLE, percentage, riskBand, suppress, suppressSeries } from '../_lib/metrics.js';
+import { enterpriseOrganizationId } from '../_lib/organizations.js';
 
 const DEFAULT_DAYS = 90;
 const MAX_DAYS = 180;
@@ -56,35 +57,27 @@ const deptStatus = (temp) => {
   return { status: '需干预', level: 'r' };
 };
 
-function originClause(origin) {
-  return origin === 'all' ? { sql: '', binds: [] } : { sql: ' AND data_origin = ?', binds: [origin] };
-}
-
 const MEMBER_TABLES = new Set(['mood_checkins', 'messages', 'risk_events', 'resource_events', 'profiles', 'appointments']);
 function scopedSource(table, origin, organizationId) {
   let where = `data_origin='${origin}'`;
-  if (organizationId && origin === 'live') {
-    if (table === 'aggregate_events' || table === 'org_rhythm' || table === 'posts') {
-      where += ` AND organization_id='${organizationId}'`;
-    } else if (MEMBER_TABLES.has(table)) {
-      where += ` AND anon_id IN (SELECT anon_id FROM subject_organizations WHERE organization_id='${organizationId}')`;
-    }
+  if (table === 'aggregate_events' || table === 'org_rhythm' || table === 'posts') {
+    where += ` AND organization_id='${organizationId}'`;
+  } else if (MEMBER_TABLES.has(table)) {
+    where += ` AND anon_id IN (SELECT anon_id FROM subject_organizations WHERE organization_id='${organizationId}')`;
   }
   return `(SELECT * FROM ${table} WHERE ${where})`;
 }
 
-async function summarize(env, since, origin) {
-  const o = originClause(origin);
-  const orgId = origin === 'live' && /^[A-Za-z0-9_-]+$/.test(env.DINGTALK_ORG_ID || '') ? env.DINGTALK_ORG_ID : null;
-  const memberClause = orgId ? ` AND anon_id IN (SELECT anon_id FROM subject_organizations WHERE organization_id='${orgId}')` : '';
-  const aggregateClause = orgId ? ` AND organization_id='${orgId}'` : '';
+async function summarize(env, since, origin, organizationId) {
+  const memberClause = ` AND anon_id IN (SELECT anon_id FROM subject_organizations WHERE organization_id='${organizationId}')`;
+  const aggregateClause = ` AND organization_id='${organizationId}'`;
   const [users, events, risks] = await Promise.all([
-    env.CARE_DB.prepare(`SELECT COUNT(DISTINCT anon_id) AS n FROM messages WHERE role = 'user' AND created_at > ?${o.sql}${memberClause}`)
-      .bind(since, ...o.binds).first(),
-    env.CARE_DB.prepare(`SELECT COUNT(*) AS n FROM aggregate_events WHERE created_at > ?${o.sql}${aggregateClause}`)
-      .bind(since, ...o.binds).first(),
-    env.CARE_DB.prepare(`SELECT level, COUNT(DISTINCT anon_id) AS people FROM risk_events WHERE created_at > ?${o.sql}${memberClause} GROUP BY level`)
-      .bind(since, ...o.binds).all(),
+    env.CARE_DB.prepare(`SELECT COUNT(DISTINCT anon_id) AS n FROM messages WHERE role = 'user' AND created_at > ? AND data_origin = ?${memberClause}`)
+      .bind(since, origin).first(),
+    env.CARE_DB.prepare(`SELECT COUNT(*) AS n FROM aggregate_events WHERE created_at > ? AND data_origin = ?${aggregateClause}`)
+      .bind(since, origin).first(),
+    env.CARE_DB.prepare(`SELECT level, COUNT(DISTINCT anon_id) AS people FROM risk_events WHERE created_at > ? AND data_origin = ?${memberClause} GROUP BY level`)
+      .bind(since, origin).all(),
   ]);
   const byLevel = Object.fromEntries((risks.results || []).map((r) => [r.level, r.people]));
   return {
@@ -113,7 +106,19 @@ export async function onRequestGet({ request, env }) {
     // 不混合模拟与真实样本来凑k，避免通过已知基线相减推算真实小样本。
     const origin = url.searchParams.get('origin') === 'demo_seed' ? 'demo_seed' : 'live';
     const scoped = /\b(FROM|JOIN) (mood_checkins|messages|aggregate_events|risk_events|resource_events|posts|profiles|appointments|org_rhythm)\b/g;
-    const organizationId = /^[A-Za-z0-9_-]+$/.test(env.DINGTALK_ORG_ID || '') ? env.DINGTALK_ORG_ID : null;
+    const requestedOrg = url.searchParams.get('organizationId');
+    if (requestedOrg && !/^[A-Za-z0-9_-]+$/.test(requestedOrg)) {
+      return json({ ok: false, reasonCode: 'ORGANIZATION_INVALID' }, 400);
+    }
+    // 未指定时默认企业组织：企业 HR 入口不需要每次显式传；公开组织由 console 会话带上。
+    const organizationId = requestedOrg || enterpriseOrganizationId(env);
+    const organization = await env.CARE_DB.prepare(
+      'SELECT id, display_name, kind FROM organizations WHERE id = ? AND status = ?'
+    ).bind(organizationId, 'active').first();
+    if (!organization) return json({ ok: false, reasonCode: 'ORGANIZATION_UNKNOWN' }, 404);
+    if (origin === 'demo_seed' && organization.kind !== 'beta') {
+      return json({ ok: false, reasonCode: 'DEMO_NOT_AVAILABLE' }, 404);
+    }
     const q = (sql, ...binds) => env.CARE_DB.prepare(sql.replace(scoped, (_m, op, table) => `${op} ${scopedSource(table, origin, organizationId)}`)).bind(...binds);
 
     const [
@@ -121,9 +126,7 @@ export async function onRequestGet({ request, env }) {
       emotions, resources, wall, topicRows, deptRows, deptMood, deptEmotion,
       rhythmRows, sensingRows, redCases, ctxRows, activityOverallRow, perfRows,
     ] = await Promise.all([
-      origin === 'live' && organizationId
-        ? env.CARE_DB.prepare('SELECT display_name, NULL AS headcount, NULL AS industry, ? AS data_origin FROM organizations WHERE id = ? AND kind = ?').bind('live', organizationId, 'enterprise').first()
-        : q('SELECT display_name, headcount, industry, data_origin FROM tenant_profile WHERE id = ?', 'demo').first(),
+      Promise.resolve({ ...organization, headcount: null, industry: null, data_origin: origin }),
       // 趋势按天统计对话的绿/非绿构成；样本量用当天对话条数，低于阈值的点单独抑制。
       q(`SELECT bucket_day AS bucket,
                 SUM(CASE WHEN level = 'green' THEN 1 ELSE 0 END) AS green,
@@ -290,7 +293,9 @@ export async function onRequestGet({ request, env }) {
       minSample: MIN_SAMPLE,
       window: { days, since },
       tenant: {
+        id: tenant?.id || organizationId || null,
         name: tenant?.display_name || null,
+        kind: tenant?.kind || (origin === 'demo_seed' ? 'demo' : null),
         headcount: headcount || null,
         industry: tenant?.industry || null,
         simulatedBaseline: tenant?.data_origin === 'demo_seed',
@@ -310,8 +315,8 @@ export async function onRequestGet({ request, env }) {
         redPeople: riskBand(byLevel.red?.people || 0),
         redCount: byLevel.red?.events || 0,
         totalConversations: totalChat,
-        // 接管情况全部来自真实预约状态；没有红色个案时返回 null，不假装 100%。
-        // 「SLA 内响应率」而不是「已接管率」：刚提交且仍在 SLA 内的个案不算漏接。
+        // 响应情况全部来自真实预约状态；没有红色个案时返回 null，不假装 100%。
+        // 「SLA 内响应率」而不是「已受理率」：刚提交且仍在 SLA 内的个案不算遗漏。
         redHandledRate: redCases?.total ? percentage(redCases.handled || 0, redCases.total) : null,
         redOnTimeRate: redCases?.total
           ? percentage(redCases.total - (redCases.breached || 0), redCases.total)
@@ -395,10 +400,10 @@ export async function onRequestGet({ request, env }) {
       })),
       activity: { posts: wall?.posts || 0, hugs: wall?.hugs || 0 },
       origins: {
-        demo_seed: await summarize(env, since, 'demo_seed'),
-        live: await summarize(env, since, 'live'),
+        demo_seed: organization.kind === 'beta' ? await summarize(env, since, 'demo_seed', organizationId) : null,
+        live: await summarize(env, since, 'live', organizationId),
       },
-      // 横幅要说明"演示期间并入了多少条真实事件"，这是全租户一个总数，
+      // 横幅要说明"内测期间并入了多少条真实事件"，这是全租户一个总数，
       // 不按人、部门或情绪拆分，推不出任何个体，所以不适用 k 抑制。
       liveEventCount: liveEvents?.n || 0,
     };

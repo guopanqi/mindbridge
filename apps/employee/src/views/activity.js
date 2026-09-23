@@ -47,7 +47,7 @@ function finish(session) {
   render();
 }
 
-// 线下活动确认参加：内容里若配了收尾提问（「留意一个变化」），先问完再结算，
+// 线下活动确认参加：内容里若配了收尾提问（「留意一个变化」），先问完再记录完成，
 // 让线下这一次和线上练习留下同样结构的完成记录。
 function attend(session) {
   if (!active(session) || session.finished) return;
