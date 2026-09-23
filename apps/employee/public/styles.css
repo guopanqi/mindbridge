@@ -77,7 +77,8 @@ h1, h2 { margin: 0; }
   padding: max(8px, env(safe-area-inset-top)) 14px 8px; background: var(--bg); border-bottom: 1px solid var(--line);
 }
 .app[data-view="me"] .topbar { display: flex; }
-.app:not([data-view="me"]) main { padding-top: env(safe-area-inset-top); }
+.app[data-entry-channel="beta_web"] .topbar { display: flex; }
+.app:not([data-view="me"]):not([data-entry-channel="beta_web"]) main { padding-top: env(safe-area-inset-top); }
 .who { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .avatar { width: 30px; height: 30px; border-radius: 50%; flex: 0 0 auto; display: grid; place-items: center; color: var(--brand);
   background: linear-gradient(140deg, #4a6d5f, #2e4a3f); border: 1.5px solid rgba(238, 185, 108, .35); }

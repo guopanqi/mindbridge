@@ -77,6 +77,7 @@ async function enterApp(session) {
   $('#organization-label').textContent = session?.entryChannel === 'beta_web'
     ? `${session.organizationName || '公开测试组织'} · 匿名参与`
     : '匿名身份 · HR 与疗愈师都看不到你是谁';
+  $('#app').dataset.entryChannel = session?.entryChannel === 'beta_web' ? 'beta_web' : 'dingtalk';
   $('#boot').hidden = true;
   $('#app').hidden = false;
   await showView('chat');
