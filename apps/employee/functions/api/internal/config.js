@@ -35,8 +35,8 @@ export async function onRequestGet({ request, env }) {
       "SELECT emotion, COUNT(*) AS n FROM aggregate_events WHERE event_type = 'chat_message' AND emotion IS NOT NULL AND created_at > ? GROUP BY emotion"
     ).bind(since).all(),
     env.CARE_DB.prepare(
-      'SELECT metric, value, sample_size, unit, created_at FROM org_rhythm WHERE data_origin = ? ORDER BY bucket_day DESC LIMIT 12'
-    ).bind('live').all(),
+      'SELECT metric, value, sample_size, unit, created_at FROM org_rhythm WHERE data_origin = ? AND organization_id = ? ORDER BY bucket_day DESC LIMIT 12'
+    ).bind('live', env.DINGTALK_ORG_ID || 'org_enterprise_primary').all(),
   ]);
 
   const hitMap = Object.fromEntries((hits.results || []).map((r) => [r.emotion, r.n]));

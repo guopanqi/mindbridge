@@ -31,3 +31,11 @@ export function sessionCookie(value, maxAge) {
 export function clearSessionCookie() {
   return '__Host-mb_session=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax';
 }
+
+export function deviceCookie(value, maxAge) {
+  return `__Host-mb_device=${encodeURIComponent(value)}; Path=/; Max-Age=${maxAge}; HttpOnly; Secure; SameSite=Lax`;
+}
+
+export function clearDeviceCookie() {
+  return '__Host-mb_device=; Path=/; Max-Age=0; HttpOnly; Secure; SameSite=Lax';
+}

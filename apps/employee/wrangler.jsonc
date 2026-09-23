@@ -8,10 +8,12 @@
     "DINGTALK_CLIENT_ID": "dingoyuuq9d3413qqbel",
     "DINGTALK_ROBOT_CODE": "dingoyuuq9d3413qqbel",
     "DINGTALK_CORP_ID": "ding585edf06dbd4a79fc7ca53aad90ff185",
+    "DINGTALK_ORG_ID": "org_enterprise_primary",
     "ANON_KEY_VERSION": "v1",
     "IDENTITY_ENCRYPTION_KEY_VERSION": "v1",
     "SESSION_TTL_SECONDS": "1800",
-    "REVIEW_DEMO": "on",
+    "APP_VERSION": "beta-1",
+    "REVIEW_DEMO": "off",
     "MODEL_API_ORIGIN": "https://api.deepseek.com",
     "MODEL_NAME": "deepseek-v4-flash",
     "MODEL_TIMEOUT_MS": "8000"
@@ -19,8 +21,8 @@
   "d1_databases": [
     {
       "binding": "CARE_DB",
-      "database_name": "mindbridge-care",
-      "database_id": "77456773-bb6f-438a-a0b3-c0678516c2d3",
+      "database_name": "mindbridge-beta-care",
+      "database_id": "65297fbb-1e45-419f-84f5-aa41a5f249f4",
       "migrations_dir": "migrations/care"
     },
     {

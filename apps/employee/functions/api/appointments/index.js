@@ -48,7 +48,7 @@ export async function onRequestGet({ request, env }) {
 
 export async function onRequestPost({ request, env }) {
   try {
-    const { anonId } = await requireSession(request, env);
+    const { anonId, organizationId } = await requireSession(request, env);
     await ensureProfile(env, anonId);
     const body = await readJson(request);
     const source = body?.messageId ? await readConsentCard(env, anonId, requireText(body.messageId, { min: 1, max: 100, field: 'messageId' })) : null;
@@ -79,17 +79,17 @@ export async function onRequestPost({ request, env }) {
     const code = caseCode();
     const statements = [
       env.CARE_DB.prepare(
-        `INSERT INTO appointments (id, case_code, anon_id, conversation_id, risk_level, status, share_context, note_cipher, content_key_version, created_at, updated_at, data_origin)
-         SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+        `INSERT INTO appointments (id, case_code, anon_id, conversation_id, risk_level, status, share_context, note_cipher, content_key_version, created_at, updated_at, data_origin, organization_id)
+         SELECT ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
          WHERE NOT EXISTS (SELECT 1 FROM appointments WHERE anon_id=? AND status IN ('requested','claimed','active'))
          ${source ? 'AND EXISTS (SELECT 1 FROM messages WHERE id=? AND anon_id=? AND body_cipher=?)' : ''}`
       ).bind(
         id, code, anonId, source?.row.conversation_id || latest?.id || null,
         riskLevel, 'requested', shareContext ? 1 : 0,
-        sealed?.cipher || null, sealed?.version || null, now, now, 'live', anonId,
+        sealed?.cipher || null, sealed?.version || null, now, now, 'live', organizationId, anonId,
         ...(source ? [source.row.id, anonId, source.row.body_cipher] : [])
       ),
-      aggregateStatement(env, { eventType: 'appointment_requested', level: riskLevel, at: now, ifChanged: true }),
+      aggregateStatement(env, { eventType: 'appointment_requested', level: riskLevel, at: now, organizationId, ifChanged: true }),
     ];
     if (shareContext) {
       statements.push(env.CARE_DB.prepare(

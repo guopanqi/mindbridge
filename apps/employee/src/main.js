@@ -20,10 +20,13 @@ const FAILURE_TEXT = {
   SERVER_TIMEOUT: '网络连接超时，请检查网络后重试。',
   NETWORK_ERROR: '网络连接失败，请检查网络后重试。',
   APP_CONFIGURATION_MISSING: '应用配置不完整，请联系管理员。',
+  INVITE_INVALID: '邀请链接无效或已失效，请联系邀请人。',
+  INVITE_FULL: '本次邀请名额已满，请联系邀请人。',
 };
 
 let booting = false;
 let currentView = null;
+let pendingInvite = null;
 const loaded = new Set();
 
 function withTimeout(promise, code) {
@@ -136,8 +139,18 @@ export async function boot({ reason } = {}) {
 
   try {
     const url = new URL(window.location.href);
+    const inviteToken = url.searchParams.get('invite') || pendingInvite;
     const reviewRequested = url.searchParams.get('demo') === 'review';
-    if (reviewRequested) {
+    if (inviteToken) {
+      pendingInvite = inviteToken;
+      url.searchParams.delete('invite');
+      window.history.replaceState(null, '', url.toString());
+      $('#boot-detail').textContent = '正在验证邀请并建立匿名身份。';
+      document.querySelector('#boot-steps [data-step="verify"]').lastChild.textContent = '确认测试组织邀请';
+      document.querySelector('#boot-steps [data-step="strip"]').lastChild.textContent = '不收集姓名或微信身份';
+      await api.authenticateInvite(inviteToken);
+      pendingInvite = null;
+    } else if (reviewRequested) {
       url.searchParams.delete('demo');
       window.history.replaceState(null, '', url.toString());
       await api.authenticateReview();
@@ -145,7 +158,7 @@ export async function boot({ reason } = {}) {
 
     let session = await getSession();
     // 正常入口不能沿用此前的评审身份；清掉后继续执行原有钉钉免登。
-    if (!reviewRequested && session.authenticated && session.review) {
+    if (!reviewRequested && !inviteToken && session.authenticated && session.review) {
       await api.signOut();
       session = { authenticated: false, review: false };
     }

@@ -60,6 +60,18 @@ function plan(now) {
       sql: "DELETE FROM follow_ups WHERE id IN (SELECT id FROM follow_ups WHERE state = 'scheduled' AND due_at < ? LIMIT ?)",
       binds: [now - 60 * 86400000, BATCH],
     },
+    {
+      table: 'product_events',
+      reason: '逐人研究事件超过 180 天',
+      sql: 'DELETE FROM product_events WHERE id IN (SELECT id FROM product_events WHERE occurred_at < ? LIMIT ?)',
+      binds: [now - 180 * 86400000, BATCH],
+    },
+    {
+      table: 'experience_feedback',
+      reason: '逐人体验反馈超过 180 天',
+      sql: 'DELETE FROM experience_feedback WHERE id IN (SELECT id FROM experience_feedback WHERE offered_at < ? LIMIT ?)',
+      binds: [now - 180 * 86400000, BATCH],
+    },
   ];
 }
 

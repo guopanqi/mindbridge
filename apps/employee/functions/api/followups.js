@@ -36,7 +36,7 @@ export async function onRequestGet({ request, env }) {
 
 export async function onRequestPost({ request, env }) {
   try {
-    const { anonId } = await requireSession(request, env);
+    const { anonId, organizationId } = await requireSession(request, env);
     const body = await readJson(request);
     const id = body?.id;
     const answer = body?.answer;
@@ -49,7 +49,7 @@ export async function onRequestPost({ request, env }) {
     if (!result.meta?.changes) throw new ApiError('FOLLOWUP_NOT_FOUND', 404, '这条回访已经处理过了');
     if (answer !== null) {
       await env.CARE_DB.batch([
-        aggregateStatement(env, { eventType: 'followup_answered', emotion: answer, level: 'green', at: now }),
+        aggregateStatement(env, { eventType: 'followup_answered', emotion: answer, level: 'green', at: now, organizationId }),
       ]);
     }
     return json({ ok: true });

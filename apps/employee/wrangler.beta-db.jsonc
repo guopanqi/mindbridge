@@ -1,0 +1,13 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "mindbridge-beta-db-migrations",
+  "compatibility_date": "2026-09-02",
+  "d1_databases": [
+    {
+      "binding": "CARE_DB",
+      "database_name": "mindbridge-beta-care",
+      "database_id": "65297fbb-1e45-419f-84f5-aa41a5f249f4",
+      "migrations_dir": "migrations/care"
+    }
+  ]
+}

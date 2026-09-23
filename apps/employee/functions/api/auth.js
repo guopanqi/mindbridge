@@ -1,6 +1,8 @@
 import { anonIdFromStaffId } from './_lib/identity.js';
 import { randomToken, sha256Base64Url } from './_lib/crypto.js';
 import { json, sessionCookie } from './_lib/http.js';
+import { ensureEnterpriseSubject } from './_lib/organizations.js';
+import { writeProductEvent } from './_lib/product-events.js';
 
 const MAX_CODE_LENGTH = 2048;
 const DINGTALK_TIMEOUT_MS = 8_000;
@@ -94,9 +96,11 @@ export async function onRequestPost({ request, env }) {
     const configuredTtl = Number.parseInt(env.SESSION_TTL_SECONDS || '', 10);
     const ttl = Number.isFinite(configuredTtl) ? configuredTtl : 1800;
     const expiresAt = now + Math.max(300, Math.min(ttl, 86400)) * 1000;
+    const organizationId = await ensureEnterpriseSubject(env, anonId);
     await env.CARE_DB.prepare(
-      'INSERT INTO sessions (session_digest, anon_id, expires_at, created_at, last_seen_at) VALUES (?, ?, ?, ?, ?)'
-    ).bind(sessionDigest, anonId, expiresAt, now, now).run();
+      "INSERT INTO sessions (session_digest, anon_id, organization_id, entry_channel, expires_at, created_at, last_seen_at) VALUES (?, ?, ?, 'dingtalk', ?, ?, ?)"
+    ).bind(sessionDigest, anonId, organizationId, expiresAt, now, now).run();
+    await writeProductEvent(env, { anonId, organizationId, entryChannel: 'dingtalk' }, 'session_started', { at: now });
     return json(
       { authenticated: true, message: '匿名会话已建立' },
       200,

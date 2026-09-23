@@ -82,13 +82,19 @@ async function resolveSession(request, env) {
   const digest = await sha256Base64Url(token);
   const now = Date.now();
   const row = await env.CARE_DB
-    .prepare('SELECT anon_id FROM sessions WHERE session_digest = ? AND expires_at > ?')
+    .prepare('SELECT anon_id, organization_id, entry_channel FROM sessions WHERE session_digest = ? AND expires_at > ?')
     .bind(digest, now)
     .first();
   if (!row?.anon_id) throw new ApiError('SESSION_REQUIRED', 401, '匿名会话已失效，请从钉钉工作台重新进入');
   await env.CARE_DB.prepare('UPDATE sessions SET last_seen_at = ? WHERE session_digest = ?')
     .bind(now, digest).run();
-  return { anonId: row.anon_id, sessionDigest: digest };
+  if (row.entry_channel === 'beta_web') {
+    const org = await env.CARE_DB.prepare("SELECT id FROM organizations WHERE id = ? AND status = 'active' AND kind = 'beta'")
+      .bind(row.organization_id).first();
+    if (!org) throw new ApiError('SESSION_REQUIRED', 401, '测试组织已暂停，请联系邀请人');
+  }
+  return { anonId: row.anon_id, organizationId: row.organization_id || env.DINGTALK_ORG_ID || null,
+    entryChannel: row.entry_channel || 'dingtalk', sessionDigest: digest };
 }
 
 export async function readJson(request, maxBytes = 8192) {
@@ -122,10 +128,10 @@ export function handleError(error, event) {
 }
 
 // 聚合埋点：只写事件类型、情绪、级别与日期分桶，供 HR 看板使用。
-export function aggregateStatement(env, { eventType, emotion = null, level = null, at, ifChanged = false }) {
+export function aggregateStatement(env, { eventType, emotion = null, level = null, at, organizationId = null, ifChanged = false }) {
   return env.CARE_DB.prepare(
-    `INSERT INTO aggregate_events (id, event_type, emotion, level, bucket_day, created_at, data_origin) SELECT ?, ?, ?, ?, ?, ?, ?${ifChanged ? ' WHERE changes()=1' : ''}`
-  ).bind(newId('agg'), eventType, emotion, level, dayBucket(at), at, 'live');
+    `INSERT INTO aggregate_events (id, event_type, emotion, level, bucket_day, created_at, data_origin, organization_id) SELECT ?, ?, ?, ?, ?, ?, ?, ?${ifChanged ? ' WHERE changes()=1' : ''}`
+  ).bind(newId('agg'), eventType, emotion, level, dayBucket(at), at, 'live', organizationId);
 }
 
 export async function ensureProfile(env, anonId) {

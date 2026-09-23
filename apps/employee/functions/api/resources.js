@@ -46,7 +46,7 @@ export async function onRequestGet({ request, env }) {
 // 员工主动选择一个资源开始参与：创建一条 resource_event，来源标记为自主浏览。
 export async function onRequestPost({ request, env }) {
   try {
-    const { anonId } = await requireSession(request, env);
+    const { anonId, organizationId } = await requireSession(request, env);
     await ensureProfile(env, anonId);
     const activityId = (await readJson(request))?.activityId;
     if (typeof activityId !== 'string' || !activityId) {
@@ -74,7 +74,7 @@ export async function onRequestPost({ request, env }) {
          SELECT ?, ?, NULL, ?, ?, 'green', 'offered', ?, ?, 'live', ?, 'self_browse'
          WHERE NOT EXISTS (SELECT 1 FROM resource_events WHERE anon_id=? AND activity_id=? AND state IN ('offered','joined'))`
       ).bind(id, anonId, activity.title, activity.level || 'L1', now, now, activityId, anonId, activityId),
-      aggregateStatement(env, { eventType: 'resource_self_selected', level: 'green', at: now, ifChanged: true }),
+      aggregateStatement(env, { eventType: 'resource_self_selected', level: 'green', at: now, organizationId, ifChanged: true }),
     ]);
     if (!inserted.meta.changes) {
       const concurrent = await env.CARE_DB.prepare("SELECT id FROM resource_events WHERE anon_id=? AND activity_id=? AND state IN ('offered','joined') ORDER BY created_at DESC LIMIT 1").bind(anonId, activityId).first();

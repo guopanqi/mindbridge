@@ -60,14 +60,30 @@ function originClause(origin) {
   return origin === 'all' ? { sql: '', binds: [] } : { sql: ' AND data_origin = ?', binds: [origin] };
 }
 
+const MEMBER_TABLES = new Set(['mood_checkins', 'messages', 'risk_events', 'resource_events', 'profiles', 'appointments']);
+function scopedSource(table, origin, organizationId) {
+  let where = `data_origin='${origin}'`;
+  if (organizationId && origin === 'live') {
+    if (table === 'aggregate_events' || table === 'org_rhythm' || table === 'posts') {
+      where += ` AND organization_id='${organizationId}'`;
+    } else if (MEMBER_TABLES.has(table)) {
+      where += ` AND anon_id IN (SELECT anon_id FROM subject_organizations WHERE organization_id='${organizationId}')`;
+    }
+  }
+  return `(SELECT * FROM ${table} WHERE ${where})`;
+}
+
 async function summarize(env, since, origin) {
   const o = originClause(origin);
+  const orgId = origin === 'live' && /^[A-Za-z0-9_-]+$/.test(env.DINGTALK_ORG_ID || '') ? env.DINGTALK_ORG_ID : null;
+  const memberClause = orgId ? ` AND anon_id IN (SELECT anon_id FROM subject_organizations WHERE organization_id='${orgId}')` : '';
+  const aggregateClause = orgId ? ` AND organization_id='${orgId}'` : '';
   const [users, events, risks] = await Promise.all([
-    env.CARE_DB.prepare(`SELECT COUNT(DISTINCT anon_id) AS n FROM messages WHERE role = 'user' AND created_at > ?${o.sql}`)
+    env.CARE_DB.prepare(`SELECT COUNT(DISTINCT anon_id) AS n FROM messages WHERE role = 'user' AND created_at > ?${o.sql}${memberClause}`)
       .bind(since, ...o.binds).first(),
-    env.CARE_DB.prepare(`SELECT COUNT(*) AS n FROM aggregate_events WHERE created_at > ?${o.sql}`)
+    env.CARE_DB.prepare(`SELECT COUNT(*) AS n FROM aggregate_events WHERE created_at > ?${o.sql}${aggregateClause}`)
       .bind(since, ...o.binds).first(),
-    env.CARE_DB.prepare(`SELECT level, COUNT(DISTINCT anon_id) AS people FROM risk_events WHERE created_at > ?${o.sql} GROUP BY level`)
+    env.CARE_DB.prepare(`SELECT level, COUNT(DISTINCT anon_id) AS people FROM risk_events WHERE created_at > ?${o.sql}${memberClause} GROUP BY level`)
       .bind(since, ...o.binds).all(),
   ]);
   const byLevel = Object.fromEntries((risks.results || []).map((r) => [r.level, r.people]));
@@ -97,14 +113,17 @@ export async function onRequestGet({ request, env }) {
     // 不混合模拟与真实样本来凑k，避免通过已知基线相减推算真实小样本。
     const origin = url.searchParams.get('origin') === 'demo_seed' ? 'demo_seed' : 'live';
     const scoped = /\b(FROM|JOIN) (mood_checkins|messages|aggregate_events|risk_events|resource_events|posts|profiles|appointments|org_rhythm)\b/g;
-    const q = (sql, ...binds) => env.CARE_DB.prepare(sql.replace(scoped, (_m, op, table) => `${op} (SELECT * FROM ${table} WHERE data_origin='${origin}')`)).bind(...binds);
+    const organizationId = /^[A-Za-z0-9_-]+$/.test(env.DINGTALK_ORG_ID || '') ? env.DINGTALK_ORG_ID : null;
+    const q = (sql, ...binds) => env.CARE_DB.prepare(sql.replace(scoped, (_m, op, table) => `${op} ${scopedSource(table, origin, organizationId)}`)).bind(...binds);
 
     const [
       tenant, trend, active, prevActive, stress, prevStress, riskRows, greenRow,
       emotions, resources, wall, topicRows, deptRows, deptMood, deptEmotion,
       rhythmRows, sensingRows, redCases, ctxRows, activityOverallRow, perfRows,
     ] = await Promise.all([
-      q('SELECT display_name, headcount, industry, data_origin FROM tenant_profile WHERE id = ?', 'demo').first(),
+      origin === 'live' && organizationId
+        ? env.CARE_DB.prepare('SELECT display_name, NULL AS headcount, NULL AS industry, ? AS data_origin FROM organizations WHERE id = ? AND kind = ?').bind('live', organizationId, 'enterprise').first()
+        : q('SELECT display_name, headcount, industry, data_origin FROM tenant_profile WHERE id = ?', 'demo').first(),
       // 趋势按天统计对话的绿/非绿构成；样本量用当天对话条数，低于阈值的点单独抑制。
       q(`SELECT bucket_day AS bucket,
                 SUM(CASE WHEN level = 'green' THEN 1 ELSE 0 END) AS green,
@@ -262,7 +281,7 @@ export async function onRequestGet({ request, env }) {
 
     // 不走 q()：这一条要的就是真实侧的总量，与当前选择的 origin 无关。
     const liveEvents = await env.CARE_DB
-      .prepare("SELECT COUNT(*) AS n FROM aggregate_events WHERE created_at > ? AND data_origin = 'live'")
+      .prepare(`SELECT COUNT(*) AS n FROM aggregate_events WHERE created_at > ? AND data_origin = 'live'${organizationId ? ` AND organization_id='${organizationId}'` : ''}`)
       .bind(since).first();
 
     const report = {

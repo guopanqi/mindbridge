@@ -10,10 +10,10 @@ const sample = JSON.parse(readFileSync(new URL('../content/activities/breathing.
 async function fixture() {
   const db = new DatabaseSync(':memory:');
   const dir = new URL('../migrations/care/', import.meta.url);
-  for (const f of readdirSync(dir).sort().filter(f => f.endsWith('.sql') && f <= '0020_activity_helpfulness.sql')) db.exec(readFileSync(new URL(f, dir), 'utf8'));
+  for (const f of readdirSync(dir).sort().filter(f => f.endsWith('.sql'))) db.exec(readFileSync(new URL(f, dir), 'utf8'));
   db.exec(activitySql(sample));
   db.exec(catalogSql({ name: 'Independent catalog label', activityId: sample.id }));
-  db.prepare('INSERT INTO sessions VALUES (?, ?, ?, ?, ?)').run(await sha256Base64Url('test'), 'person', Date.now() + 100000, 0, 0);
+  db.prepare('INSERT INTO sessions (session_digest, anon_id, expires_at, created_at, last_seen_at) VALUES (?, ?, ?, ?, ?)').run(await sha256Base64Url('test'), 'person', Date.now() + 100000, 0, 0);
   db.exec("INSERT INTO resource_events (id,anon_id,resource_name,resource_level,risk_level,state,created_at,updated_at,data_origin,activity_id) VALUES ('event','person','old title','L1','green','offered',0,0,'live','breathing')");
   const env = { CARE_DB: {
     prepare(sql) {

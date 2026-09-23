@@ -30,7 +30,7 @@ export async function onRequestGet({ request, env }) {
 
 export async function onRequestPost({ request, env }) {
   try {
-    const { anonId } = await requireSession(request, env);
+    const { anonId, organizationId } = await requireSession(request, env);
     const body = await readJson(request);
     const id = body?.id;
     const approve = body?.approve === true;
@@ -42,7 +42,7 @@ export async function onRequestPost({ request, env }) {
     ).bind(approve ? 'approved' : 'denied', now, id, anonId, now).run();
     if (!result.meta?.changes) throw new ApiError('REQUEST_NOT_PENDING', 404, '这条请求已经处理过或已过期');
     await env.CARE_DB.batch([
-      aggregateStatement(env, { eventType: approve ? 'context_approved' : 'context_denied', at: now }),
+      aggregateStatement(env, { eventType: approve ? 'context_approved' : 'context_denied', at: now, organizationId }),
     ]);
     return json({ ok: true, status: approve ? 'approved' : 'denied' });
   } catch (error) {

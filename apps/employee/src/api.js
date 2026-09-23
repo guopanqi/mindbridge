@@ -40,6 +40,7 @@ export const api = {
   config: () => request('/api/config'),
   session: () => request('/api/session'),
   authenticate: (code) => post('/api/auth', { code }),
+  authenticateInvite: (token) => post('/api/auth/invite', { token }),
   authenticateReview: () => post('/api/auth/demo'),
   signOut: () => request('/api/session', { method: 'DELETE' }),
   me: () => request('/api/me'),

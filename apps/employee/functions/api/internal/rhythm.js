@@ -28,6 +28,16 @@ function authorize(request, env) {
   return header.startsWith('Bearer ') && timingSafeEqual(header.slice(7), expected);
 }
 
+async function attendanceEnabled(env) {
+  const row = await env.CARE_DB.prepare(
+    `SELECT c.enabled FROM organization_capabilities c
+     JOIN organizations o ON o.id = c.organization_id
+     WHERE c.organization_id = ? AND c.capability = 'dingtalk_attendance'
+       AND o.kind = 'enterprise' AND o.status = 'active'`
+  ).bind(env.DINGTALK_ORG_ID || 'org_enterprise_primary').first();
+  return row?.enabled === 1;
+}
+
 function failure(error) {
   return {
     ok: false,
@@ -48,6 +58,7 @@ async function collect(env, days) {
 
 export async function onRequestGet({ request, env }) {
   if (!authorize(request, env)) return json({ ok: false, reasonCode: 'UNAUTHORIZED' }, 401);
+  if (!await attendanceEnabled(env)) return json({ ok: false, connected: false, reasonCode: 'ATTENDANCE_NOT_ENABLED' }, 403);
   const days = Math.max(1, Math.min(Number.parseInt(new URL(request.url).searchParams.get('days') || '', 10) || DEFAULT_DAYS, 30));
   try {
     const { orgSize, records, window } = await collect(env, days);
@@ -75,6 +86,7 @@ export async function onRequestGet({ request, env }) {
 
 export async function onRequestPost({ request, env }) {
   if (!authorize(request, env)) return json({ ok: false, reasonCode: 'UNAUTHORIZED' }, 401);
+  if (!await attendanceEnabled(env)) return json({ ok: false, connected: false, reasonCode: 'ATTENDANCE_NOT_ENABLED' }, 403);
   const days = Math.max(1, Math.min(Number.parseInt(new URL(request.url).searchParams.get('days') || '', 10) || DEFAULT_DAYS, 30));
   try {
     const { orgSize, records } = await collect(env, days);
@@ -89,11 +101,11 @@ export async function onRequestPost({ request, env }) {
 
     if (rows.length) {
       await env.CARE_DB.batch(rows.map(([metric, value, unit]) => env.CARE_DB.prepare(
-        `INSERT INTO org_rhythm (id, bucket_day, metric, value, sample_size, unit, source, data_origin, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, 'live', ?)
-         ON CONFLICT(bucket_day, metric, data_origin) DO UPDATE SET
+        `INSERT INTO org_rhythm (id, organization_id, bucket_day, metric, value, sample_size, unit, source, data_origin, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'live', ?)
+         ON CONFLICT(organization_id, bucket_day, metric, data_origin) DO UPDATE SET
            value = excluded.value, sample_size = excluded.sample_size, created_at = excluded.created_at`
-      ).bind(newId('rhy'), day, metric, value, summary.sampleSize, unit, 'dingtalk_attendance', now)));
+      ).bind(newId('rhy'), env.DINGTALK_ORG_ID || 'org_enterprise_primary', day, metric, value, summary.sampleSize, unit, 'dingtalk_attendance', now)));
     }
 
     return json({

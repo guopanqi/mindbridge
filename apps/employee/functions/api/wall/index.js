@@ -5,6 +5,7 @@ import {
   openBody, PLAIN_VERSION, readJson, requireSession, requireText, sealBody,
 } from '../_lib/care.js';
 import { classifyTopic } from '../_lib/topics.js';
+import { productEventStatement } from '../_lib/product-events.js';
 
 const PAGE_SIZE = 30;
 const RATE_WINDOW_MS = 10 * 60_000;
@@ -30,7 +31,8 @@ export function screenContent(text) {
 
 export async function onRequestGet({ request, env }) {
   try {
-    const { anonId } = await requireSession(request, env);
+    const { anonId, organizationId } = await requireSession(request, env);
+    if (!organizationId) throw new ApiError('ORGANIZATION_REQUIRED', 403, '当前入口没有组织');
     await ensureProfile(env, anonId);
     const { results: posts } = await env.CARE_DB.prepare(
       `SELECT p.id, p.anon_id, p.body_cipher, p.content_key_version, p.created_at, p.data_origin,
@@ -38,8 +40,8 @@ export async function onRequestGet({ request, env }) {
               (SELECT COUNT(*) FROM post_reactions r WHERE r.post_id = p.id) AS hugs,
               (SELECT COUNT(*) FROM post_reactions r WHERE r.post_id = p.id AND r.anon_id = ?) AS hugged
        FROM posts p LEFT JOIN profiles pr ON pr.anon_id = p.anon_id
-       WHERE p.deleted_at IS NULL ORDER BY p.created_at DESC LIMIT ?`
-    ).bind(anonId, PAGE_SIZE).all();
+       WHERE p.organization_id = ? AND p.deleted_at IS NULL ORDER BY p.created_at DESC LIMIT ?`
+    ).bind(anonId, organizationId, PAGE_SIZE).all();
 
     const ids = (posts || []).map((p) => p.id);
     let replies = [];
@@ -98,7 +100,9 @@ export async function onRequestGet({ request, env }) {
 
 export async function onRequestPost({ request, env }) {
   try {
-    const { anonId } = await requireSession(request, env);
+    const session = await requireSession(request, env);
+    const { anonId, organizationId } = session;
+    if (!organizationId) throw new ApiError('ORGANIZATION_REQUIRED', 403, '当前入口没有组织');
     await ensureProfile(env, anonId);
     const text = requireText((await readJson(request))?.text, { min: 2, max: 500, field: 'text' });
     screenContent(text);
@@ -115,12 +119,15 @@ export async function onRequestPost({ request, env }) {
     const emotion = null;
     // 议题在此刻分类并落库；HR 端之后只对类别计数，不接触原文。
     const topic = classifyTopic(text);
-    await env.CARE_DB.batch([
+    const statements = [
       env.CARE_DB.prepare(
-        'INSERT INTO posts (id, anon_id, body_cipher, content_key_version, emotion, topic, created_at, data_origin) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-      ).bind(id, anonId, sealed.cipher, sealed.version, emotion, topic, now, 'live'),
-      aggregateStatement(env, { eventType: 'wall_post', emotion, level: 'green', at: now }),
-    ]);
+        'INSERT INTO posts (id, anon_id, organization_id, body_cipher, content_key_version, emotion, topic, created_at, data_origin) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+      ).bind(id, anonId, organizationId, sealed.cipher, sealed.version, emotion, topic, now, 'live'),
+      aggregateStatement(env, { eventType: 'wall_post', emotion, level: 'green', at: now, organizationId }),
+    ];
+    const event = productEventStatement(env, session, 'wall_post_created', { at: now, objectType: 'post', objectId: id });
+    if (event) statements.push(event);
+    await env.CARE_DB.batch(statements);
     return json({ ok: true, id });
   } catch (error) {
     return handleError(error, 'wall_post_failed');
@@ -129,12 +136,12 @@ export async function onRequestPost({ request, env }) {
 
 export async function onRequestDelete({ request, env }) {
   try {
-    const { anonId } = await requireSession(request, env);
+    const { anonId, organizationId } = await requireSession(request, env);
     const id = new URL(request.url).searchParams.get('id');
     if (!id) throw new ApiError('POST_ID_REQUIRED', 400, '缺少帖子标识');
     const result = await env.CARE_DB
-      .prepare('UPDATE posts SET deleted_at = ? WHERE id = ? AND anon_id = ? AND deleted_at IS NULL')
-      .bind(Date.now(), id, anonId).run();
+      .prepare('UPDATE posts SET deleted_at = ? WHERE id = ? AND anon_id = ? AND organization_id = ? AND deleted_at IS NULL')
+      .bind(Date.now(), id, anonId, organizationId).run();
     if (!result.meta?.changes) throw new ApiError('POST_NOT_FOUND', 404, '这条内容不存在或不属于你');
     return json({ ok: true });
   } catch (error) {

@@ -9,6 +9,7 @@ import { createModelGateway } from '../harness/model-gateway.js';
 import { emptyUserState } from '../harness/model-contract.js';
 import { runConversationHarness } from '../harness/index.js';
 import { CRISIS_RESOURCES, fallbackNeedsCrisis, safeFallback } from '../harness/safety.js';
+import { productEventStatement } from '../product-events.js';
 
 const RATE_WINDOW_MS = 60_000;
 const RATE_LIMIT = 20;
@@ -155,7 +156,7 @@ async function activeConversation(env, anonId, now) {
   };
 }
 
-export async function handleInbound({ env, anonId, text, channel = 'h5', requestKey = null, fingerprint = null }) {
+export async function handleInbound({ env, anonId, text, channel = 'h5', requestKey = null, fingerprint = null, session = null }) {
   if (!['h5', 'dingtalk'].includes(channel)) throw new ApiError('CHANNEL_INVALID');
   return withConversationLock(env, anonId, async ({ fence, unfence }) => {
     if (requestKey) {
@@ -199,8 +200,16 @@ export async function handleInbound({ env, anonId, text, channel = 'h5', request
     const statements = [
       insert(userId, 'user', userSealed, result.level, now),
       insert(replyId, 'assistant', replySealed, result.level, now + 1),
-      aggregateStatement(env, { eventType: 'chat_message', emotion: result.emotion, level: result.level, at: now }),
+      aggregateStatement(env, { eventType: 'chat_message', emotion: result.emotion, level: result.level, at: now, organizationId: session?.organizationId || env.DINGTALK_ORG_ID || null }),
     ];
+    if (session?.organizationId) {
+      statements.push(productEventStatement(env, session, 'chat_message_sent', {
+        at: now, objectType: 'conversation', objectId: conversation.id,
+      }));
+      statements.push(productEventStatement(env, session, 'chat_reply_delivered', {
+        at: now + 1, objectType: 'conversation', objectId: conversation.id,
+      }));
+    }
 
     if (engineOutput.harness) {
       const sealedState = await sealBody(env, JSON.stringify(engineOutput.harness.nextState), stateAad(conversation.id));
@@ -249,7 +258,7 @@ export async function handleInbound({ env, anonId, text, channel = 'h5', request
       statements.push(env.CARE_DB.prepare(
         'INSERT INTO resource_events (id, anon_id, conversation_id, resource_name, resource_level, risk_level, state, created_at, updated_at, data_origin, activity_id, offer_reason) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
       ).bind(resourceEventId, anonId, conversation.id, result.resource.name, result.resource.level, result.level, 'offered', now, now, 'live', result.resource.activityId || null, offerReason));
-      statements.push(aggregateStatement(env, { eventType: 'resource_offered', emotion: result.emotion, level: result.level, at: now }));
+      statements.push(aggregateStatement(env, { eventType: 'resource_offered', emotion: result.emotion, level: result.level, at: now, organizationId: session?.organizationId || env.DINGTALK_ORG_ID || null }));
       appended.push({ id: cardId, role: 'resource', at: now + 2, card: result.resource });
     }
 
@@ -294,7 +303,7 @@ export async function handleInbound({ env, anonId, text, channel = 'h5', request
       statements.push(env.CARE_DB.prepare(
         'INSERT INTO risk_events (id, anon_id, conversation_id, level, rule, emotion, engine, created_at, data_origin) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
       ).bind(newId('risk'), anonId, conversation.id, result.level, result.rule, result.emotion, 'harness-v1', now, 'live'));
-      statements.push(aggregateStatement(env, { eventType: 'risk_flagged', emotion: result.emotion, level: result.level, at: now }));
+      statements.push(aggregateStatement(env, { eventType: 'risk_flagged', emotion: result.emotion, level: result.level, at: now, organizationId: session?.organizationId || env.DINGTALK_ORG_ID || null }));
     }
 
     const order = { green: 0, yellow: 1, red: 2 };

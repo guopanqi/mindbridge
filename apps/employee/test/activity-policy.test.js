@@ -15,7 +15,7 @@ async function setup(t) {
   const db = new DatabaseSync(':memory:');
   t.after(() => db.close());
   const migrations = new URL('../migrations/care/', import.meta.url);
-  for (const file of readdirSync(migrations).sort().filter(f => f.endsWith('.sql') && f <= '0019_activity_policy.sql')) {
+  for (const file of readdirSync(migrations).sort().filter(f => f.endsWith('.sql'))) {
     db.exec(readFileSync(new URL(file, migrations), 'utf8'));
   }
   const sample = JSON.parse(readFileSync(new URL('../content/activities/breathing.json', import.meta.url)));
@@ -26,7 +26,7 @@ async function setup(t) {
   ];
   for (const a of docs) { db.exec(activitySql(a)); db.exec(catalogSql({ name: `资源-${a.id}`, activityId: a.id })); }
   db.exec("INSERT INTO intervention_matrix (emotion,l1_name,l2_name,updated_at) VALUES ('焦虑','旧L1展示名','旧L2展示名',0)");
-  db.prepare('INSERT INTO sessions VALUES (?, ?, ?, ?, ?)').run(await sha256Base64Url('policy-test'), 'person', Date.now() + 60000, 0, 0);
+  db.prepare('INSERT INTO sessions (session_digest, anon_id, expires_at, created_at, last_seen_at) VALUES (?, ?, ?, ?, ?)').run(await sha256Base64Url('policy-test'), 'person', Date.now() + 60000, 0, 0);
   const env = {
     INTERNAL_SERVICE_TOKEN: 'policy-test-internal-token-32-chars',
     CARE_DB: {

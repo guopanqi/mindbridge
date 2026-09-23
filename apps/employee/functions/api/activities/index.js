@@ -5,6 +5,7 @@
 import { json } from '../_lib/http.js';
 import { followupQuestion } from '../_lib/followup-data.js';
 import { activityAvailableSql } from '../_lib/activity-availability.js';
+import { productEventStatement, writeProductEvent } from '../_lib/product-events.js';
 import {
   ApiError, handleError, newId, readJson, requireSession, requireText, dayBucket,
 } from '../_lib/care.js';
@@ -69,10 +70,14 @@ function shapeActivity(activity, event) {
 
 export async function onRequestGet({ request, env }) {
   try {
-    const { anonId } = await requireSession(request, env);
+    const session = await requireSession(request, env);
+    const { anonId } = session;
     const eventId = new URL(request.url).searchParams.get('eventId');
     if (!eventId) throw new ApiError('EVENT_ID_REQUIRED', 400, '缺少推荐标识');
     const { event, activity } = await loadContext(env, anonId, eventId);
+    await writeProductEvent(env, session, 'activity_opened', {
+      objectType: 'activity', objectId: activity.id, contentVersion: activity.content_version,
+    });
     return json({ ok: true, activity: shapeActivity(activity, event) });
   } catch (error) {
     return handleError(error, 'activity_read_failed');
@@ -81,7 +86,8 @@ export async function onRequestGet({ request, env }) {
 
 export async function onRequestPost({ request, env }) {
   try {
-    const { anonId } = await requireSession(request, env);
+    const session = await requireSession(request, env);
+    const { anonId } = session;
     const body = await readJson(request);
     const eventId = body?.eventId;
     if (typeof eventId !== 'string' || !eventId) throw new ApiError('EVENT_ID_REQUIRED', 400, '缺少推荐标识');
@@ -90,9 +96,9 @@ export async function onRequestPost({ request, env }) {
     const statements = [];
     const unchanged = () => json({ ok: true, activity: shapeActivity(activity, event) });
     const aggregate = (type) => env.CARE_DB.prepare(
-      `INSERT INTO aggregate_events (id, event_type, level, bucket_day, created_at, data_origin)
-       SELECT ?, ?, 'green', ?, ?, 'live' WHERE changes() = 1`
-    ).bind(newId('agg'), type, dayBucket(now), now);
+      `INSERT INTO aggregate_events (id, event_type, level, bucket_day, created_at, data_origin, organization_id)
+       SELECT ?, ?, 'green', ?, ?, 'live', ? WHERE changes() = 1`
+    ).bind(newId('agg'), type, dayBucket(now), now, session.organizationId);
 
     if (body.action === 'start') {
       if (event.state === 'joined' || event.state === 'completed') return unchanged();
@@ -101,6 +107,10 @@ export async function onRequestPost({ request, env }) {
         "UPDATE resource_events SET state = 'joined', stage_index = 0, activity_id = ?, content_version = ?, activity_snapshot_json = ?, updated_at = ? WHERE id = ? AND anon_id = ? AND state = 'offered'"
       ).bind(activity.id, activity.content_version, JSON.stringify(activity), now, eventId, anonId));
       statements.push(aggregate('activity_started'));
+      const researchEvent = productEventStatement(env, session, 'activity_started', {
+        at: now, objectType: 'activity', objectId: activity.id, contentVersion: activity.content_version,
+      });
+      if (researchEvent) statements.push(researchEvent);
     } else if (body.action === 'stage') {
       const index = body.stageIndex;
       const stages = JSON.parse(activity.stages_json);
@@ -117,7 +127,17 @@ export async function onRequestPost({ request, env }) {
         "UPDATE resource_events SET state = 'completed', helpfulness = COALESCE(?, helpfulness), feedback_at = ?, updated_at = ? WHERE id = ? AND anon_id = ? AND state = 'joined'"
       ).bind(helpfulness, helpfulness ? now : null, now, eventId, anonId));
       statements.push(aggregate('activity_completed'));
+      const researchEvent = productEventStatement(env, session, 'activity_completed', {
+        at: now, objectType: 'activity', objectId: activity.id, contentVersion: activity.content_version,
+      });
+      if (researchEvent) statements.push(researchEvent);
       // 回访按真实自然日间隔排期，不做演示加速。
+      if (helpfulness) {
+        const feedbackEvent = productEventStatement(env, session, 'activity_feedback_submitted', {
+          at: now, objectType: 'activity', objectId: activity.id, contentVersion: activity.content_version,
+        });
+        if (feedbackEvent) statements.push(feedbackEvent);
+      }
       const dueAt = now + FOLLOWUP_DELAY_DAYS * 86400000;
       statements.push(env.CARE_DB.prepare(
         `INSERT INTO follow_ups (id, anon_id, resource_event_id, activity_id, activity_title, question, due_at, state, created_at, data_origin)
@@ -134,6 +154,10 @@ export async function onRequestPost({ request, env }) {
       statements.push(env.CARE_DB.prepare(
         "UPDATE resource_events SET helpfulness = ?, feedback_at = ?, updated_at = ? WHERE id = ? AND anon_id = ? AND state = 'completed'"
       ).bind(helpfulness, now, now, eventId, anonId));
+      const researchEvent = productEventStatement(env, session, 'activity_feedback_submitted', {
+        at: now, objectType: 'activity', objectId: activity.id, contentVersion: activity.content_version,
+      });
+      if (researchEvent) statements.push(researchEvent);
     } else if (body.action === 'skip') {
       if (event.state === 'declined') return unchanged();
       if (event.state === 'completed') throw new ApiError('ACTIVITY_STATE_INVALID', 409, '已完成活动不能跳过');

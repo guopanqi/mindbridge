@@ -13,9 +13,10 @@ export async function onRequestGet({ request, env }) {
 
 export async function onRequestPost({ request, env }) {
   try {
-    const { anonId } = await requireSession(request, env);
+    const session = await requireSession(request, env);
+    const { anonId } = session;
     const { text } = await readJson(request);
-    const result = await handleInbound({ env, anonId, text, channel: 'h5' });
+    const result = await handleInbound({ env, anonId, text, channel: 'h5', session });
     result.messages = await hydrateCards(env, anonId, result.messages);
     return json(result);
   } catch (error) { return handleError(error, 'chat_send_failed'); }

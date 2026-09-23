@@ -4,6 +4,7 @@ import { ApiError, handleError, readJson, requireText } from '../_lib/care.js';
 import { hmacBase64Url, sha256Base64Url } from '../_lib/crypto.js';
 import { anonIdFromStaffId } from '../_lib/identity.js';
 import { handleInbound } from '../_lib/conversation/service.js';
+import { ensureEnterpriseSubject } from '../_lib/organizations.js';
 
 async function authorized(request, env) {
   if (typeof env.BOT_RELAY_TOKEN !== 'string' || env.BOT_RELAY_TOKEN.length < 32) return false;
@@ -24,8 +25,10 @@ export async function onRequestPost({ request, env }) {
     const staffId = requireText(body.staffId, { max: 512, field: 'staffId' });
     const text = requireText(body.text, { max: 800, field: 'text' });
     const anonId = await anonIdFromStaffId(env, staffId);
+    const organizationId = await ensureEnterpriseSubject(env, anonId);
     const requestKey = await sha256Base64Url(JSON.stringify([body.corpId, body.robotCode, msgId]));
     const fingerprint = await hmacBase64Url(env.BOT_RELAY_TOKEN, JSON.stringify([anonId, text]));
-    return json(await handleInbound({ env, anonId, text, channel: 'dingtalk', requestKey, fingerprint }));
+    return json(await handleInbound({ env, anonId, text, channel: 'dingtalk', requestKey, fingerprint,
+      session: { anonId, organizationId, entryChannel: 'dingtalk' } }));
   } catch (error) { return handleError(error, 'bot_inbound_failed'); }
 }
