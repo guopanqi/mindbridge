@@ -64,9 +64,4 @@ export const api = {
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(payload),
   }),
-  createHealerInvite: (displayName) => request('/api/healer/invite', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ displayName }),
-  }),
 };

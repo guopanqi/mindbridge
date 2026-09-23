@@ -1,2 +1,0 @@
-INSERT OR REPLACE INTO staff (staff_id, tenant_id, display_name, credential, roles, auth_method, status, created_at, updated_at, last_seen_at) VALUES ('stf_f6e0775cbc795846', 'external', '李佳', 'UNIHEAL 国际疗愈师 · UH-2024-0871', 'healer', 'access_key', 'active', 1788414724276, 1788414724276, 1788414724276);
-INSERT INTO staff_access_keys (id, staff_id, key_digest, label, created_at) VALUES ('key_47850012f902a840', 'stf_f6e0775cbc795846', 'NO-yGy4D4Zmcez1bQTTlQlQAwqGI2MbM8EaXql_Tfvw', '李佳 的常用入口', 1788414724276);

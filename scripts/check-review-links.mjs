@@ -1,4 +1,4 @@
-// 评审聚合页的入口契约。输出只包含检查结果，绝不打印邀请或登录密钥。
+// 评审聚合页的入口契约。输出只包含检查结果，不打印邀请或管理密钥。
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
@@ -16,15 +16,15 @@ function checkContract(found) {
   const expected = [
     ['mindbridge-beta.pages.dev', '/', 'invite'],
     ['mindbridge-console.pages.dev', '/', 'orgKey'],
-    ['mindbridge-console.pages.dev', '/healer/', 'k'],
+    ['mindbridge-console.pages.dev', '/healer/', null],
   ];
   found.forEach((url, index) => {
     const [host, path, key] = expected[index];
     assert.equal(url.protocol, 'https:');
     assert.equal(url.host, host);
     assert.equal(url.pathname, path);
-    assert.deepEqual([...url.searchParams.keys()], [key]);
-    assert.ok(url.searchParams.get(key)?.length >= 16, `${key} 缺失`);
+    assert.deepEqual([...url.searchParams.keys()], key ? [key] : []);
+    if (key) assert.ok(url.searchParams.get(key)?.length >= 16, `${key} 缺失`);
   });
 }
 
@@ -55,7 +55,7 @@ if (remote) {
     const checks = [
       ['https://mindbridge-beta.pages.dev/api/auth/invite', { token: deployed[0].searchParams.get('invite') }],
       ['https://mindbridge-console.pages.dev/api/auth/org', { token: deployed[1].searchParams.get('orgKey') }],
-      ['https://mindbridge-console.pages.dev/api/auth/healer', { accessKey: deployed[2].searchParams.get('k') }],
+      ['https://mindbridge-console.pages.dev/api/auth/healer', { username: '评审疗愈师' }],
     ];
     for (const [index, [address, body]] of checks.entries()) {
       const response = await fetch(address, {

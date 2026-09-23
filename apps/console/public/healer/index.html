@@ -17,14 +17,10 @@
         <h1 id="gate-title">正在进入工作台</h1>
         <p id="gate-detail" class="gate-detail">请稍候。</p>
         <p id="gate-code" class="gate-code" hidden></p>
-        <details id="healer-gate" class="healer-gate">
-          <summary>用邀请码进入</summary>
-          <p class="gate-detail">邀请码由企业管理员生成，24 小时内有效。</p>
-          <div class="healer-form">
-            <input id="healer-code" type="text" autocomplete="off" placeholder="邀请码" aria-label="疗愈师邀请码" />
-            <button id="healer-login" class="primary" type="button">进入</button>
-          </div>
-        </details>
+        <div id="signin" class="healer-form" hidden>
+          <input id="signin-name" type="text" autocomplete="username" placeholder="疗愈师登录名，例如李佳" aria-label="疗愈师登录名" />
+          <button id="signin-go" class="primary" type="button">进入工作台</button>
+        </div>
       </div>
     </section>
 
