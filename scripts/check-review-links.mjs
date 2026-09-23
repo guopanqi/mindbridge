@@ -57,7 +57,7 @@ if (remote) {
       ['https://mindbridge-console.pages.dev/api/auth/org', { token: deployed[1].searchParams.get('orgKey') }],
       ['https://mindbridge-console.pages.dev/api/auth/healer', { accessKey: deployed[2].searchParams.get('k') }],
     ];
-    for (const [address, body] of checks) {
+    for (const [index, [address, body]] of checks.entries()) {
       const response = await fetch(address, {
         method: 'POST',
         headers: { 'content-type': 'application/json', origin: new URL(address).origin },
@@ -65,7 +65,18 @@ if (remote) {
       });
       assert.equal(response.status, 200, `${new URL(address).pathname} 凭证登录失败`);
       assert.equal((await response.json()).ok ?? true, true);
+      const cookieName = index === 0 ? '__Host-mb_session' : '__Host-mb_staff';
+      const cookie = (response.headers.getSetCookie?.() || [response.headers.get('set-cookie') || ''])
+        .map((value) => value.split(';')[0])
+        .find((value) => value.startsWith(`${cookieName}=`));
+      assert.ok(cookie, `${new URL(address).pathname} 未签发会话`);
+      const session = await fetch(`${new URL(address).origin}/api/session`, { headers: { cookie } });
+      assert.equal(session.status, 200, `${new URL(address).pathname} 会话无法读取`);
+      assert.equal((await session.json()).authenticated, true);
+      const next = index === 0 ? '/api/bootstrap' : (index === 1 ? '/api/metrics?days=90&origin=demo_seed' : '/api/cases');
+      const data = await fetch(`${new URL(address).origin}${next}`, { headers: { cookie } });
+      assert.equal(data.status, 200, `${next} 无法读取`);
     }
-    console.log('三个评审入口的凭证登录通过');
+    console.log('三个评审入口的凭证登录、会话及首屏数据通过');
   }
 }
