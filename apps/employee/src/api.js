@@ -41,7 +41,6 @@ export const api = {
   session: () => request('/api/session'),
   authenticate: (code) => post('/api/auth', { code }),
   authenticateInvite: (token) => post('/api/auth/invite', { token }),
-  authenticateReview: () => post('/api/auth/demo'),
   signOut: () => request('/api/session', { method: 'DELETE' }),
   me: () => request('/api/me'),
   bootstrap: () => request('/api/bootstrap'),
@@ -75,7 +74,7 @@ export async function getSession() {
   try {
     return await api.session();
   } catch (error) {
-    if (error instanceof ApiError && error.code === 'HTTP_401') return { authenticated: false, review: false };
+    if (error instanceof ApiError && error.code === 'HTTP_401') return { authenticated: false };
     throw error;
   }
 }

@@ -41,11 +41,6 @@ export const api = {
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ token }),
   }),
-  signInAsDemo: (name, password) => request('/api/auth/demo', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ name, password }),
-  }),
   signOut: () => request('/api/session', { method: 'DELETE' }),
   metrics: (days, origin = 'live') => request(`/api/metrics?days=${encodeURIComponent(days)}&origin=${encodeURIComponent(origin)}`),
   config: () => request('/api/config'),

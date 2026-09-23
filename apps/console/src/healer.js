@@ -22,7 +22,6 @@ function showGate(title, detail, code) {
   $('#gate').hidden = false;
   $('#workspace').hidden = true;
   // 没有有效会话时才露出登录框，正在自动进入的过程中不闪一下表单。
-  $('#signin').hidden = false;
 }
 
 async function enterWorkspace(session) {
@@ -61,17 +60,6 @@ async function boot() {
         error instanceof ApiError ? error.code : null);
       return;
     }
-  } else if (url.searchParams.get('demo') === 'review') {
-    url.searchParams.delete('demo');
-    window.history.replaceState({}, '', url.toString());
-    try {
-      await api.signInAsDemo('李佳', '');
-    } catch (error) {
-      showGate('入口已停用',
-        error instanceof ApiError && error.userMessage ? error.userMessage : '内测体验登录没有完成。',
-        error instanceof ApiError ? error.code : null);
-      return;
-    }
   }
   try {
     const session = await api.session();
@@ -85,21 +73,6 @@ async function boot() {
   }
   showGate('疗愈师工作台', '请使用企业管理员提供的入口链接打开本页面。链接等同于登录凭证，请不要转发。', null);
 }
-
-// 内测体验登录：预置账号「李佳」，密码不校验。真实上线时这条路径可以用 DEMO_LOGIN=off 关掉。
-async function signInWithName() {
-  const name = $('#signin-name').value.trim();
-  if (!name) return toast('请填写姓名。');
-  try {
-    await api.signInAsDemo(name, $('#signin-pass').value);
-    await enterWorkspace(await api.session());
-  } catch (error) {
-    toast(error instanceof ApiError && error.userMessage ? error.userMessage : '这个账号进不去。');
-  }
-}
-
-$('#signin-go').addEventListener('click', () => void signInWithName());
-$('#signin-pass').addEventListener('keydown', (event) => { if (event.key === 'Enter') void signInWithName(); });
 
 // 邀请码是新疗愈师首次入职用的，日常入口是管理员发的链接。
 $('#healer-login').addEventListener('click', async () => {

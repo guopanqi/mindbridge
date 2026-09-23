@@ -1,9 +1,8 @@
 # MindBridge
 
-企业钉钉组织内的**匿名员工心理支持系统**。
+面向企业与内测组织的**匿名员工心理支持系统**。
 
-不是"带钉钉外壳的心理健康网页"，也不是把交互原型上线。核心约束是：
-**需要保护的人匿名，负有责任的人实名。**
+钉钉和网页邀请是进入组织的不同方式；聊天、广场、活动和组织报表都按组织隔离。参与者使用组织内匿名身份，工作人员按职责实名访问管理端。
 
 ---
 
@@ -31,7 +30,7 @@ Identity Relay（D1: mindbridge-identity）
   HMAC 派生稳定匿名身份 · 加密保存钉钉身份映射 · 支持密钥版本轮换
       │  只输出 canonical anonymous id
       ▼
-Care Domain（D1: mindbridge-care）
+  Care Domain（D1: mindbridge-beta-care）
   会话 / 情绪 / 帖子 / 活动 / 预约 / 风险 / 聚合事件
   永不保存 userid、姓名、手机号
       │
@@ -73,8 +72,8 @@ npm run dev:employee     # 构建并启动本地 8788，另开终端
 路演原型发布继续使用 `bash scripts/deploy-prototype.sh`，不包含在 `deploy:all` 中。
 
 ```bash
-cd apps/employee && npm install && npm run check     # 构建 + 29 项单测
-cd apps/console && npm install && npm run check       # 构建 + 8 项单测/边界测试
+cd apps/employee && npm ci && npm run check
+cd apps/console && npm ci && npm run check
 ```
 
 本地跑起来（两个服务要同时开，console 通过内部接口向 care 取数）：

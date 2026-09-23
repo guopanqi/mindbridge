@@ -12,6 +12,7 @@
     "deploy:employee": "bash scripts/app.sh deploy employee",
     "deploy:all": "bash scripts/app.sh deploy all",
     "health": "bash scripts/app.sh health all",
+    "check:review-links": "node scripts/check-review-links.mjs",
     "dev:console": "bash scripts/app.sh dev console",
     "dev:employee": "bash scripts/app.sh dev employee"
   },

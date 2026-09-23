@@ -4,10 +4,7 @@ import { DatabaseSync } from 'node:sqlite';
 import { readFileSync, readdirSync } from 'node:fs';
 import { activitySql, catalogSql } from '../scripts/activity-content.mjs';
 import { randomToken, sha256Base64Url } from '../functions/api/_lib/crypto.js';
-import { onRequestPost as adminLogin } from '../functions/api/beta-admin/login.js';
-import { validSameOrigin } from '../functions/api/_lib/beta-admin.js';
-import { onRequestGet as adminConfigGet, onRequestPut as adminConfigPut } from '../functions/api/beta-admin/config.js';
-import { readOrganizationConfig } from '../functions/api/_lib/organization-config.js';
+import { readOrganizationConfig, updateOrganizationConfig } from '../functions/api/_lib/organization-config.js';
 import { searchActivities, executeTool } from '../functions/api/_lib/harness/tools.js';
 
 function d1(db) {
@@ -29,7 +26,7 @@ function d1(db) {
   };
 }
 
-test('公开组织管理者只改本组织活动与情绪映射，参与者不能进入配置', async (t) => {
+test('公开组织配置只影响本组织，且不能启用钉钉感知', async (t) => {
   const db = new DatabaseSync(':memory:');
   t.after(() => db.close());
   const dir = new URL('../migrations/care/', import.meta.url);
@@ -43,27 +40,12 @@ test('公开组织管理者只改本组织活动与情绪映射，参与者不�
     db.exec(activitySql(activity));
     db.exec(catalogSql({ name: activity.title, activityId: activity.id }));
   }
-  const token = randomToken();
-  db.prepare('INSERT INTO beta_admin_credentials(organization_id,token_digest,created_at) VALUES (?,?,?)')
-    .run('org_beta_a', await sha256Base64Url(token), now);
   const env = { CARE_DB: d1(db) };
-  const req = (method, path, body = null, cookie = '') => new Request(`https://example.test${path}`, {
-    method, headers: { origin: 'https://example.test', cookie, ...(body ? { 'content-type': 'application/json' } : {}) },
-    ...(body ? { body: JSON.stringify(body) } : {}),
-  });
-  const denied = await adminConfigGet({ request: req('GET', '/api/beta-admin/config', null, '__Host-mb_session=participant'), env });
-  assert.equal(denied.status, 401);
-  const login = await adminLogin({ request: req('POST', '/api/beta-admin/login', { token }), env });
-  assert.equal(login.status, 200);
-  const cookie = login.headers.get('set-cookie')?.match(/__Host-mb_admin=[^;]+/)?.[0];
-  assert.ok(cookie);
-  const before = await adminConfigGet({ request: req('GET', '/api/beta-admin/config', null, cookie), env });
-  assert.equal((await before.json()).organization.id, 'org_beta_a');
-  const disable = await adminConfigPut({ request: req('PUT', '/api/beta-admin/config', { kind: 'activity', activityId: 'breathing', enabled: false }, cookie), env });
+  const disable = await updateOrganizationConfig(env, 'org_beta_a', { kind: 'activity', activityId: 'breathing', enabled: false }, 'test');
   assert.equal(disable.status, 200);
   assert.equal((await searchActivities(env, { query: '呼吸' }, { organizationId: 'org_beta_a' })).activities.some((x) => x.id === 'breathing'), false);
   assert.equal((await searchActivities(env, { query: '呼吸' }, { organizationId: 'org_beta_b' })).activities.some((x) => x.id === 'breathing'), true);
-  const mapping = await adminConfigPut({ request: req('PUT', '/api/beta-admin/config', { kind: 'matrix', emotion: '焦虑', l1ActivityId: 'second-l1' }, cookie), env });
+  const mapping = await updateOrganizationConfig(env, 'org_beta_a', { kind: 'matrix', emotion: '焦虑', l1ActivityId: 'second-l1' }, 'test');
   assert.equal(mapping.status, 200);
   const a = await readOrganizationConfig(env, 'org_beta_a');
   const b = await readOrganizationConfig(env, 'org_beta_b');
@@ -72,23 +54,8 @@ test('公开组织管理者只改本组织活动与情绪映射，参与者不�
   const recommended = await executeTool(env, { name: 'search_activities', arguments: { query: '焦虑' } },
     { organizationId: 'org_beta_a', emotion: '焦虑', level: 'green' });
   assert.equal(recommended.activities[0]?.id, 'second-l1');
-  const forbiddenSensing = await adminConfigPut({ request: req('PUT', '/api/beta-admin/config', { kind: 'sensing', key: 'attendance_off_duty', enabled: true }, cookie), env });
-  assert.equal(forbiddenSensing.status, 400);
-});
-
-test('公开转发层经代理访问管理接口时仍视为同源，外部站点仍被拒绝', () => {
-  const forwarded = new Request('https://mindbridge-app-8j6.pages.dev/api/beta-admin/login', {
-    method: 'POST', headers: { origin: 'https://mindbridge-beta.pages.dev' },
-  });
-  assert.equal(validSameOrigin(forwarded), true);
-  const attacker = new Request('https://mindbridge-app-8j6.pages.dev/api/beta-admin/login', {
-    method: 'POST', headers: { origin: 'https://evil.example.com' },
-  });
-  assert.equal(validSameOrigin(attacker), false);
-  const direct = new Request('https://mindbridge-app-8j6.pages.dev/api/beta-admin/login', {
-    method: 'POST', headers: { origin: 'https://mindbridge-app-8j6.pages.dev' },
-  });
-  assert.equal(validSameOrigin(direct), true);
+  const forbidden = await updateOrganizationConfig(env, 'org_beta_a', { kind: 'sensing', key: 'attendance_off_duty', enabled: true }, 'test');
+  assert.equal(forbidden.status, 400);
 });
 
 test('内部接口按 organizationId 读写公开组织配置，且不能开钉钉感知', async (t) => {

@@ -29,7 +29,6 @@ function showGate(title, detail, code) {
   }
   $('#gate').hidden = false;
   $('#console').hidden = true;
-  $('#signin').hidden = false;
 }
 
 function renderBanner(data) {
@@ -157,16 +156,6 @@ async function boot() {
       showGate('无法进入管理后台', GATE_TEXT[reason] || error.userMessage || '身份校验没有完成。', reason);
       return;
     }
-  } else if (url.searchParams.get('demo') === 'review') {
-    url.searchParams.delete('demo');
-    window.history.replaceState({}, '', url.toString());
-    try {
-      await api.signInAsDemo('admin', '');
-    } catch (error) {
-      const reason = error instanceof ApiError ? error.code : 'UNEXPECTED_CLIENT_ERROR';
-      showGate('入口已停用', error.userMessage || '体验通道已关闭，请使用组织邀请链接进入。', reason);
-      return;
-    }
   }
   try {
     const session = await api.session();
@@ -185,21 +174,6 @@ document.addEventListener('click', (event) => {
   const tab = /** @type {HTMLElement | null} */ (/** @type {Element} */ (event.target).closest('.tab'));
   if (tab) void showView(tab.dataset.view);
 });
-// 内测体验登录：预置账号「admin」，密码不校验。真实上线时用 DEMO_LOGIN=off 关掉。
-async function signInWithName() {
-  const name = $('#signin-name').value.trim();
-  if (!name) return toast('请填写姓名。');
-  try {
-    await api.signInAsDemo(name, $('#signin-pass').value);
-    await enterConsole(await api.session());
-  } catch (error) {
-    toast(error instanceof ApiError && error.userMessage ? error.userMessage : '这个账号进不去。');
-  }
-}
-
-$('#signin-go').addEventListener('click', () => void signInWithName());
-$('#signin-pass').addEventListener('keydown', (event) => { if (event.key === 'Enter') void signInWithName(); });
-
 $('#sign-out').addEventListener('click', async () => {
   await api.signOut().catch(() => {});
   showGate('已退出', '需要时可重新打开管理入口。', null);

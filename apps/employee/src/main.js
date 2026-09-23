@@ -147,7 +147,6 @@ export async function boot({ reason } = {}) {
   try {
     const url = new URL(window.location.href);
     const inviteToken = url.searchParams.get('invite') || pendingInvite;
-    const reviewRequested = url.searchParams.get('demo') === 'review';
     if (inviteToken) {
       pendingInvite = inviteToken;
       url.searchParams.delete('invite');
@@ -157,18 +156,9 @@ export async function boot({ reason } = {}) {
       document.querySelector('#boot-steps [data-step="strip"]').lastChild.textContent = '不收集姓名或微信身份';
       await api.authenticateInvite(inviteToken);
       pendingInvite = null;
-    } else if (reviewRequested) {
-      url.searchParams.delete('demo');
-      window.history.replaceState(null, '', url.toString());
-      await api.authenticateReview();
     }
 
     let session = await getSession();
-    // 正常入口不能沿用此前的体验身份；清掉后继续执行原有钉钉免登。
-    if (!reviewRequested && !inviteToken && session.authenticated && session.review) {
-      await api.signOut();
-      session = { authenticated: false, review: false };
-    }
     const alive = session.authenticated;
     if (!alive) {
       const blocked = bareEntryCode(navigator.userAgent);

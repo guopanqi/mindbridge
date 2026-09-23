@@ -39,7 +39,6 @@ export async function onRequestGet({ request, env, waitUntil }) {
   return json({
     authenticated: true,
     session: 'anonymous',
-    review: String(session.anon_id || '').startsWith('mbreview_'),
     entryChannel: session.entry_channel || 'dingtalk',
     organizationId: session.organization_id || null,
     organizationName,
