@@ -48,6 +48,7 @@ export const api = {
   }),
   signOut: () => request('/api/session', { method: 'DELETE' }),
   metrics: (days, origin = 'live') => request(`/api/metrics?days=${encodeURIComponent(days)}&origin=${encodeURIComponent(origin)}`),
+  testTimeline: (anonId) => request(`/api/test-timeline${anonId ? `?anonId=${encodeURIComponent(anonId)}` : ''}`),
   config: () => request('/api/config'),
   industry: () => request('/api/industry'),
   saveConfig: (payload) => request('/api/config', {

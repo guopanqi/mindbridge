@@ -3,6 +3,7 @@ import { BUILD_ID } from './build-id.js';
 import { $, el, toast } from './dom.js';
 import { loadDashboard, renderDashboard, setOrganizationKind } from './views/dashboard.js';
 import { loadAudit, renderAudit } from './views/audit.js';
+import { loadTestTimeline, renderTestTimeline } from './views/test-timeline.js';
 
 const GATE_TEXT = {
   NO_CODE: '请从钉钉管理后台（oa.dingtalk.com → 应用管理 → MindBridge）进入，或使用组织管理链接打开。',
@@ -75,15 +76,17 @@ async function showView(view) {
     tab.classList.toggle('on', on);
     tab.setAttribute('aria-selected', String(on));
   }
-  for (const name of ['dashboard', 'audit']) $(`#view-${name}`).hidden = name !== view;
+  for (const name of ['dashboard', 'audit', 'test-timeline']) $(`#view-${name}`).hidden = name !== view;
   try {
     if (!loaded.has(view)) {
       loaded.add(view);
       if (view === 'dashboard') renderDashboard($('#view-dashboard'));
       if (view === 'audit') renderAudit($('#view-audit'));
+      if (view === 'test-timeline') renderTestTimeline($('#view-test-timeline'));
     }
     if (view === 'dashboard') renderBanner(await loadDashboard());
     if (view === 'audit') await loadAudit();
+    if (view === 'test-timeline') await loadTestTimeline();
   } catch (error) {
     if (error instanceof ApiError && error.code === 'STAFF_SESSION_REQUIRED') {
       showGate('会话已过期', '请重新打开管理入口。', 'STAFF_SESSION_REQUIRED');
@@ -106,7 +109,7 @@ async function enterConsole(session) {
   $('#console').hidden = false;
   // 没有 admin 角色的账号看不到审计入口。公开组织管理员也不看企业审计台。
   // 个案台不在这个应用里：疗愈师走独立的 /healer 工作台。
-  const visibility = { dashboard: 'hr_viewer', audit: 'admin' };
+  const visibility = { dashboard: 'hr_viewer', audit: 'admin', 'test-timeline': 'internal_tester' };
   let first = null;
   for (const tab of /** @type {NodeListOf<HTMLElement>} */ (document.querySelectorAll('.tab'))) {
     const allowed = session.roles.includes(visibility[tab.dataset.view])

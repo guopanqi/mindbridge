@@ -28,6 +28,8 @@
 
 内部测试入口由 `INTERNAL_TEST_ORG_ID` 固定组织、`INTERNAL_TEST_KEY` 作为 Pages Secret 签发；登录后会话只有 `hr_viewer,internal_tester`，没有配置权限。内部测试员看本组织真实报表时最小样本为 1，页面标明测试视图并记录独立审计动作；普通组织管理入口仍按 10 人门槛。入口原码只保存在本地忽略的 `.dev.vars` 和 Pages Secret，不写入仓库。
 
+内部测试员还可打开「匿名事件时间线」，按本组织匿名 User ID 核对聊天、活动推荐、开始、完成以及同刻写入的组织统计事件。时间线不返回聊天原文；统计事件以同组织、同毫秒和事件类型对应，旧记录或极端并发不能据此证明逐人归属。公开组织没有可靠的全员人数分母，看板改显示已发言人数；零红色个案时 SLA 比率显示「暂无个案」。
+
 疗愈师通常不在客户的钉钉组织内。内测时由系统侧运行
 `node scripts/provision-healer.mjs "登录名" "资质说明" --remote` 创建全局账号；疗愈师在
 `https://mindbridge-console.pages.dev/healer/` 输入登录名即可进入，无邀请码、密码或专属链接。

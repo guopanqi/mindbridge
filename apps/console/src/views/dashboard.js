@@ -131,7 +131,11 @@ function renderDashPane(data) {
       el('span', { text: originNote(data) }),
     ]),
     el('div', { class: 'kpis' }, [
-      kpi(numberText(data.coverage.rate, '%'), '员工覆盖率', data.coverage.delta ? `较上月 ${data.coverage.delta} · 说过话的人` : '说过话的人占全员'),
+      kpi(data.coverage.rate == null && data.tenant.kind === 'beta'
+        ? data.coverage.activeUsers?.suppressed ? '<span class="na">不予展示</span>' : `${data.coverage.activeUsers?.value ?? 0}<small> 人</small>`
+        : numberText(data.coverage.rate, '%'),
+      data.tenant.kind === 'beta' ? '已发言人数' : '员工覆盖率',
+      data.tenant.kind === 'beta' ? '公开组织没有可核验的全员人数基数' : data.coverage.delta ? `较上月 ${data.coverage.delta} · 说过话的人` : '说过话的人占全员'),
       kpi(
         data.temperature?.value === null || data.temperature?.value === undefined
           ? '<span class="na">样本不足</span>'
@@ -144,10 +148,10 @@ function renderDashPane(data) {
       kpi(numberText(data.risk.greenShare, '%'), '绿色 · 日常占比', '多为轻量情绪'),
       kpi(
         data.risk.redOnTimeRate === null || data.risk.redOnTimeRate === undefined
-          ? '<span class="na">不予展示</span>'
+          ? `<span class="na">${data.risk.redCases === 0 ? '暂无个案' : '不予展示'}</span>`
           : `${data.risk.redOnTimeRate}<small>%</small>`,
         '红色个案 SLA 内响应率',
-        data.risk.redCases === null ? '样本不足或口径未验证' : data.risk.redBreached
+        data.risk.redCases === 0 ? '尚无红色个案，响应率没有分母' : data.risk.redCases === null ? '样本不足或口径未验证' : data.risk.redBreached
           ? `${data.risk.redBreached} 例超时`
           : `${data.risk.redCases} 例建案中，无超时`,
       ),
@@ -203,7 +207,7 @@ function renderDashPane(data) {
     ]),
     el('div', { class: 'cardC' }, [
       el('h4', { text: '部门概览' }),
-      el('div', { class: 'cs', text: '仅显示有效样本 ≥10 人的部门' }),
+      el('div', { class: 'cs', text: `仅显示有效样本 ≥${min} 人的部门` }),
       el('table', {}, [
         el('thead', {}, [el('tr', {}, [
           el('th', { text: '部门' }), el('th', { text: '人数' }), el('th', { text: '参与率' }),

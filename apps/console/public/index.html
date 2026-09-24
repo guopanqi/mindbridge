@@ -37,11 +37,13 @@
       <nav class="tabs" role="tablist">
         <button class="tab on" role="tab" aria-selected="true" data-view="dashboard">员工关怀看板</button>
         <button class="tab" role="tab" aria-selected="false" data-view="audit">审计记录</button>
+        <button class="tab" role="tab" aria-selected="false" data-view="test-timeline" hidden>匿名事件时间线</button>
       </nav>
 
       <main>
         <section id="view-dashboard" class="view"></section>
         <section id="view-audit" class="view" hidden></section>
+        <section id="view-test-timeline" class="view" hidden></section>
       </main>
     </div>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
