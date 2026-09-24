@@ -86,22 +86,59 @@ test('活动只允许所属员工访问，已开始快照在停用后仍能继�
   db.close();
 });
 
-test('呼吸是180秒一段加一道收尾提问；媒体和选择内容均可直接进入核心体验', () => {
-  // 呼吸本身仍是不被切碎的单段 180 秒；之后只允许一道「留意一个变化」的收尾选择，
-  // 让完成记录里留下员工自己说的那一句，不是系统替他判断的分数。
-  assert.equal(sample.stages.length, 2);
-  const breath = sample.stages[0];
-  assert.equal(breath.type, 'breath');
-  assert.equal((breath.cycle.inhale + breath.cycle.hold + breath.cycle.exhale) * breath.rounds, 180);
-  assert.equal(sample.stages[1].type, 'choice');
-  for (const id of ['pmr', 'bodyscan-text', 'stretch-guide']) {
-    const activity = validateActivity(JSON.parse(readFileSync(new URL(`../content/activities/${id}.json`, import.meta.url))));
-    assert.equal(activity.stages.length, 1);
-    assert.equal(activity.stages[0].type, 'media');
-  }
-  const questions = JSON.parse(readFileSync(new URL('../content/activities/value-anchor.json', import.meta.url)));
-  assert.equal(questions.stages.length, 2);
-  assert.ok(questions.stages.every(stage => stage.type === 'choice'));
+test('独立活动使用单个 component 段与文字兜底', () => {
+  // 呼吸的体验本体是专属组件（宽 → 窄 → 宽三段 180 秒），JSON 只保留目录元数据和
+  // component 占位段；旧客户端用 fallbackHint 跑完整文字版，不会卡在原地。
+  assert.equal(sample.stages.length, 1);
+  assert.equal(sample.stages[0].type, 'component');
+  assert.equal(sample.stages[0].component, 'breathing-space');
+  assert.ok(typeof sample.stages[0].fallbackHint === 'string' && sample.stages[0].fallbackHint.length > 50);
+  const pmr = validateActivity(JSON.parse(readFileSync(new URL('../content/activities/pmr.json', import.meta.url))));
+  assert.equal(pmr.stages.length, 1);
+  assert.equal(pmr.stages[0].type, 'component');
+  assert.equal(pmr.stages[0].component, 'pmr');
+  assert.ok(pmr.stages[0].fallbackHint.length > 50);
+  const returnRhythm = validateActivity(JSON.parse(readFileSync(new URL('../content/activities/return-rhythm.json', import.meta.url))));
+  assert.equal(returnRhythm.stages.length, 1);
+  assert.equal(returnRhythm.stages[0].component, 'return-rhythm');
+  assert.ok(returnRhythm.stages[0].fallbackHint.length > 50);
+  const scan = validateActivity(JSON.parse(readFileSync(new URL('../content/activities/bodyscan-text.json', import.meta.url))));
+  assert.equal(scan.stages.length, 1);
+  assert.equal(scan.stages[0].component, 'body-scan');
+  assert.ok(scan.stages[0].fallbackHint.length > 50);
+  const stretch = validateActivity(JSON.parse(readFileSync(new URL('../content/activities/stretch-guide.json', import.meta.url))));
+  assert.equal(stretch.stages.length, 1);
+  assert.equal(stretch.stages[0].component, 'stretch-guide');
+  assert.ok(stretch.stages[0].fallbackHint.length > 50);
+  const anchor = validateActivity(JSON.parse(readFileSync(new URL('../content/activities/value-anchor.json', import.meta.url))));
+  assert.equal(anchor.stages.length, 1);
+  assert.equal(anchor.stages[0].type, 'component');
+  assert.equal(anchor.stages[0].component, 'value-anchor');
+  assert.ok(anchor.stages[0].fallbackHint.length > 50);
+});
+
+test('情绪书写是独立组件：单个 component 段 + 文字兜底', () => {
+  const activity = validateActivity(JSON.parse(readFileSync(new URL('../content/activities/writing-practice.json', import.meta.url))));
+  assert.equal(activity.stages.length, 1);
+  assert.equal(activity.stages[0].type, 'component');
+  assert.equal(activity.stages[0].component, 'writing-practice');
+  assert.ok(typeof activity.stages[0].fallbackHint === 'string' && activity.stages[0].fallbackHint.length > 50);
+});
+
+test('暂停卡是独立组件：单个 component 段 + 文字兜底', () => {
+  const activity = validateActivity(JSON.parse(readFileSync(new URL('../content/activities/pause-card.json', import.meta.url))));
+  assert.equal(activity.stages.length, 1);
+  assert.equal(activity.stages[0].type, 'component');
+  assert.equal(activity.stages[0].component, 'pause-card');
+  assert.ok(typeof activity.stages[0].fallbackHint === 'string' && activity.stages[0].fallbackHint.length > 50);
+});
+
+test('三件好事是独立组件：单个 component 段 + 文字兜底', () => {
+  const activity = validateActivity(JSON.parse(readFileSync(new URL('../content/activities/gratitude-checkin.json', import.meta.url))));
+  assert.equal(activity.stages.length, 1);
+  assert.equal(activity.stages[0].type, 'component');
+  assert.equal(activity.stages[0].component, 'gratitude');
+  assert.ok(typeof activity.stages[0].fallbackHint === 'string' && activity.stages[0].fallbackHint.length > 50);
 });
 
 test('可拓展媒体配置必须有安全的真实地址或完整模拟时间线', () => {

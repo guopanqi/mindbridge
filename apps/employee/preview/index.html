@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>组件预览台 · MindBridge</title>
+<link rel="stylesheet" href="/public/styles.css">
+<style>
+  /* 预览台外壳刻意用中性灰，与正式版深绿主题彻底区分开。 */
+  body { background: #161616; }
+  .pv-tool { background: #202020; border-bottom: 2px dashed #555; padding: 12px 16px;
+    display: flex; gap: 12px; align-items: center; flex-wrap: wrap; font-size: 13px; color: #ccc; }
+  .pv-badge { background: #f5c518; color: #111; font-weight: 700; font-size: 12px;
+    border-radius: 6px; padding: 3px 8px; }
+  .pv-tool select { background: #111; color: #eee; border: 1px solid #555; border-radius: 8px;
+    padding: 6px 8px; font: inherit; }
+  .pv-tool label { display: flex; gap: 6px; align-items: center; }
+  .pv-tool button { background: #333; color: #eee; border: 1px solid #666; border-radius: 8px;
+    padding: 7px 12px; font: inherit; }
+  .pv-note { font-size: 12px; color: #888; }
+  .pv-device { text-align: center; color: #888; font-size: 12px; margin: 14px 0 10px; font-family: monospace; }
+  /* 手机框：居中，真实 CSS 像素尺寸，内部自行滚动。 */
+  .pv-phone { width: max-content; max-width: 96vw; margin: 0 auto 24px; background: #000;
+    border: 10px solid #000; border-radius: 48px; box-shadow: 0 0 0 2px #444, 0 18px 60px rgba(0,0,0,.6); }
+  .pv-notch { width: 120px; height: 26px; background: #000; border-radius: 0 0 14px 14px; margin: 0 auto;
+    position: relative; z-index: 2; }
+  .pv-screen { overflow-y: auto; background: linear-gradient(172deg, var(--bg), var(--bg-deep)); }
+  .pv-stage { padding: 18px 16px 24px; display: grid; gap: 14px; min-height: 100%; align-content: start; }
+  /* 事件日志：明确的工具面板，与手机框拉开距离。 */
+  .pv-logwrap { max-width: 720px; margin: 0 auto 40px; padding: 0 16px; }
+  .pv-logwrap h2 { font-size: 13px; color: #888; font-weight: 600; margin: 0 0 8px; }
+  .pv-log { display: grid; gap: 8px; }
+  .pv-log pre { background: #0d0d0d; border: 1px dashed #555; border-radius: 10px; padding: 10px 12px;
+    font-size: 12px; color: #aaa; margin: 0; white-space: pre-wrap; font-family: monospace; }
+</style>
+</head>
+<body>
+<div class="pv-tool">
+  <span class="pv-badge">预览工具</span>
+  <span class="pv-note">仅开发调试用，不会出现在正式版</span>
+  <select id="pv-component" aria-label="选择组件"></select>
+  <select id="pv-device" aria-label="选择机型"></select>
+  <select id="pv-speed" aria-label="播放速度">
+    <option value="1">1×</option>
+    <option value="4">4×</option>
+    <option value="20">20×</option>
+    <option value="60">60×</option>
+  </select>
+  <label><input type="checkbox" id="pv-rm"> 减少动态效果</label>
+  <select id="pv-zoom" aria-label="缩放">
+    <option value="auto">自动适配</option>
+    <option value="1">100%</option>
+    <option value="0.75">75%</option>
+    <option value="0.5">50%</option>
+  </select>
+  <button id="pv-restart" type="button">重新开始</button>
+</div>
+<div class="pv-device" id="pv-device-label"></div>
+<div class="pv-phone">
+  <div class="pv-notch"></div>
+  <div class="pv-screen" id="pv-screen"><div class="pv-stage" id="pv-stage"></div></div>
+</div>
+<div class="pv-logwrap">
+  <h2 id="pv-title">事件日志</h2>
+  <div class="pv-log" id="pv-log"></div>
+</div>
+<script type="module" src="/preview/preview.js"></script>
+</body>
+</html>

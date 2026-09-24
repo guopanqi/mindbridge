@@ -1,5 +1,14 @@
 import { el } from '../dom.js';
 import { renderGuidedPlayer, renderMediaPlayer } from './guided-player.js';
+import { BREATHING_SPACE } from '../activities/breathing-space.js';
+import { PAUSE_CARD } from '../activities/pause-card.js';
+import { WRITING_PRACTICE } from '../activities/writing-practice.js';
+import { GRATITUDE } from '../activities/gratitude.js';
+import { BODY_SCAN } from '../activities/body-scan.js';
+import { STRETCH_GUIDE } from '../activities/stretch-guide.js';
+import { PMR } from '../activities/pmr.js';
+import { RETURN_RHYTHM } from '../activities/return-rhythm.js';
+import { VALUE_ANCHOR } from '../activities/value-anchor.js';
 
 const time = value => `${Math.floor(Math.ceil(value) / 60)}:${String(Math.ceil(value) % 60).padStart(2, '0')}`;
 
@@ -92,6 +101,15 @@ function writing(stage, { complete, isLast }) {
   ];
 }
 
+// 独立组件注册：体验本身就是内容的活动（如呼吸），按活动 id 强制路由到
+// 专属组件，不再走下面的通用引擎。已开始的旧内容快照同样进入新组件——
+// 旧快照作废，结束时壳会自动按快照内的 stage 数量补齐进度再 complete，后端无需改动。
+// 新增组件时在这里加一行，并同步 content 里对应 JSON 的 component 段声明。
+const BESPOKE = { breathing: BREATHING_SPACE, 'bodyscan-text': BODY_SCAN, 'stretch-guide': STRETCH_GUIDE, pmr: PMR, 'pause-card': PAUSE_CARD, 'writing-practice': WRITING_PRACTICE, 'return-rhythm': RETURN_RHYTHM, 'value-anchor': VALUE_ANCHOR, 'gratitude-checkin': GRATITUDE };
+
+export const bespokeFor = activityId => BESPOKE[activityId] || null;
+export const BESPOKE_IDS = Object.keys(BESPOKE);
+
 // 每个引擎只接收内容和生命周期；不能自行写 API 或改变全局活动状态。
 // complete(result?) 表示本段自然结束；cleanup(fn) 必须释放计时器、媒体和事件监听。
 export const ACTIVITY_ENGINES = {
@@ -105,8 +123,10 @@ export const ACTIVITY_ENGINES = {
 };
 
 // 渲染与版式都按内容类型注册，不因统一流程而丢掉圆形呼吸、波形或视频等专属界面。
+// component 是独立组件的占位段：旧客户端用 fallbackHint 做文字兜底，新客户端按活动 id 路由到专属组件。
 export const ACTIVITY_PRESENTATION = {
   breath: { immersive: true, cue: '圆大吸气 · 圆小呼气', conclusion: '让呼吸回到自然节奏，放松肩膀，慢慢结束这次练习。' },
+  component: { immersive: true, cue: '跟随画面即可', conclusion: '这次练习到这里就完成了，接下来按自己的节奏继续。' },
   media: { immersive: true, conclusion: '播放已结束。可以停留一会儿，再回到接下来的事情。' },
   scan: { immersive: true, conclusion: '把注意力慢慢带回周围，按舒服的节奏结束练习。' },
   timer: { immersive: true, conclusion: '跟练已结束，稍作休息再继续。' },

@@ -12,6 +12,7 @@ const browser = {
   TextDecoder: 'readonly', btoa: 'readonly', atob: 'readonly', matchMedia: 'readonly',
   localStorage: 'readonly', navigator: 'readonly', location: 'readonly', history: 'readonly',
   Event: 'readonly', CustomEvent: 'readonly', FormData: 'readonly', Headers: 'readonly', WebSocket: 'readonly',
+  Audio: 'readonly',
   performance: 'readonly', structuredClone: 'readonly', queueMicrotask: 'readonly',
   URLSearchParams: 'readonly', AbortSignal: 'readonly', DOMException: 'readonly',
   ReadableStream: 'readonly', HTMLElement: 'readonly', Node: 'readonly',

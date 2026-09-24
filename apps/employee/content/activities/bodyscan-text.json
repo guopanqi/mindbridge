@@ -1,63 +1,33 @@
 {
   "id": "bodyscan-text",
-  "contentVersion": 6,
+  "contentVersion": 9,
   "title": "工间身体扫描",
-  "description": "从头到脚逐个部位停留一会儿，把「说不清哪里累」变成具体的位置。",
+  "description": "一段正念身体扫描：依次留意脚、腿、躯干、手臂、肩颈和面部的感觉，不需要让身体立刻放松。画面和文字会带着你往下走；不舒服时随时停下。",
   "kind": "online",
   "level": "L1",
   "available": true,
-  "form": "音频引导",
-  "duration": "1 分 26 秒",
-  "scoreLabel": "疲惫感",
+  "form": "图文引导",
+  "duration": "5 分钟",
+  "scoreLabel": "身体觉察",
   "suitedFor": "久坐伏案之后，身体钝钝地累但说不清哪里累",
-  "coreMethod": "分部位的身体觉察",
+  "coreMethod": "正念身体扫描 · 观察而不改变",
   "tags": [
     "疲惫"
   ],
   "scale": {
-    "preLabel": "此刻的身体疲惫程度是多少？",
-    "low": "轻松",
-    "high": "非常疲惫",
-    "direction": "down"
+    "preLabel": "此刻你能留意到身体哪些感觉？",
+    "low": "还不太清楚",
+    "high": "能注意到一些",
+    "direction": "up"
   },
   "stages": [
     {
-      "type": "media",
-      "presentation": "audio",
-      "title": "从头往下走一遍",
-      "hint": "就坐在工位上做。可以闭眼，也可以看着屏幕，两种都行。 每个部位停留一会儿，只是去感觉，不需要改变什么。",
-      "segments": [
-        {
-          "title": "头顶与额头",
-          "hint": "感受头皮的重量，让眉心之间松开。",
-          "seconds": 14
-        },
-        {
-          "title": "眼睛与下颌",
-          "hint": "盯了几小时屏幕的眼睛，还有可能一直咬着的后槽牙。",
-          "seconds": 14
-        },
-        {
-          "title": "肩颈与胸口",
-          "hint": "留意肩膀是不是不自觉地耸着，随着呼气让它落下来。",
-          "seconds": 16
-        },
-        {
-          "title": "手臂与双手",
-          "hint": "感受手指的温度。握了一天鼠标的手，现在可以完全摊开。",
-          "seconds": 14
-        },
-        {
-          "title": "腰背",
-          "hint": "觉察椅背和坐垫托住你的地方，把重量交给它们。",
-          "seconds": 14
-        },
-        {
-          "title": "双腿与双脚",
-          "hint": "感受双脚踩在地面上的支撑感，这是身体和地面唯一的接触。",
-          "seconds": 14
-        }
-      ]
+      "type": "component",
+      "component": "body-scan",
+      "src": "/media/bodyscan-molly.mp3",
+      "title": "五分钟身体扫描",
+      "hint": "可以坐着、站着，闭眼或看屏幕。依次留意身体感觉；没有明显感觉也没关系。不需要主动放松。",
+      "fallbackHint": "五分钟身体扫描：先感受身体与椅子、地面的接触；再觉察自然呼吸；依次留意双脚和小腿、大腿和腰背、腹部与胸部、双手手臂和肩膀、颈部下颌和面部；最后感受整个身体并回到周围环境。只观察感觉，不要求改变它。"
     }
   ]
 }

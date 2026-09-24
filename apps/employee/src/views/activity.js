@@ -2,7 +2,8 @@
 // 引擎只通知 complete 并注册 cleanup；API 写入、重试和版本快照在这里统一管理。
 import { api, ApiError } from '../api.js';
 import { clear, el, toast } from '../dom.js';
-import { ACTIVITY_ENGINES, ACTIVITY_PRESENTATION, activityPlan } from './activity-engines.js';
+import { ACTIVITY_ENGINES, ACTIVITY_PRESENTATION, activityPlan, bespokeFor } from './activity-engines.js';
+import { activityFacts } from './activity-facts.js';
 
 let overlay;
 let current = null;
@@ -100,7 +101,7 @@ async function recover(session) {
     }
     render();
   } catch (error) {
-    if (active(session)) toast(messageOf(error, '暂时无法同步，请稍后重试。'));
+    if (active(session)) toast(messageOf(error, '暂时无法同步，请稍后再试。'));
   }
 }
 
@@ -109,7 +110,6 @@ function header(session) {
     el('button', { class: 'act-back', text: '‹', attrs: { type: 'button', 'aria-label': '关闭' }, on: { click: close } }),
     el('div', {}, [
       el('p', { class: 'act-title', text: session.activity.title }),
-      el('p', { class: 'act-meta', text: [session.activity.form, session.activity.duration].filter(Boolean).join(' · ') }),
     ]),
   ]);
 }
@@ -117,6 +117,8 @@ function header(session) {
 function intro(session) {
   const activity = session.activity;
   return [
+    activityFacts(activity),
+    activity.coreMethod ? el('p', { class: 'act-method', text: `练习方法：${activity.coreMethod}` }) : null,
     el('p', { class: 'act-desc', text: activity.description }),
     activity.kind === 'offline' ? el('div', { class: 'act-info' }, [
       el('p', { text: `时间：${activity.schedule || '待定'}` }),
@@ -132,7 +134,7 @@ function intro(session) {
 function experience(session) {
   const plan = activityPlan(session.activity.stages);
   const item = plan[session.position];
-  if (!item) return [el('p', { text: '活动内容暂时不可用，请关闭后重试。' })];
+  if (!item) return [el('p', { text: '活动内容暂时不可用，请关闭后再试。' })];
   const { stage } = item;
   const cleanups = [];
   let live = true;
@@ -146,7 +148,10 @@ function experience(session) {
     moveProgress(session, plan[session.position].index);
     render();
   };
-  const presentation = ACTIVITY_PRESENTATION[stage.type];
+  // 独立组件按活动 id 强制生效：忽略快照里的旧 stage，直接跑专属体验。
+  // 结束时走同一套 finish（按快照 stage 数补齐进度再 complete），旧快照也能正常结算。
+  const bespoke = bespokeFor(session.activity.id);
+  const presentation = bespoke?.presentation || ACTIVITY_PRESENTATION[stage.type];
   const instructions = [...item.instructions, stage.hint].filter(Boolean);
   const nodes = [el('div', { class: 'act-experience-heading' }, [
     el('p', { class: 'act-step-title', attrs: { tabindex: '-1' }, text: stage.title }),
@@ -155,7 +160,8 @@ function experience(session) {
   if (presentation?.cue) nodes.push(el('p', { class: 'act-cue', text: presentation.cue }));
   // 播放型体验先给核心渲染，完整说明收在下方，旧快照里长段准备文字也不占首屏。
   if (!presentation?.immersive && stage.hint) nodes.push(el('p', { class: 'act-step-hint', text: stage.hint }));
-  const engine = Object.hasOwn(ACTIVITY_ENGINES, stage.type) ? ACTIVITY_ENGINES[stage.type] : null;
+  const engine = bespoke?.render
+    || (Object.hasOwn(ACTIVITY_ENGINES, stage.type) ? ACTIVITY_ENGINES[stage.type] : null);
   if (engine) nodes.push(el('div', { class: 'act-engine', attrs: { 'data-engine': stage.type } },
     engine(stage, { complete, cleanup: fn => cleanups.push(fn), isLast: session.position === plan.length - 1 })));
   else if (stage.fallbackHint) {
@@ -185,14 +191,14 @@ function result(session) {
     on: { click: async () => {
       if (!session.rating) { close(); return; }
       closeButton.disabled = true;
-      closeButton.textContent = '正在保存…';
+      closeButton.textContent = '正在保存';
       try {
         await session.tail;
         if (!active(session)) return;
         await api.activityProgress({ eventId: session.eventId, action: 'rate', helpfulness: session.rating });
         if (active(session)) close();
       } catch (error) {
-        if (active(session)) { closeButton.disabled = false; closeButton.textContent = '保存评价并关闭'; toast(messageOf(error, '评价未能保存，活动完成记录不受影响。')); }
+        if (active(session)) { closeButton.disabled = false; closeButton.textContent = '保存评价并关闭'; toast(messageOf(error, '评价保存失败，完成记录不受影响。')); }
       }
     } },
   });
@@ -204,7 +210,7 @@ function result(session) {
       ? el('img', { class: 'act-photo', attrs: { src: '/media/offline-workshop.svg', alt: '线下工作坊示意插画', loading: 'lazy' } })
       : null,
     el('h2', { class: 'act-step-title', text: activity.kind === 'offline' ? '已完成 · 线下参与' : '体验结束' }),
-    el('p', { class: 'act-save-status', attrs: { role: 'status' }, text: session.saved ? '已记录完成' : '正在保存完成记录…' }),
+    el('p', { class: 'act-save-status', attrs: { role: 'status' }, text: session.saved ? '已记录完成' : '正在保存完成记录' }),
     !session.answers.filter(Boolean).length ? el('p', { class: 'act-closing-copy', text: conclusion }) : null,
     ...session.answers.filter(Boolean).map(answer => el('div', { class: 'act-outcome' }, [
       el('p', { class: 'act-note', text: answer.question }), el('b', { text: answer.label }),
@@ -217,7 +223,7 @@ function result(session) {
       ? el('p', { class: 'act-note', text: `你的评价：${activity.progress.helpfulness}` })
       : el('div', {}, [
         el('p', { class: 'act-q', text: '这次练习对你有舒缓作用吗？' }), picker,
-        el('p', { class: 'act-note', text: '不评价也会正常记录完成。' }),
+        el('p', { class: 'act-note', text: '不评价也会记录完成。' }),
       ]),
     ]),
     closeButton,
@@ -245,8 +251,8 @@ function render() {
   }
   const nodes = session.error ? [
     el('p', { class: 'act-step-title', text: '进度保存尚未确认' }),
-    el('p', { class: 'act-note', text: '可以重试同步，确认后继续。' }),
-    el('button', { class: 'primary', text: '重试同步', attrs: { type: 'button' }, on: { click: () => void recover(session) } }),
+    el('p', { class: 'act-note', text: '可重新同步，确认后继续。' }),
+    el('button', { class: 'primary', text: '重新同步', attrs: { type: 'button' }, on: { click: () => void recover(session) } }),
   ] : session.phase === 'result' ? result(session)
     : session.phase === 'experience' ? experience(session)
       : session.phase === 'booked' ? booked(session) : intro(session);
@@ -287,7 +293,7 @@ export async function openActivity(eventId, afterClose) {
     session.phase = session.saved ? 'result' : response.activity.kind === 'offline' && response.activity.progress.state === 'joined' ? 'booked' : 'intro';
     render();
   } catch (error) {
-    if (active(session)) toast(messageOf(error, '活动内容打不开，请稍后再试。'));
+    if (active(session)) toast(messageOf(error, '活动内容暂时无法打开，请稍后再试。'));
   }
 }
 

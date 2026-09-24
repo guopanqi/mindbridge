@@ -46,6 +46,19 @@ stages 是连续体验的内容序列，不是必须点击“下一步”的分�
 {"type":"media","presentation":"video","title":"观看引导","src":"/media/guide.mp4"}
 ```
 
+## 独立组件（component 段）
+
+体验本身就是内容的活动（如呼吸），不再用通用 stage 拼，用专属组件：
+
+```json
+{"type":"component","component":"breathing-space","title":"三步呼吸空间","hint":"…","fallbackHint":"…"}
+```
+
+- 渲染由 `src/views/activity-engines.js` 里的注册表按活动 id 路由到 `src/activities/<component>.js`，已开始的旧快照同样进入新组件（旧快照作废）。
+- `fallbackHint` 是旧客户端的文字兜底，必须可独立执行，不能只写“请更新”。
+- 结束时走壳里同一套 finish（按快照 stage 数补齐进度再 complete），后端无需改动。
+- 新增组件时同步三处：`src/activities/` 新文件、`activity-engines.js` 注册一行、对应 JSON 的 component 段声明。
+
 可使用 HTTPS 素材地址，但还须在部署环境的 CSP media-src 中明确允许对应域名。
 播放器尝试自动播放；浏览器阻止时显示“点击播放”，加载失败时提供重试，不把失败当完成。
 模拟播放器支持暂停、拖动、重播；呼吸和模拟播放器切后台自动暂停，回前台恢复，手动暂停不会被自动恢复。关闭或换活动会释放计时器和媒体资源。
