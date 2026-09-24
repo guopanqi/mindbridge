@@ -41,6 +41,11 @@ export const api = {
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ token }),
   }),
+  signInAsInternalTester: (token) => request('/api/auth/internal-test', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ token }),
+  }),
   signOut: () => request('/api/session', { method: 'DELETE' }),
   metrics: (days, origin = 'live') => request(`/api/metrics?days=${encodeURIComponent(days)}&origin=${encodeURIComponent(origin)}`),
   config: () => request('/api/config'),

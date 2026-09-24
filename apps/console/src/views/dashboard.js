@@ -15,7 +15,7 @@ export function setOrganizationKind(kind) {
 
 const SUPPRESSED_TEXT = (min) => `样本不足 ${min} 人，不予展示`;
 const numberText = (value, suffix = '') => value === null || value === undefined ? '不予展示' : `${value}${suffix}`;
-const originNote = (data) => data.origin === 'demo_seed' ? '当前为本组织演示数据，不代表真实使用；与真实数据分别统计。' : '当前仅统计本组织真实使用；样本不足 10 人的指标不予展示。';
+const originNote = (data) => data.origin === 'demo_seed' ? '当前为本组织演示数据，不代表真实使用；与真实数据分别统计。' : data.internalTest ? '内部测试视图：当前仅统计本组织真实使用，最小样本为 1 人。' : '当前仅统计本组织真实使用；样本不足 10 人的指标不予展示。';
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
 // 8 行业 Benchmark 常模库（取自 Demo）
@@ -805,7 +805,7 @@ function switchPane(pane) {
   clear(container);
   if (organizationKind === 'beta' && cachedData.origins.demo_seed?.eventCount) {
     const source = el('select', { attrs: { 'aria-label': '数据来源' } });
-    for (const [value, label] of [['live', '真实数据（小样本遮蔽）'], ['demo_seed', '本组织演示数据']]) {
+    for (const [value, label] of [['live', cachedData.internalTest ? '真实数据（内部测试视图）' : '真实数据（小样本遮蔽）'], ['demo_seed', '本组织演示数据']]) {
       const option = el('option', { text: label, attrs: { value } });
       option.selected = value === dataOrigin;
       source.append(option);

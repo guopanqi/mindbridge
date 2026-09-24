@@ -9,6 +9,7 @@ const GATE_TEXT = {
   NOT_ADMIN: '只有企业管理员可以进入 MindBridge 管理后台。',
   SSO_CODE_REPLAYED: '这个免登链接已经用过了，请回到钉钉管理后台重新点击进入。',
   ADMIN_LINK_INVALID: '管理链接无效或已失效，请向创建组织的人索取新链接。',
+  INTERNAL_TEST_LOGIN_INVALID: '内部测试入口无效，请使用新发的测试入口。',
   APP_CONFIGURATION_MISSING: '管理后台配置不完整，请联系系统管理员。',
   SERVER_TIMEOUT: '网络连接超时，请稍后重试。',
   NETWORK_ERROR: '网络连接失败，请稍后重试。',
@@ -39,6 +40,9 @@ function renderBanner(data) {
   const nodes = [];
   if (data.origin === 'demo_seed') {
     nodes.push(el('span', { class: 'sim-chip', text: '本组织演示数据 · 非真实使用' }));
+  }
+  if (data.internalTest) {
+    nodes.push(el('span', { class: 'sim-chip', text: '内部测试视图 · 最小样本 1 人 · 真实数据' }));
   }
   if (tenant.kind === 'beta') {
     nodes.push(
@@ -92,7 +96,9 @@ async function showView(view) {
 async function enterConsole(session) {
   const orgKind = session.organization?.kind || 'enterprise';
   setOrganizationKind(orgKind);
-  const roleLabel = orgKind === 'beta'
+  const roleLabel = session.roles.includes('internal_tester')
+    ? '内部测试员'
+    : orgKind === 'beta'
     ? '组织管理员'
     : (session.roles.includes('admin') ? '企业管理员' : 'HR');
   $('#staff-name').textContent = `${session.displayName} · ${roleLabel}`;
@@ -132,6 +138,19 @@ function takeOrgKey(url) {
 
 async function boot() {
   const url = new URL(window.location.href);
+
+  const debugKey = url.searchParams.get('debugKey');
+  if (debugKey) {
+    url.searchParams.delete('debugKey');
+    window.history.replaceState({}, '', url.toString());
+    try {
+      await api.signInAsInternalTester(debugKey);
+    } catch (error) {
+      const reason = error instanceof ApiError ? error.code : 'UNEXPECTED_CLIENT_ERROR';
+      showGate('无法进入内部测试视图', GATE_TEXT[reason] || error.userMessage || '测试入口校验没有完成。', reason);
+      return;
+    }
+  }
 
   const orgKey = takeOrgKey(url);
   if (orgKey) {

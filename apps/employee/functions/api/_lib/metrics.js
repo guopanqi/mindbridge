@@ -7,19 +7,19 @@
 // 阈值写死在代码里，不做成企业可配置项：可配置的阈值等于给保护开后门。
 export const MIN_SAMPLE = 10;
 
-export function suppress(value, sampleSize) {
-  if (!Number.isFinite(sampleSize) || sampleSize < MIN_SAMPLE) {
-    return { suppressed: true, reason: 'MIN_SAMPLE', minSample: MIN_SAMPLE, sampleSize: null };
+export function suppress(value, sampleSize, minSample = MIN_SAMPLE) {
+  if (!Number.isFinite(sampleSize) || sampleSize < minSample) {
+    return { suppressed: true, reason: 'MIN_SAMPLE', minSample, sampleSize: null };
   }
   return { suppressed: false, value, sampleSize };
 }
 
 // 交叉筛选的防推断：多个维度叠加后样本会变小，必须按叠加后的样本量判断，
 // 不能因为父级维度样本够就放行子级。
-export function suppressSeries(points) {
+export function suppressSeries(points, minSample = MIN_SAMPLE) {
   return points.map((point) => ({
     bucket: point.bucket,
-    ...suppress(point.value, point.sampleSize),
+    ...suppress(point.value, point.sampleSize, minSample),
   }));
 }
 

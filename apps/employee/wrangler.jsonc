@@ -10,6 +10,7 @@
     "DINGTALK_CORP_ID": "ding585edf06dbd4a79fc7ca53aad90ff185",
     "DINGTALK_ORG_ID": "org_enterprise_primary",
     "DEFAULT_HEALER_STAFF_ID": "stf_demo_healer",
+    "INTERNAL_TEST_ORG_ID": "org_beta_c41af106e4014b45ae3c30eb4b1b5fde",
     "ANON_KEY_VERSION": "v1",
     "IDENTITY_ENCRYPTION_KEY_VERSION": "v1",
     "SESSION_TTL_SECONDS": "1800",

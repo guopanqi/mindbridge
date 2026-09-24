@@ -558,6 +558,26 @@ test('HR metrics：live 样本 1/4/5/9 人均按 k=10 抑制，10 人才放行',
   }
 });
 
+test('内部测试视图只对指定组织放开单人真实样本', async () => {
+  const { db, env } = await metricsFixture(1);
+  env.INTERNAL_TEST_ORG_ID = 'org_enterprise_primary';
+  const get = async (organizationId) => {
+    const request = new Request(`https://employee.test/api/internal/metrics?days=7&organizationId=${organizationId}&internalTest=1`, {
+      headers: { authorization: `Bearer ${SERVICE_TOKEN}` },
+    });
+    return (await readMetrics({ env, request })).json();
+  };
+  const allowed = await get('org_enterprise_primary');
+  assert.equal(allowed.internalTest, true);
+  assert.equal(allowed.minSample, 1);
+  assert.equal(allowed.coverage.activeUsers.value, 1);
+  assert.equal(typeof allowed.temperature.value, 'number');
+  const other = await get('org_review');
+  assert.equal(other.internalTest, false);
+  assert.equal(other.minSample, 10);
+  db.close();
+});
+
 test('HR metrics：demo_seed 与 live 分组，demo 不能拿来凑 live 的 k=10', async () => {
   const mixed = await metricsFixture(1, 10);
   const liveResponse = await readMetrics({ env: mixed.env, request: mixed.request('live') });

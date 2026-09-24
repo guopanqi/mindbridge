@@ -9,15 +9,16 @@ export async function onRequestGet({ request, env }) {
     const staff = await requireStaff(request, env, 'hr_viewer');
     const days = new URL(request.url).searchParams.get('days') || '90';
     const origin = new URL(request.url).searchParams.get('origin') === 'demo_seed' ? 'demo_seed' : 'live';
+    const internalTest = staff.roles.includes('internal_tester') && staff.organizationId === env.INTERNAL_TEST_ORG_ID;
     const upstream = await fetch(
-      `${env.CARE_API_ORIGIN}/api/internal/metrics?days=${encodeURIComponent(days)}&origin=${origin}&${organizationQuery(staff, env)}`,
+      `${env.CARE_API_ORIGIN}/api/internal/metrics?days=${encodeURIComponent(days)}&origin=${origin}&${organizationQuery(staff, env)}${internalTest ? '&internalTest=1' : ''}`,
       { headers: { authorization: `Bearer ${careToken(env)}` }, signal: AbortSignal.timeout(10000) }
     ).catch(() => null);
     if (!upstream || !upstream.ok) {
       throw new ApiError('CARE_UPSTREAM_FAILED', 502, '聚合数据暂时取不到，请稍后重试');
     }
     const body = await upstream.json();
-    await audit(env, staff.staffId, 'view_dashboard', 'report', `metrics:${days}d:${staff.organizationId || 'enterprise'}`, 'ok');
+    await audit(env, staff.staffId, internalTest ? 'view_dashboard_internal_test' : 'view_dashboard', 'report', `metrics:${days}d:${staff.organizationId || 'enterprise'}`, 'ok');
     return json(body);
   } catch (error) {
     return handleError(error, 'metrics_proxy_failed');

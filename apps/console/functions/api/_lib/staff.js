@@ -2,7 +2,7 @@
 import { sha256Base64Url } from './crypto.js';
 import { clearStaffCookie, json, readCookie, STAFF_COOKIE } from './http.js';
 
-export const ROLES = ['admin', 'hr_viewer', 'healer'];
+export const ROLES = ['admin', 'hr_viewer', 'healer', 'internal_tester'];
 
 export class ApiError extends Error {
   constructor(code, status = 400, message = '请求无法完成') {

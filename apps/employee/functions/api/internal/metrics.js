@@ -68,7 +68,7 @@ function scopedSource(table, origin, organizationId) {
   return `(SELECT * FROM ${table} WHERE ${where})`;
 }
 
-async function summarize(env, since, origin, organizationId) {
+async function summarize(env, since, origin, organizationId, minSample) {
   const memberClause = ` AND anon_id IN (SELECT anon_id FROM subject_organizations WHERE organization_id='${organizationId}')`;
   const aggregateClause = ` AND organization_id='${organizationId}'`;
   const [users, events, risks] = await Promise.all([
@@ -81,10 +81,10 @@ async function summarize(env, since, origin, organizationId) {
   ]);
   const byLevel = Object.fromEntries((risks.results || []).map((r) => [r.level, r.people]));
   return {
-    activeUsers: suppress(users?.n || 0, users?.n || 0),
+    activeUsers: suppress(users?.n || 0, users?.n || 0, minSample),
     eventCount: origin === 'demo_seed' ? events?.n || 0 : null,
     eventCountSuppressed: origin !== 'demo_seed',
-    riskBands: { suppressed: (users?.n || 0) < MIN_SAMPLE, yellow: (byLevel.yellow || 0) >= MIN_SAMPLE ? riskBand(byLevel.yellow) : null, red: (byLevel.red || 0) >= MIN_SAMPLE ? riskBand(byLevel.red) : null },
+    riskBands: { suppressed: (users?.n || 0) < minSample, yellow: (byLevel.yellow || 0) >= minSample ? riskBand(byLevel.yellow) : null, red: (byLevel.red || 0) >= minSample ? riskBand(byLevel.red) : null },
   };
 }
 
@@ -116,6 +116,12 @@ export async function onRequestGet({ request, env }) {
       'SELECT id, display_name, kind FROM organizations WHERE id = ? AND status = ?'
     ).bind(organizationId, 'active').first();
     if (!organization) return json({ ok: false, reasonCode: 'ORGANIZATION_UNKNOWN' }, 404);
+    const internalTest = url.searchParams.get('internalTest') === '1'
+      && origin === 'live' && organizationId === env.INTERNAL_TEST_ORG_ID;
+    const minSample = internalTest ? 1 : MIN_SAMPLE;
+    const suppressFor = (value, size) => suppress(value, size, minSample);
+    const suppressSeriesFor = (points) => suppressSeries(points, minSample);
+    const band = (count) => internalTest ? String(count) : riskBand(count);
     if (origin === 'demo_seed' && organization.kind !== 'beta') {
       return json({ ok: false, reasonCode: 'DEMO_NOT_AVAILABLE' }, 404);
     }
@@ -225,11 +231,11 @@ export async function onRequestGet({ request, env }) {
     const totalChat = greenCount + (byLevel.yellow?.events || 0) + (byLevel.red?.events || 0);
     const emotionTotal = (emotions.results || []).reduce((sum, row) => sum + row.n, 0);
 
-    const temperature = (stress?.n || 0) >= MIN_SAMPLE ? toTemperature(nonGreenShare(stress)) : null;
-    const prevTemperature = (prevStress?.n || 0) >= MIN_SAMPLE ? toTemperature(nonGreenShare(prevStress)) : null;
+    const temperature = (stress?.n || 0) >= minSample ? toTemperature(nonGreenShare(stress)) : null;
+    const prevTemperature = (prevStress?.n || 0) >= minSample ? toTemperature(nonGreenShare(prevStress)) : null;
 
-    const coverageRate = headcount && activeUsers >= MIN_SAMPLE ? Math.min(100, percentage(activeUsers, headcount)) : null;
-    const prevCoverageRate = headcount && prevActive?.n >= MIN_SAMPLE ? Math.min(100, percentage(prevActive.n, headcount)) : null;
+    const coverageRate = headcount && activeUsers >= minSample ? Math.min(100, percentage(activeUsers, headcount)) : null;
+    const prevCoverageRate = headcount && prevActive?.n >= minSample ? Math.min(100, percentage(prevActive.n, headcount)) : null;
 
     // 部门概览：人数、参与率、情绪温度、主导议题全部真算，样本不足的部门自动被抑制。
     const moodByDept = Object.fromEntries((deptMood.results || []).map((r) => [r.name, r]));
@@ -241,7 +247,7 @@ export async function onRequestGet({ request, env }) {
     const departments = (deptRows.results || []).map((dept) => {
       const mood = moodByDept[dept.name];
       const people = mood?.people || 0;
-      if (people < MIN_SAMPLE) {
+      if (people < minSample) {
         return {
           name: dept.name, headcount: dept.headcount, sampleSize: null, suppressed: true,
           participationRate: null, moodTemp: null, mainTopic: null, status: null, level: null,
@@ -255,7 +261,7 @@ export async function onRequestGet({ request, env }) {
         suppressed: false,
         participationRate: percentage(people, dept.headcount),
         moodTemp: temp,
-        mainTopic: topTopicByDept[dept.name]?.people >= MIN_SAMPLE ? topTopicByDept[dept.name].topic : null,
+        mainTopic: topTopicByDept[dept.name]?.people >= minSample ? topTopicByDept[dept.name].topic : null,
         ...deptStatus(temp),
       };
     });
@@ -272,7 +278,7 @@ export async function onRequestGet({ request, env }) {
       let state = 'ok';
       if (!signal || signal.enabled !== 1) state = 'disabled';
       else if (!row) state = 'not_synced';
-      else if (row.sample_size < MIN_SAMPLE) state = 'suppressed';
+      else if (row.sample_size < minSample) state = 'suppressed';
       return {
         key, label, note, state,
         value: state === 'ok' ? format(row.value) : null,
@@ -290,7 +296,8 @@ export async function onRequestGet({ request, env }) {
     const report = {
       ok: true,
       origin,
-      minSample: MIN_SAMPLE,
+      minSample,
+      internalTest,
       window: { days, since },
       tenant: {
         id: tenant?.id || organizationId || null,
@@ -301,18 +308,18 @@ export async function onRequestGet({ request, env }) {
         simulatedBaseline: tenant?.data_origin === 'demo_seed',
       },
       coverage: {
-        activeUsers: suppress(activeUsers, activeUsers),
+        activeUsers: suppressFor(activeUsers, activeUsers),
         rate: coverageRate,
         delta: deltaLabel(coverageRate, prevCoverageRate) ? `${deltaLabel(coverageRate, prevCoverageRate)}pt` : null,
       },
       temperature: { value: temperature, delta: deltaLabel(temperature, prevTemperature) },
-      moodTrend: suppressSeries((trend.results || []).map((r) => ({
+      moodTrend: suppressSeriesFor((trend.results || []).map((r) => ({
         bucket: r.bucket, value: toTemperature(nonGreenShare(r)), sampleSize: r.n,
       }))),
       risk: {
         greenShare: totalChat ? percentage(greenCount, totalChat) : null,
-        yellowPeople: riskBand(byLevel.yellow?.people || 0),
-        redPeople: riskBand(byLevel.red?.people || 0),
+        yellowPeople: band(byLevel.yellow?.people || 0),
+        redPeople: band(byLevel.red?.people || 0),
         redCount: byLevel.red?.events || 0,
         totalConversations: totalChat,
         // 响应情况全部来自真实预约状态；没有红色个案时返回 null，不假装 100%。
@@ -325,7 +332,7 @@ export async function onRequestGet({ request, env }) {
         redBreached: redCases?.breached || 0,
         redCases: redCases?.total || 0,
       },
-      topics: (topicRows.results || []).filter(r => r.people >= MIN_SAMPLE).map((r) => ({ topic: r.topic, count: r.n })),
+      topics: (topicRows.results || []).filter(r => r.people >= minSample).map((r) => ({ topic: r.topic, count: r.n })),
       departments,
       rhythm: {
         connected: Boolean(rhythmRows.results?.length),
@@ -344,31 +351,31 @@ export async function onRequestGet({ request, env }) {
       // 帮助度是选填的，所以「有帮助占比」必须和「评价率」一起给——
       // 只给占比会让一小撮愿意评价的人看起来像全体。
       activityOverall: {
-        ...suppress({
+        ...suppressFor({
           recommended: activityOverallRow?.recommended || 0,
-          participationRate: activityOverallRow?.joined_people >= MIN_SAMPLE ? percentage(activityOverallRow.participated, activityOverallRow.recommended) : null,
-          completionRate: activityOverallRow?.completed_people >= MIN_SAMPLE ? percentage(activityOverallRow.completed, activityOverallRow.participated) : null,
-          repeatRate: activityOverallRow?.completed_people >= MIN_SAMPLE
+          participationRate: activityOverallRow?.joined_people >= minSample ? percentage(activityOverallRow.participated, activityOverallRow.recommended) : null,
+          completionRate: activityOverallRow?.completed_people >= minSample ? percentage(activityOverallRow.completed, activityOverallRow.participated) : null,
+          repeatRate: activityOverallRow?.completed_people >= minSample
             ? percentage(activityOverallRow.repeat_people || 0, activityOverallRow.completed_people)
             : null,
         }, activityOverallRow?.people || 0),
         feedbackCount: null,
-        helpfulRate: activityOverallRow?.feedback >= MIN_SAMPLE
+        helpfulRate: activityOverallRow?.feedback >= minSample
           ? percentage(activityOverallRow.helpful || 0, activityOverallRow.feedback)
           : null,
-        feedbackRate: activityOverallRow?.feedback >= MIN_SAMPLE
+        feedbackRate: activityOverallRow?.feedback >= minSample
           ? percentage(activityOverallRow.feedback, activityOverallRow.completed || 0)
           : null,
       },
       activityByAudience: (ctxRows.results || []).map((r) => ({
         tag: r.tag,
         label: CONTEXT_LABELS[r.tag] || r.tag,
-        ...suppress({
+        ...suppressFor({
           recommended: r.recommended,
-          participationRate: r.joined_people >= MIN_SAMPLE ? percentage(r.participated, r.recommended) : null,
-          completionRate: r.completed_people >= MIN_SAMPLE ? percentage(r.completed, r.participated) : null,
-          helpfulRate: r.feedback >= MIN_SAMPLE && r.people >= MIN_SAMPLE ? percentage(r.helpful || 0, r.feedback) : null,
-          feedbackRate: r.feedback >= MIN_SAMPLE && r.people >= MIN_SAMPLE ? percentage(r.feedback, r.completed || 0) : null,
+          participationRate: r.joined_people >= minSample ? percentage(r.participated, r.recommended) : null,
+          completionRate: r.completed_people >= minSample ? percentage(r.completed, r.participated) : null,
+          helpfulRate: r.feedback >= minSample && r.people >= minSample ? percentage(r.helpful || 0, r.feedback) : null,
+          feedbackRate: r.feedback >= minSample && r.people >= minSample ? percentage(r.feedback, r.completed || 0) : null,
           feedback: r.feedback,
         }, r.people),
       })),
@@ -378,37 +385,37 @@ export async function onRequestGet({ request, env }) {
       activityPerformance: (perfRows.results || []).map((r) => ({
         label: r.label,
         level: r.level,
-        ...suppress({
+        ...suppressFor({
           recommended: r.recommended,
-          participationRate: r.joined_people >= MIN_SAMPLE ? percentage(r.participated, r.recommended) : null,
-          completionRate: r.completed_people >= MIN_SAMPLE ? percentage(r.completed, r.participated) : null,
-          helpfulRate: r.feedback >= MIN_SAMPLE && r.people >= MIN_SAMPLE ? percentage(r.helpful || 0, r.feedback) : null,
-          feedbackRate: r.feedback >= MIN_SAMPLE && r.people >= MIN_SAMPLE ? percentage(r.feedback, r.completed || 0) : null,
+          participationRate: r.joined_people >= minSample ? percentage(r.participated, r.recommended) : null,
+          completionRate: r.completed_people >= minSample ? percentage(r.completed, r.participated) : null,
+          helpfulRate: r.feedback >= minSample && r.people >= minSample ? percentage(r.helpful || 0, r.feedback) : null,
+          feedbackRate: r.feedback >= minSample && r.people >= minSample ? percentage(r.feedback, r.completed || 0) : null,
           feedback: r.feedback,
         }, r.people),
       })),
-      topEmotions: emotionTotal >= MIN_SAMPLE
+      topEmotions: emotionTotal >= minSample
         ? (emotions.results || []).map((r) => ({ emotion: r.emotion, share: percentage(r.n, emotionTotal) }))
         : [],
       resources: (resources.results || []).map((r) => ({
         name: r.name, level: r.level,
-        ...suppress({
+        ...suppressFor({
           offered: r.offered,
-          joinRate: r.joined_people >= MIN_SAMPLE ? percentage(r.joined, r.offered) : null,
-          completeRate: r.completed_people >= MIN_SAMPLE ? percentage(r.completed, r.offered) : null,
+          joinRate: r.joined_people >= minSample ? percentage(r.joined, r.offered) : null,
+          completeRate: r.completed_people >= minSample ? percentage(r.completed, r.offered) : null,
         }, r.people),
       })),
       activity: { posts: wall?.posts || 0, hugs: wall?.hugs || 0 },
       origins: {
-        demo_seed: organization.kind === 'beta' ? await summarize(env, since, 'demo_seed', organizationId) : null,
-        live: await summarize(env, since, 'live', organizationId),
+        demo_seed: organization.kind === 'beta' ? await summarize(env, since, 'demo_seed', organizationId, minSample) : null,
+        live: await summarize(env, since, 'live', organizationId, minSample),
       },
       // 横幅要说明"内测期间并入了多少条真实事件"，这是全租户一个总数，
       // 不按人、部门或情绪拆分，推不出任何个体，所以不适用 k 抑制。
       liveEventCount: liveEvents?.n || 0,
     };
     // 无法从不含主体的aggregate_events证明每个情绪/事件分组达到k，真实侧保守不出数。
-    if (origin === 'live') {
+    if (origin === 'live' && !internalTest) {
       report.topEmotions = [];
       report.activity = { posts: null, hugs: null };
       report.risk = Object.fromEntries(Object.keys(report.risk).map(key => [key, null]));
