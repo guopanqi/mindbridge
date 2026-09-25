@@ -35,10 +35,10 @@ export async function deriveDisplayName(anonId) {
 
 export function contentKey(env) {
   const version = env.CARE_CONTENT_KEY_VERSION || 'v1';
-  if (!/^v[1-9]\d*$/.test(version)) throw new ApiError('APP_CONFIGURATION_MISSING', 503, '应用部署配置不完整');
+  if (!/^v[1-9]\d*$/.test(version)) throw new ApiError('APP_CONFIGURATION_MISSING', 503, '应用配置不完整，请联系管理员');
   const key = env[`CARE_CONTENT_KEY_${version.toUpperCase()}`];
   if (typeof key !== 'string' || key.length < 43) {
-    throw new ApiError('APP_CONFIGURATION_MISSING', 503, '应用部署配置不完整');
+    throw new ApiError('APP_CONFIGURATION_MISSING', 503, '应用配置不完整，请联系管理员');
   }
   return { version, key };
 }
@@ -78,14 +78,14 @@ export function requireSession(request, env) {
 
 async function resolveSession(request, env) {
   const token = readCookie(request, SESSION_COOKIE);
-  if (!token) throw new ApiError('SESSION_REQUIRED', 401, '匿名会话已失效，请从组织入口重新进入');
+  if (!token) throw new ApiError('SESSION_REQUIRED', 401, '匿名会话已失效，请重新进入');
   const digest = await sha256Base64Url(token);
   const now = Date.now();
   const row = await env.CARE_DB
     .prepare('SELECT anon_id, organization_id, entry_channel FROM sessions WHERE session_digest = ? AND expires_at > ?')
     .bind(digest, now)
     .first();
-  if (!row?.anon_id) throw new ApiError('SESSION_REQUIRED', 401, '匿名会话已失效，请从组织入口重新进入');
+  if (!row?.anon_id) throw new ApiError('SESSION_REQUIRED', 401, '匿名会话已失效，请重新进入');
   await env.CARE_DB.prepare('UPDATE sessions SET last_seen_at = ? WHERE session_digest = ?')
     .bind(now, digest).run();
   if (row.entry_channel === 'beta_web') {
@@ -99,11 +99,11 @@ async function resolveSession(request, env) {
 
 export async function readJson(request, maxBytes = 8192) {
   const raw = await request.text();
-  if (raw.length > maxBytes) throw new ApiError('PAYLOAD_TOO_LARGE', 413, '内容过长');
+  if (raw.length > maxBytes) throw new ApiError('PAYLOAD_TOO_LARGE', 413, '内容过长，请精简后重试');
   try {
     return JSON.parse(raw || '{}');
   } catch {
-    throw new ApiError('INVALID_JSON', 400, '请求格式错误');
+    throw new ApiError('INVALID_JSON', 400, '请求格式有误，请重试');
   }
 }
 
@@ -124,7 +124,7 @@ export function handleError(error, event) {
   }
   // 不打印错误原文：可能包含员工输入或身份关联信息。
   console.error(JSON.stringify({ event, reasonCode: 'INTERNAL_ERROR' }));
-  return json({ ok: false, reasonCode: 'INTERNAL_ERROR', message: '服务暂时不可用，请稍后重试' }, 500);
+  return json({ ok: false, reasonCode: 'INTERNAL_ERROR', message: '服务暂时不可用，请稍后再试' }, 500);
 }
 
 // 聚合埋点：只写事件类型、情绪、级别与日期分桶，供 HR 看板使用。

@@ -25,7 +25,7 @@ function replyBox(post, onDone) {
       input.value = '';
       onDone();
     } catch (error) {
-      toast(error instanceof ApiError && error.userMessage ? error.userMessage : '回复没有成功，请稍后再试。');
+      toast(error instanceof ApiError && error.userMessage ? error.userMessage : '回复失败，请稍后再试。');
     }
   };
   input.addEventListener('keydown', (event) => {
@@ -53,7 +53,7 @@ function card(post, reload) {
         attrs: { type: 'button', 'aria-pressed': post.hugged, 'aria-label': '抱抱' },
         on: {
           click: async () => {
-            try { await api.hug(post.id); reload(); } catch { toast('操作没有成功，请稍后再试。'); }
+            try { await api.hug(post.id); reload(); } catch { toast('操作失败，请稍后再试。'); }
           },
         },
       }),
@@ -66,7 +66,7 @@ function card(post, reload) {
         class: 'link danger', text: '删除', attrs: { type: 'button' },
         on: {
           click: async () => {
-            try { await api.deletePost(post.id); reload(); } catch { toast('删除没有成功，请稍后再试。'); }
+            try { await api.deletePost(post.id); reload(); } catch { toast('删除失败，请稍后再试。'); }
           },
         },
       }) : null,
@@ -82,7 +82,7 @@ function card(post, reload) {
 export function renderWall(root) {
   clear(root);
   feed = el('div', { class: 'feed' });
-  const input = el('textarea', { attrs: { rows: 1, maxlength: 500, placeholder: '写点什么…数据已被匿名' } });
+  const input = el('textarea', { attrs: { rows: 1, maxlength: 500, placeholder: '写点什么…将以匿名身份发布' } });
   const publish = async () => {
     const text = input.value.trim();
     if (!text) return;
@@ -92,7 +92,7 @@ export function renderWall(root) {
       await loadWall();
       toast('已发布。');
     } catch (error) {
-      toast(error instanceof ApiError && error.userMessage ? error.userMessage : '发布没有成功，请稍后再试。');
+      toast(error instanceof ApiError && error.userMessage ? error.userMessage : '发布失败，请稍后再试。');
     }
   };
   composer = el('div', { class: 'composer wall' }, [
@@ -122,6 +122,6 @@ export async function loadWall() {
     paintWall();
   } catch (error) {
     if (error instanceof ApiError && error.code === 'SESSION_REQUIRED') throw error;
-    toast('广场内容暂时读不出来，请稍后再试。');
+    toast('广场内容暂时无法加载，请稍后再试。');
   }
 }

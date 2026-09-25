@@ -170,6 +170,15 @@ tr.masked td { color: var(--mut2); font-style: italic; background: #fafbfc; }
 .tplmenu button:hover { background: #f2f7f5; color: var(--brand); }
 .tplmenu button small { display: block; color: var(--mut2); font-size: 10px; margin-top: 2px; }
 
+/* 行业模板：收进干预矩阵卡片右上角，与矩阵同一模块 */
+.cfghead { flex-wrap: wrap; }
+.cfghead .template-control { margin-left: auto; position: relative; }
+.tpl-editor { margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line); }
+.tpl-editor .cfg-select { width: 100%; margin-bottom: 10px; }
+.tpl-row { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
+.tpl-row .tpl-emotion { flex: none; width: 64px; font-size: 12px; font-weight: 600; }
+.tpl-row .cfg-select { flex: 1; min-width: 0; }
+
 .mx-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 .mx { width: 100%; border-collapse: separate; border-spacing: 0; min-width: 800px; }
 .mx th { padding: 10px 12px; font-size: 12px; font-weight: 650; color: var(--ink); border-bottom: 2px solid var(--line); vertical-align: bottom; }
@@ -344,5 +353,50 @@ tr.masked td { color: var(--mut2); font-style: italic; background: #fafbfc; }
   .acts { gap: 8px; }
   .acts input { width: 100% !important; }
   .logtxt { width: 100%; font-size: 10.5px; }
-  .mx { min-width: 0; }
+}
+
+/* 窄屏表格：保持最小可读宽度、卡片内横向滚动，避免表头被挤成竖排。
+   遮蔽行（colspan 长文本）允许换行。 */
+@media (max-width: 680px) {
+  .cardC { overflow-x: auto; }
+  .cardC h4 { flex-wrap: wrap; }
+  .cardC table { min-width: 620px; }
+  .cardC table th, .cardC table td { white-space: nowrap; }
+  .cardC table tr.masked td { white-space: normal; }
+  .tbar .tn { width: 76px; }
+  .tbar .tv { width: 56px; }
+}
+
+/* 干预矩阵在窄屏下保持横向滚动（.mx-wrap），不挤压：
+   表头不换行，下拉框给最小宽度，避免被截断。 */
+.mx th { white-space: nowrap; }
+.mx .lvsub { display: block; font-size: 10px; font-weight: 400; color: var(--mut2); }
+.mx select { max-width: 100%; }
+@media (max-width: 680px) {
+  .mx { min-width: 680px; }
+  .mx td { min-width: 0; }
+  .mx select { min-width: 150px; }
+}
+
+/* 窄屏导航：5 个子 tab 放不下时横向滚动，右侧渐隐提示可滑动。 */
+@media (max-width: 680px) {
+  .hr-navbar {
+    gap: 16px; padding: 4px 10px;
+    scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(to right, #000 92%, transparent 100%);
+    mask-image: linear-gradient(to right, #000 92%, transparent 100%);
+  }
+  .hr-navbar::-webkit-scrollbar { display: none; }
+  .hr-nav-btn { padding: 12px 0; }
+  .tabs { overflow-x: auto; scrollbar-width: none; }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab { padding: 12px 14px; white-space: nowrap; }
+}
+
+/* 窄屏触控目标：主要按钮/下拉不低于 40px，矩阵复选框放大。 */
+@media (max-width: 680px) {
+  .ghost, .bt { min-height: 40px; }
+  select.cfg-select { min-height: 40px; }
+  .cardC input[type="checkbox"] { width: 22px; height: 22px; accent-color: var(--brand); }
+  .staff-name { max-width: 38vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 }

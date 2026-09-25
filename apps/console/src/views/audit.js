@@ -20,13 +20,13 @@ export async function loadAudit() {
   try {
     body = await api.audit();
   } catch (error) {
-    clear(root).append(el('p', { class: 'empty', text: error.userMessage || '审计记录暂时取不到。' }));
+    clear(root).append(el('p', { class: 'empty', text: error.userMessage || '审计记录暂时无法加载。' }));
     return;
   }
   clear(root).append(
     el('section', { class: 'panel' }, [
       el('h2', { text: '工作人员操作审计' }),
-      el('p', { class: 'panel-sub', text: '记录谁在什么时候做了什么。对象只记录报表名或匿名个案编号，不含任何员工原文。' }),
+      el('p', { class: 'panel-sub', text: '记录操作人、操作时间与内容。对象仅记录报表名称或匿名个案编号，不含员工原文。' }),
       body.entries.length
         ? el('table', { class: 'grid-table' }, [
           el('thead', {}, [el('tr', {}, [
@@ -41,7 +41,7 @@ export async function loadAudit() {
             el('td', { text: entry.result === 'ok' ? '成功' : entry.result }),
           ]))),
         ])
-        : el('p', { class: 'empty', text: '还没有操作记录。' }),
+        : el('p', { class: 'empty', text: '暂无操作记录。' }),
     ]),
   );
 }

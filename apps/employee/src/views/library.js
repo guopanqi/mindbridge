@@ -4,10 +4,11 @@
 // 但需要的时候必须找得到——推荐没推到、或者想再做一次别的，都从这里进。
 //
 // 浏览不产生任何风险判定；点「开始」才建立参与记录。
-// 可见性目前只有「已启用且内容就绪」一档；按岗位/资格分级的可见与申请属于第二版。
+// 未开放的线下内容仅用于预览；参与入口仍由服务端的可用性规则拦截。
 import { api, ApiError } from '../api.js';
 import { clear, el, toast } from '../dom.js';
 import { openActivity } from './activity.js';
+import { activityFacts } from './activity-facts.js';
 
 let overlay;
 let onClose = () => {};
@@ -27,29 +28,29 @@ async function start(item) {
     close();
     await openActivity(eventId, onClose);
   } catch (error) {
-    toast(error instanceof ApiError && error.userMessage ? error.userMessage : '打不开这个活动，请稍后再试。');
+    toast(error instanceof ApiError && error.userMessage ? error.userMessage : '该活动暂时无法打开，请稍后再试。');
   }
 }
 
 function card(item) {
-  return el('div', { class: 'lib-card' }, [
+  const comingSoon = item.status !== 'available';
+  const statusLabel = item.status === 'paused' ? '暂时暂停' : '暂未开放';
+  return el('div', { class: `lib-card${comingSoon ? ' coming-soon' : ''}` }, [
     el('div', { class: 'lib-head' }, [
       el('span', { class: 'lib-title', text: item.title }),
+      comingSoon ? el('span', { class: 'lib-soon', text: statusLabel }) : null,
       // 完成次数直接显示在库里：不然从库里进来的人不知道自己已经在做了。
       item.doneCount > 0 ? el('span', { class: 'lib-done', text: `已完成 ${item.doneCount} 次` }) : null,
     ]),
     item.suitedFor ? el('p', { class: 'lib-suited', text: item.suitedFor }) : null,
     item.coreMethod ? el('p', { class: 'lib-core', text: item.coreMethod }) : null,
-    el('div', { class: 'lib-meta' }, [
-      el('span', { text: item.form || (item.kind === 'offline' ? '线下活动' : '线上自助') }),
-      item.duration ? el('span', { text: item.duration }) : null,
-      item.kind === 'offline' && item.schedule ? el('span', { text: item.schedule }) : null,
-    ]),
+    item.description ? el('p', { class: 'lib-desc', text: item.description }) : null,
+    comingSoon ? el('p', { class: 'lib-soon-note', text: item.kind === 'offline' ? '线下场次尚未开放，具体时间和地点将在开放时公布。' : '服务暂不可用，开放后可在这里参与。' }) : activityFacts(item),
     el('button', {
       class: 'secondary small',
-      text: item.kind === 'offline' ? '了解并报名' : '开始',
-      attrs: { type: 'button' },
-      on: { click: () => void start(item) },
+      text: comingSoon ? statusLabel : item.kind === 'offline' ? '了解并报名' : '开始',
+      attrs: { type: 'button', disabled: comingSoon },
+      on: comingSoon ? {} : { click: () => void start(item) },
     }),
   ]);
 }
@@ -64,7 +65,7 @@ function render() {
       }),
       el('div', {}, [
         el('p', { class: 'act-title', text: '活动库' }),
-        el('p', { class: 'act-meta', text: '浏览不会留下任何记录，点开始才算参与。' }),
+        el('p', { class: 'act-meta', text: '浏览不留记录，点击开始才会计入参与。' }),
       ]),
     ]),
     el('div', { class: 'lib-body' }, [
@@ -103,7 +104,7 @@ export async function openLibrary(afterClose) {
     render();
   } catch (error) {
     if (error instanceof ApiError && error.code === 'SESSION_REQUIRED') throw error;
-    toast('活动库暂时打不开，请稍后再试。');
+    toast('活动库暂时无法打开，请稍后再试。');
   }
 }
 

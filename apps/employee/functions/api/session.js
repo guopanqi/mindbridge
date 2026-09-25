@@ -12,6 +12,7 @@ export async function onRequestGet({ request, env, waitUntil }) {
     .bind(digest, now).first() : null;
   let renewedCookie = null;
   let organizationName = null;
+  let researchTranscriptEnabled = false;
   if (session?.entry_channel === 'beta_web') {
     const org = await env.CARE_DB.prepare("SELECT id, display_name FROM organizations WHERE id = ? AND status = 'active' AND kind = 'beta'")
       .bind(session.organization_id).first();
@@ -29,6 +30,11 @@ export async function onRequestGet({ request, env, waitUntil }) {
   } else {
     await env.CARE_DB.prepare('UPDATE sessions SET last_seen_at = ? WHERE session_digest = ?').bind(now, digest).run();
   }
+  if (session?.entry_channel === 'beta_web') {
+    const capability = await env.CARE_DB.prepare("SELECT enabled FROM organization_capabilities WHERE organization_id = ? AND capability = 'research_transcript_export'")
+      .bind(session.organization_id).first();
+    researchTranscriptEnabled = capability?.enabled === 1;
+  }
   // 保留期清理跟着会话检查顺带做一小批：我们在隐私说明里承诺了 180 天，
   // 就必须真的有东西在删。放进 waitUntil，不阻塞响应，失败也不影响业务。
   if (typeof waitUntil === 'function') {
@@ -42,6 +48,7 @@ export async function onRequestGet({ request, env, waitUntil }) {
     entryChannel: session.entry_channel || 'dingtalk',
     organizationId: session.organization_id || null,
     organizationName,
+    researchTranscriptEnabled,
   }, 200, renewedCookie ? { 'set-cookie': renewedCookie } : {});
 }
 

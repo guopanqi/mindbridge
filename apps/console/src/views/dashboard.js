@@ -7,11 +7,18 @@ let dataOrigin = 'live';
 let currentPane = 'dash';
 let cachedData = null;
 let organizationKind = 'enterprise';
+let viewerRoles = [];
 
 export function setOrganizationKind(kind) {
   organizationKind = kind === 'beta' ? 'beta' : 'enterprise';
   dataOrigin = 'live';
 }
+
+export function setViewerRoles(roles) {
+  viewerRoles = Array.isArray(roles) ? roles : [];
+}
+
+const isTemplateEditor = () => viewerRoles.includes('internal_tester');
 
 const SUPPRESSED_TEXT = (min) => `样本不足 ${min} 人，不予展示`;
 const numberText = (value, suffix = '') => value === null || value === undefined ? '不予展示' : `${value}${suffix}`;
@@ -92,7 +99,7 @@ function trendChart(points, minSample) {
     svg,
     el('p', {
       class: 'chart-caption',
-      text: `${first?.bucket || ''} → ${last?.bucket || ''} · 7 天滑动平均 · 10 分 = 对话全部为绿色，越低表示非绿对话越多 · 断点表示当日样本不足 ${minSample} 人`,
+      text: `${first?.bucket || ''} → ${last?.bucket || ''} · 7 天滑动平均 · 10 分表示当日对话全部为绿色；分数越低，表示需要关注的对话占比越高 · 断点表示当日样本不足 ${minSample} 人`,
     }),
   ]);
 }
@@ -102,7 +109,7 @@ function originCard(title, summary, note) {
     el('h3', { text: title }),
     el('p', { class: 'origin-note', text: note }),
     el('dl', {}, [
-      el('div', {}, [el('dt', { text: '事件总数' }), el('dd', { text: summary.eventCount === null ? '隐私遮蔽 · 独立样本量未验证' : String(summary.eventCount) })]),
+      el('div', {}, [el('dt', { text: '事件总数' }), el('dd', { text: summary.eventCount === null ? '样本不足，不予展示' : String(summary.eventCount) })]),
       el('div', {}, [
         el('dt', { text: '活跃人数' }),
         el('dd', { text: summary.activeUsers.suppressed ? '不予展示' : String(summary.activeUsers.value) }),
@@ -127,15 +134,15 @@ function renderDashPane(data) {
 
   return el('div', { class: 'inner' }, [
     el('div', { class: 'demo-banner' }, [
-      el('b', { text: data.origin === 'demo_seed' ? '演示数据：' : '数据口径：' }),
+      el('b', { text: data.origin === 'demo_seed' ? '演示数据：' : '数据说明：' }),
       el('span', { text: originNote(data) }),
     ]),
     el('div', { class: 'kpis' }, [
       kpi(data.coverage.rate == null && data.tenant.kind === 'beta'
         ? data.coverage.activeUsers?.suppressed ? '<span class="na">不予展示</span>' : `${data.coverage.activeUsers?.value ?? 0}<small> 人</small>`
         : numberText(data.coverage.rate, '%'),
-      data.tenant.kind === 'beta' ? '已发言人数' : '员工覆盖率',
-      data.tenant.kind === 'beta' ? '公开组织没有可核验的全员人数基数' : data.coverage.delta ? `较上月 ${data.coverage.delta} · 说过话的人` : '说过话的人占全员'),
+      data.tenant.kind === 'beta' ? '实际参与人数' : '员工覆盖率',
+      data.tenant.kind === 'beta' ? '公开组织暂无全员花名册，以实际参与人数呈现' : data.coverage.delta ? `较上月 ${data.coverage.delta} · 有过发言的员工` : '有过发言的员工占全员'),
       kpi(
         data.temperature?.value === null || data.temperature?.value === undefined
           ? '<span class="na">样本不足</span>'
@@ -145,13 +152,13 @@ function renderDashPane(data) {
         // 否则同一个数字在两套口径之间被当成可比的趋势。
         data.temperature?.delta ? `较上周 ${data.temperature.delta} · 按对话分级` : '按对话绿黄红构成',
       ),
-      kpi(numberText(data.risk.greenShare, '%'), '绿色 · 日常占比', '多为轻量情绪'),
+      kpi(numberText(data.risk.greenShare, '%'), '绿色 · 日常占比', '以日常轻度情绪为主'),
       kpi(
         data.risk.redOnTimeRate === null || data.risk.redOnTimeRate === undefined
           ? `<span class="na">${data.risk.redCases === 0 ? '暂无个案' : '不予展示'}</span>`
           : `${data.risk.redOnTimeRate}<small>%</small>`,
         '红色个案 SLA 内响应率',
-        data.risk.redCases === 0 ? '尚无红色个案，响应率没有分母' : data.risk.redCases === null ? '样本不足或口径未验证' : data.risk.redBreached
+        data.risk.redCases === 0 ? '暂无红色个案' : data.risk.redCases === null ? '样本不足，暂不展示' : data.risk.redBreached
           ? `${data.risk.redBreached} 例超时`
           : `${data.risk.redCases} 例建案中，无超时`,
       ),
@@ -159,7 +166,7 @@ function renderDashPane(data) {
     el('div', { class: 'grid2' }, [
       el('div', { class: 'cardC' }, [
         el('h4', {}, [el('span', { text: '组织议题热度' }), el('span', { class: 'src', text: '来源：匿名广场 · 发帖时分类，不读取原文' })]),
-        el('div', { class: 'cs', text: '员工主动谈论什么 —— 回答「公司出什么事了」' }),
+        el('div', { class: 'cs', text: '员工主动谈论什么 —— 呈现员工主动讨论的议题分布' }),
         topics.length
           ? el('div', {}, topics.map((t, i) => el('div', { class: 'tbar' }, [
             el('span', { class: 'tn', text: t.topic }),
@@ -171,11 +178,11 @@ function renderDashPane(data) {
             // 展示真实条数，不编造趋势箭头。
             el('span', { class: `tv ${i === 0 ? 'up' : ''}`, text: `${t.count} 条` }),
           ])))
-          : el('div', { class: 'cs', text: '本周期内还没有可归类的广场内容。' }),
+          : el('div', { class: 'cs', text: '本周期暂无可归类的广场内容。' }),
       ]),
       el('div', { class: 'cardC' }, [
         el('h4', {}, [el('span', { text: '情绪分布 · 本周' }), el('span', { class: 'src', text: '来源：私密通道' })]),
-        el('div', { class: 'cs', text: '聚合后的风险等级 —— 回答「人怎么样了」' }),
+        el('div', { class: 'cs', text: '员工整体情绪状态的风险等级构成' }),
         el('div', { class: 'dl' }, [
           el('div', { class: 'dr' }, [el('span', { class: 'sq', style: 'background:#2d8a5e' }), el('span', { text: '绿色 · 日常' }), el('span', { class: 'dv', text: numberText(data.risk.greenShare, '%') })]),
           el('div', { class: 'dr' }, [el('span', { class: 'sq', style: 'background:#c07a2c' }), el('span', { text: '黄色 · 需关注' }), el('span', { class: 'dv', text: numberText(data.risk.yellowPeople) })]),
@@ -192,16 +199,16 @@ function renderDashPane(data) {
             el('span', { class: 'fn-arrow', text: '→' }),
             el('div', { class: 'fn' }, [
               el('b', { text: numberText(data.risk.redCases) }),
-              el('span', { text: '例员工同意建案' }),
+              el('span', { text: '例经员工同意建案' }),
             ]),
             el('span', { class: 'fn-arrow', text: '→' }),
             el('div', { class: 'fn' }, [
               el('b', { text: numberText(data.risk.redHandledRate, '%') }),
-              el('span', { text: '已被疗愈师接管' }),
+              el('span', { text: '已由疗愈师跟进' }),
             ]),
           ]),
-          el('p', { class: 'fn-note', text: '识别到红色信号后，系统会先说明边界并征求本人同意；不同意就不会建案，也不会通知任何人。因此信号数与个案数本来就不相等。' }),
-          el('p', { class: 'no', text: '你无权查看个案详情。' }),
+          el('p', { class: 'fn-note', text: '出现红色信号后，系统将向员工说明情况并征得其同意后方可建案；未经员工同意不会建案，也不会通知任何人。因此信号数量与建案数量并不完全对应。' }),
+          el('p', { class: 'no', text: '个案详情仅对疗愈师开放。' }),
         ]),
       ]),
     ]),
@@ -237,11 +244,11 @@ function renderDashPane(data) {
         el('span', { text: '团队节奏' }),
         el('span', { class: 'src', text: data.rhythm?.connected ? '来源：钉钉考勤（已连接）' : '来源：钉钉考勤（未接入）' }),
       ]),
-      el('div', { class: 'cs', text: '回答「他们有多忙」—— 全部为行为元数据，不含任何消息内容。未开启或样本不足时不展示数值。' }),
+      el('div', { class: 'cs', text: '反映团队忙碌程度 —— 仅使用考勤、审批等行为统计，不含任何消息内容。未开启或样本不足时不展示数值。' }),
       el('div', { class: 'rhy' }, (data.rhythm?.metrics || []).map((m) => {
         // 状态如实呈现：没开就说没开，没同步就说没同步，样本不够就说样本不够。
         const stateText = {
-          disabled: '未开启该项感知',
+          disabled: '该项数据采集尚未开启',
           not_synced: '已开启，尚未同步',
           suppressed: `有效样本 ${m.sampleSize ?? 0} 人，低于 ${data.minSample} 人`,
         };
@@ -251,23 +258,23 @@ function renderDashPane(data) {
           el('div', { class: 'rt', text: m.state === 'ok' ? m.note : stateText[m.state] }),
         ]);
       })),
-      el('div', { class: 'rhynote', html: '<b>本系统未申请「会话内容存档」权限。</b> 消息条数、@次数、夜间消息占比这类数据，我们拿不到，也不打算拿。<br>以上指标按 ≥10 人聚合，不落个人档案，不与绩效、晋升、续聘挂钩。' }),
+      el('div', { class: 'rhynote', html: '<b>未开通「会话内容存档」权限。</b>消息条数、@次数、夜间消息占比等与消息内容相关的指标不在采集范围内。<br>以上指标均为 ≥10 人聚合展示，不进入个人档案，不用于绩效、晋升或续聘评估。' }),
     ]),
     el('div', { class: 'cardC' }, [
       el('h4', { text: '情绪温度趋势' }),
-      el('div', { class: 'cs', text: '每日对话中绿色的占比越高，温度越高。10 分表示当天全部对话都是绿色。心情打卡入口已下线，这条曲线不再依赖员工额外填写。' }),
+      el('div', { class: 'cs', text: '每日对话中绿色的占比越高，温度越高。10 分表示当天全部对话都是绿色。原心情打卡入口已停止使用，本曲线不再依赖员工额外填写。' }),
       trendChart(data.moodTrend, min),
     ]),
     organizationKind === 'beta' && data.origins.demo_seed?.eventCount ? el('div', { class: 'cardC' }, [
       el('h4', { text: '本组织演示数据' }),
-      el('div', { class: 'cs', text: '评审演示数据只属于当前组织，与真实使用分别统计。' }),
+      el('div', { class: 'cs', text: '演示数据仅用于当前组织的形态预览，与真实使用分别统计。' }),
       el('div', { class: 'origin-grid' }, [
-        originCard('演示数据', data.origins.demo_seed, '用于展示组织报表的完整形态，不代表真实使用'),
+        originCard('演示数据', data.origins.demo_seed, '用于预览组织报表的完整形态，不代表真实使用'),
         originCard('真实数据', data.origins.live, '评审实际使用；样本不足时不展示具体指标'),
       ]),
     ]) : null,
     el('div', { class: 'blind' }, [
-      el('h5', { text: '你在本系统中看不到什么' }),
+      el('h5', { text: '本系统不提供以下数据' }),
       el('ul', {}, [
         el('li', { text: '任何员工的姓名、工号、账号' }),
         el('li', { text: '任何一条倾诉或发帖的原文' }),
@@ -276,7 +283,7 @@ function renderDashPane(data) {
         el('li', { text: '样本不足 10 人的部门数据' }),
       ]),
     ]),
-    el('p', { class: 'privacy-footnote', text: `本页所有指标均为匿名聚合结果。任何维度样本量低于 ${min} 人时不出数，该阈值写死在代码中、企业管理员无法调整。本页不存在下钻到个人的入口。` }),
+    el('p', { class: 'privacy-footnote', text: `本页所有指标均为匿名聚合结果。任何维度样本量低于 ${min} 人时不展示；该阈值由系统设定，企业管理员无法调整。本页不提供查看个人数据的入口。` }),
   ]);
 }
 
@@ -309,7 +316,7 @@ function renderActivitiesPane(data) {
 
     el('div', { class: 'cardC' }, [
       el('h4', {}, [el('span', { text: '不同身份标签的活动表现' }), el('span', { class: 'src', text: '去标识化聚合' })]),
-      el('div', { class: 'cs', text: `只显示群体趋势。有效样本少于 ${data.minSample} 人的标签不予展示，HRBP 无法查看任何员工的标签选择。` }),
+      el('div', { class: 'cs', text: `仅展示群体趋势。有效样本少于 ${data.minSample} 人的标签不予展示；任何角色均无法查看员工个人的标签选择。` }),
       el('table', {}, [
         el('thead', {}, [el('tr', {}, [
           el('th', { text: '身份标签' }), el('th', { text: '推荐次数' }), el('th', { text: '参与率' }),
@@ -332,7 +339,7 @@ function renderActivitiesPane(data) {
     ]),
     el('div', { class: 'cardC' }, [
       el('h4', {}, [el('span', { text: '单项活动表现' }), el('span', { class: 'src', text: '按推荐次数排序' })]),
-      el('div', { class: 'cs', text: '这里没有「效果」指标：活动不再做前后自评，能报告的只有参与、完成和员工主动给出的评价。「有帮助占比」只统计填了评价的人，所以必须连同「评价率」一起看——评价率低时，占比不能代表全体。' }),
+      el('div', { class: 'cs', text: '本页不设「效果」指标：活动不再要求前后自评，仅呈现参与、完成与员工主动评价。「有帮助占比」仅统计已评价用户，须结合「评价率」解读；评价率过低时不代表全体。' }),
       el('table', {}, [
         el('thead', {}, [el('tr', {}, [
           el('th', { text: '活动' }), el('th', { text: '层级' }), el('th', { text: '推荐次数' }),
@@ -399,7 +406,8 @@ function renderIndustryPane(data) {
     };
 
     clear(container);
-    container.append(
+    // 直接 append(null) 会插入字面量 "null" 文本节点，这里必须过滤。
+    container.append(...[
       simulated ? el('div', { class: 'demo-banner' }, [
         el('b', { text: '跨企业对照为模拟数据：' }),
         el('span', { text: `当前只有一个真实租户，行业基准由预置样本生成，用于说明产品形态。表中「${data.tenant?.name || '本企业'}」一列是真实聚合。` }),
@@ -450,9 +458,9 @@ function renderIndustryPane(data) {
           return select;
         })(),
         view && !view.eligible
-          ? el('div', { class: 'cs', text: `该行业样本为 ${view.companies} 家企业 / ${view.employees} 人，未达展示门槛，不予出数。` })
+          ? el('div', { class: 'cs', text: `该行业样本为 ${view.companies} 家企业 / ${view.employees} 人，尚未达到展示门槛，暂不展示。` })
           : el('div', { class: 'kpis' }, [
-            kpi(`${view?.useRate ?? '—'}<small>%</small>`, '树洞月活', '行业均值'),
+            kpi(`${view?.useRate ?? '—'}<small>%</small>`, '员工覆盖率', '行业均值'),
             kpi(`${view?.completionRate ?? '—'}<small>%</small>`, '活动完成率', '行业均值'),
             kpi(`${view?.avgRating ?? '—'}<small>/5</small>`, '活动满意度', '行业均值'),
             kpi(`${view?.companies ?? '—'}<small>家</small>`, '统计池企业数', `合计 ${view?.employees ?? 0} 人`),
@@ -497,7 +505,7 @@ function renderIndustryPane(data) {
         el('table', { class: 'industry-all' }, [
           el('thead', {}, [el('tr', {}, [
             el('th', { text: '行业' }), el('th', { text: '企业样本' }), el('th', { text: '员工样本' }),
-            el('th', { text: '树洞月活' }), el('th', { text: '活动完成率' }), el('th', { text: '满意度' }), el('th', { text: '高表现活动' }),
+            el('th', { text: '员工覆盖率' }), el('th', { text: '活动完成率' }), el('th', { text: '满意度' }), el('th', { text: '高表现活动' }),
           ])]),
           el('tbody', {}, ind.benchmarks.map((b) => {
             const effects = ind.detail[b.industry]?.effects || [];
@@ -511,7 +519,7 @@ function renderIndustryPane(data) {
                 el('td', { class: 'mono', text: `${b.completionRate}%` }),
                 el('td', { class: 'mono', text: Number(b.avgRating).toFixed(1) }),
                 el('td', { text: best ? `${best.activity}（${best.avgRating} / 5）` : '—' }),
-              ] : [el('td', { class: 'masked', attrs: { colspan: 4 }, text: '样本未达门槛 · 不予出数' })]),
+               ] : [el('td', { class: 'masked', attrs: { colspan: 4 }, text: '样本未达门槛，暂不展示' })]),
             ]);
             row.addEventListener('click', () => { selected = b.industry; void renderInner(); });
             return row;
@@ -523,7 +531,7 @@ function renderIndustryPane(data) {
         el('b', { text: '行业数据边界：' }),
         el('span', { text: '不向任何企业披露其他企业名称、客户编码或单家企业明细；不进入员工姓名、工号、倾诉原文或个人活动记录；企业数或员工样本量不足时不生成 Benchmark；行业数据仅用于同行参照、服务配置与疗愈效果分析。' }),
       ]),
-    );
+    ].filter(Boolean));
   }
 
   void renderInner();
@@ -534,12 +542,96 @@ function levelSelect(catalog, level, current, onChange) {
   const select = el('select', { class: 'cfg-select' });
   select.append(el('option', { text: '未指定 · 按活动检索', attrs: { value: '' } }));
   for (const item of catalog.filter((c) => c.level === level)) {
-    const option = el('option', { text: `${item.icon || ''} ${item.name}`.trim(), attrs: { value: item.activityId } });
+    const option = el('option', { text: `${item.icon || ''} ${item.name}${item.serviceStatus === 'open' ? '' : '（暂未开放）'}`.trim(), attrs: { value: item.activityId } });
     if (item.activityId === current) option.selected = true;
     select.append(option);
   }
   select.addEventListener('change', () => onChange(select.value));
   return select;
+}
+
+// 干预矩阵卡片右上角的模板控件：按钮 + 下拉选行业，与矩阵同一模块。
+function templateControls(config, renderInner) {
+  const templates = config.industryTemplates || {};
+  const names = Object.keys(templates).sort();
+  const applyTemplate = async (industry, btn) => {
+    btn.disabled = true;
+    try {
+      const result = await api.saveConfig({ kind: 'apply_template', industry });
+      const applied = result?.applied?.length ?? 0;
+      const skipped = result?.skipped?.length ?? 0;
+      toast(skipped
+        ? `已套用「${industry}」${applied} 项，${skipped} 项因活动不可用已跳过（${(result.skipped || []).join('、')}）`
+        : `已套用「${industry}」模板 · 可在下方矩阵继续微调`);
+      await renderInner();
+    } catch (error) {
+      toast(error.userMessage || '套用失败');
+      btn.disabled = false;
+    }
+  };
+  const menu = el('div', { class: 'tplmenu' });
+  // 副标题是该行业的疗愈目标（服务端 industry_template_meta，随方案演进维护），
+  // 不是模板行内容的复述——行内容套用后直接可见，无需重复。
+  const goals = config.industryGoals || {};
+  for (const name of names) {
+    const item = el('button', { attrs: { type: 'button' } }, [
+      el('span', { text: name }),
+      goals[name] ? el('small', { text: goals[name] }) : null,
+    ]);
+    item.addEventListener('click', (event) => {
+      event.stopPropagation();
+      menu.classList.remove('on');
+      void applyTemplate(name, btn);
+    });
+    menu.append(item);
+  }
+  if (!names.length) menu.append(el('p', { class: 'cs', text: '服务端暂无行业模板，请联系工作人员维护。' }));
+  const btn = el('button', { class: 'tplbtn', text: '套用行业模板 ▾', attrs: { type: 'button' } });
+  btn.addEventListener('click', (event) => {
+    event.stopPropagation();
+    menu.classList.toggle('on');
+    if (menu.classList.contains('on')) {
+      document.addEventListener('click', () => menu.classList.remove('on'), { once: true });
+    }
+  });
+  menu.addEventListener('click', (event) => event.stopPropagation());
+  return { control: el('div', { class: 'template-control' }, [btn, menu]), names };
+}
+
+function templateEditor(config, names) {
+  const wrap = el('div', { class: 'tpl-editor' }, [
+    el('p', { class: 'cs', html: '<b>工作人员维护区：</b>此处改的是服务端全局模板，只影响以后套用的组织，不改变已套用组织的现有配置。' }),
+  ]);
+  if (!names.length) return wrap;
+  // 模板编辑只 toast 不整页重绘：下拉框里的值本身就是最新状态，重绘反而会丢光标。
+  const quietSave = async (payload, successText) => {
+    try { await api.saveConfig(payload); toast(successText); }
+    catch (error) { toast(error.userMessage || '保存失败'); }
+  };
+  const picker = el('select', { class: 'cfg-select', attrs: { 'aria-label': '编辑的行业模板' } });
+  for (const name of names) picker.append(el('option', { text: name, attrs: { value: name } }));
+  const rows = el('div', {});
+  const paint = () => {
+    clear(rows);
+    const list = (config.industryTemplates || {})[picker.value] || [];
+    for (const item of list) {
+      rows.append(el('div', { class: 'tpl-row' }, [
+        el('span', { class: 'tpl-emotion', text: item.emotion }),
+        levelSelect(config.catalog, 'L1', item.l1ActivityId, (value) => quietSave(
+          { kind: 'save_template', industry: picker.value, emotion: item.emotion, l1ActivityId: value || null },
+          `模板「${picker.value} · ${item.emotion}」一级资源已更新`,
+        )),
+        levelSelect(config.catalog, 'L2', item.l2ActivityId, (value) => quietSave(
+          { kind: 'save_template', industry: picker.value, emotion: item.emotion, l2ActivityId: value || null },
+          `模板「${picker.value} · ${item.emotion}」二级资源已更新`,
+        )),
+      ]));
+    }
+  };
+  picker.addEventListener('change', paint);
+  paint();
+  wrap.append(picker, rows);
+  return wrap;
 }
 
 function renderCfgPane() {
@@ -570,26 +662,19 @@ function renderCfgPane() {
     };
 
     clear(container);
+    const tpl = templateControls(config, renderInner);
     container.append(
       el('div', { class: 'cardC' }, [
-        el('h4', { text: '活动库启停' }),
-        el('p', { class: 'cs', text: '内容由版本化文件维护；这里控制是否向员工开放新的参与。已开始的活动保留原版本。' }),
-        ...(config.activityCatalog || []).map(item => {
-          const box = el('input', { attrs: { type: 'checkbox', 'aria-label': item.title } });
-          box.checked = item.enabled === 1;
-          box.disabled = item.content_available !== 1 || item.globally_enabled !== 1;
-          box.addEventListener('change', () => void save({ kind: 'activity', activityId: item.id, enabled: box.checked }, '活动开放状态已保存'));
-          return el('label', { class: 'cs' }, [box, el('span', { text: `${item.title}${item.content_available !== 1 || item.globally_enabled !== 1 ? '（内容暂未开放）' : ''}` })]);
-        }),
-      ]),
-      el('div', { class: 'cardC' }, [
-        el('h4', { text: '干预内容矩阵' }),
-        el('div', { class: 'cs', text: '当用户请求推荐时，按情绪优先检索已配置活动；停用会阻止对应情绪的普通推荐。命中数未具备可验证的独立样本量，暂不展示。' }),
+        el('div', { class: 'cfghead' }, [
+          el('h4', { text: '干预内容矩阵' }),
+          tpl.control,
+        ]),
+        el('div', { class: 'cs', text: '员工请求推荐时，按情绪优先匹配已配置活动；停用后该情绪不再触发推荐。触发次数样本不足，暂不展示。' }),
         el('div', { class: 'mx-wrap' }, [
           el('table', { class: 'mx' }, [
             el('thead', {}, [el('tr', {}, [
               el('th', { text: '情绪信号' }),
-              el('th', { text: '命中' }),
+              el('th', { text: '触发次数' }),
               el('th', { class: 'g', html: '一级干预 · 绿色<span class="lvsub">个人自助资源</span>' }),
               el('th', { class: 'y', html: '二级干预 · 黄色<span class="lvsub">团体活动与工作坊</span>' }),
               el('th', { class: 'r', html: '三级干预 · 红色<span class="lvsub">专业疗愈师介入</span>' }),
@@ -619,7 +704,28 @@ function renderCfgPane() {
             ]))),
           ]),
         ]),
-        el('div', { class: 'rhynote', html: '<b>红色一级不可配置。</b>危机判定与是否请求疗愈师支持由独立于配置的规则引擎决定，HR 无法调整触发条件，也无法关闭危机流程。' }),
+        el('div', { class: 'rhynote', html: '<b>红色风险识别始终启用。</b>上方开关只控制疗愈师转介；关闭时仍会提供危机热线。' }),
+        isTemplateEditor() ? templateEditor(config, tpl.names) : null,
+      ]),
+      el('div', { class: 'cardC' }, [
+        el('h4', { text: '活动开放管理' }),
+        el('p', { class: 'cs', text: '此处保存本组织的选择，产品侧服务状态独立维护。尚未开放的活动也可预先配置；只有服务开放且本组织启用时，员工才能参与。' }),
+        ...(config.activityCatalog || []).map(item => {
+          const box = el('input', { attrs: { type: 'checkbox', 'aria-label': item.title } });
+          box.checked = item.enabled === 1;
+          box.addEventListener('change', () => void save({ kind: 'activity', activityId: item.id, enabled: box.checked }, '活动开放状态已保存'));
+          return el('label', { class: 'cs' }, [box, el('span', { text: `${item.title}（服务${item.service_status === 'open' && item.content_available === 1 ? '开放中' : item.service_status === 'paused' ? '暂停' : '暂未开放'}）` })]);
+        }),
+      ]),
+      el('div', { class: 'cardC' }, [
+        el('h4', { text: '疗愈师转介' }),
+        el('p', { class: 'cs', text: `本组织是否启用疗愈师转介。产品侧服务状态：${config.healerServiceStatus === 'open' ? '开放中' : config.healerServiceStatus === 'paused' ? '暂停' : config.healerServiceStatus === 'retired' ? '已结束' : '筹备中'}。只有服务开放且本组织启用时，员工才能预约；12356 危机热线不受影响。` }),
+        (() => {
+          const box = el('input', { attrs: { type: 'checkbox', 'aria-label': '开放疗愈师转介' } });
+          box.checked = config.healerOrganizationEnabled === true;
+          box.addEventListener('change', () => void save({ kind: 'healer_referral', enabled: box.checked }, box.checked ? '已开放疗愈师转介' : '已关闭疗愈师转介'));
+          return el('label', { class: 'cs' }, [box, el('span', { text: '开放疗愈师转介与预约' })]);
+        })(),
       ]),
     );
   }
@@ -660,7 +766,7 @@ function renderSensingPane() {
 
     // 连接状态如实呈现：连上了说连上了，没连上说明缺哪个权限点，绝不显示示例数值。
     const connection = (() => {
-      if (!status) return { cls: 'r', title: '未能查询连接状态', detail: '管理端到 care 的内部调用失败。' };
+      if (!status) return { cls: 'r', title: '未能查询连接状态', detail: '未能查询钉钉连接状态，请稍后重试。' };
       if (!status.ok || !status.connected) {
         // 钉钉的报错里通常带着直接申请权限的链接，原样提取出来做成可点的。
         const link = (status.errmsg || '').match(/https:\/\/open-dev\.dingtalk\.com\S+?(?=,|\]|\s|$)/)?.[0] || null;
@@ -669,10 +775,10 @@ function renderSensingPane() {
           cls: 'r',
           title: '未连接钉钉接口',
           detail: scope
-            ? `缺少权限点 ${scope}。在钉钉开发者后台申请开通后即可连接。`
+            ? `缺少以下钉钉权限：${scope}。在钉钉开发者后台申请开通后即可连接。`
             : status.errcode
               ? `钉钉返回 errcode ${status.errcode}：${status.errmsg || '未知错误'}`
-              : '调用钉钉接口失败，通常是应用凭据未配置或网络不可达。本地开发环境没有真实钉钉凭据时会出现这个状态。',
+              : '调用钉钉接口失败，请检查应用配置与网络连接后重试。',
           link,
         };
       }
@@ -682,14 +788,14 @@ function renderSensingPane() {
         return {
           cls: 'y',
           title: '已连接，但所选区间内没有打卡记录',
-          detail: `通讯录与考勤接口均调用成功，企业成员 ${status.orgSize} 人，近 ${status.window?.days ?? 7} 天返回 0 条打卡记录。测试企业通常没有真实打卡行为，这不是故障。`,
+          detail: `通讯录与考勤接口均调用成功，企业成员 ${status.orgSize} 人，近 ${status.window?.days ?? 7} 天暂无打卡记录。如企业暂无打卡行为，将显示此状态。`,
         };
       }
       if (status.suppressed) {
         return {
           cls: 'y',
           title: '已连接，但样本不足不予展示',
-          detail: `接口调用成功，企业成员 ${status.orgSize} 人，取到 ${status.recordCount} 条打卡记录、覆盖 ${status.sampleSize} 人，低于最小样本 ${status.minSample} 人。按隐私规则不展示聚合结果——这不是故障。`,
+          detail: `接口调用成功，企业成员 ${status.orgSize} 人，取到 ${status.recordCount} 条打卡记录、覆盖 ${status.sampleSize} 人，低于最小样本 ${status.minSample} 人。按隐私规则暂不展示聚合结果。`,
         };
       }
       return {
@@ -731,14 +837,14 @@ function renderSensingPane() {
       ]),
       el('div', { class: 'cardC' }, [
         el('h4', { text: '办公数据感知能力' }),
-        el('div', { class: 'cs', text: '开关即时生效，控制系统是否采集对应的行为元数据。全部为非内容型元数据。' }),
+        el('div', { class: 'cs', text: '开启后，系统将采集对应的办公行为统计（不含任何消息内容），即时生效。' }),
         el('div', { class: 'grp' }, config.sensing.map((item) => el('button', {
           class: `grow ${item.enabled ? 'on' : ''} ${item.lockedOff ? 'locked' : ''}`,
           attrs: { type: 'button' },
           on: {
             click: () => {
               if (item.lockedOff) {
-                toast('本系统不申请该权限，这项无法开启。');
+                toast('该能力依赖尚未开通的平台权限，无法开启。');
                 return;
               }
               void save(
@@ -752,11 +858,11 @@ function renderSensingPane() {
           el('div', { class: 'gi' }, [
             el('div', { class: 'gn', text: `${item.label} · ${item.category}` }),
             el('div', { class: 'gc', text: item.detail }),
-            el('div', { class: 'gc mut', text: item.requiresPermission ? `钉钉权限点：${item.requiresPermission}` : '' }),
+            el('div', { class: 'gc mut', text: item.requiresPermission ? `所需钉钉权限：${item.requiresPermission}` : '' }),
           ]),
           el('div', { class: 'gs', text: item.lockedOff ? '永不采集' : (item.enabled ? '已开启' : '已关闭') }),
         ]))),
-        el('div', { class: 'rhynote', html: '<b>本系统未申请「会话内容存档」权限。</b>消息条数、@次数、夜间消息占比这类数据，我们拿不到，也不打算拿。<br>工作消息只有在员工本人主动转发时才会进入个人支持空间，HR 无法查看转发内容。' }),
+        el('div', { class: 'rhynote', html: '<b>未开通「会话内容存档」权限。</b>消息条数、@次数、夜间消息占比等与消息内容相关的指标不在采集范围内。<br>员工工作消息仅在其本人主动转发时进入个人支持空间，转发内容他人不可见。' }),
       ]),
     );
   }

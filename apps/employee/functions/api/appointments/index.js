@@ -1,6 +1,7 @@
 // 匿名预约：疗愈师侧在 Stage 4 实现，这里只做员工侧的提交、查看与取消。
 // 个案编号是给疗愈师看的唯一标识，它由随机值生成，不从 anon_id 派生。
 import { json } from '../_lib/http.js';
+import { healerReferralEnabled } from '../_lib/healer-availability.js';
 import { cardUpdate, readConsentCard } from '../_lib/conversation/card-state.js';
 import {
   ApiError, aggregateStatement, ensureProfile, handleError, newId,
@@ -21,7 +22,7 @@ function caseCode() {
 
 export async function onRequestGet({ request, env }) {
   try {
-    const { anonId } = await requireSession(request, env);
+    const { anonId, organizationId } = await requireSession(request, env);
     const { results } = await env.CARE_DB.prepare(
       'SELECT id, case_code, risk_level, status, share_context, note_cipher, content_key_version, created_at, cancelled_at FROM appointments WHERE anon_id = ? ORDER BY created_at DESC LIMIT 20'
     ).bind(anonId).all();
@@ -41,7 +42,7 @@ export async function onRequestGet({ request, env }) {
         cancelledAt: row.cancelled_at,
       });
     }
-    return json({ ok: true, appointments: items });
+    return json({ ok: true, appointments: items, healerReferralEnabled: await healerReferralEnabled(env, organizationId || env.DINGTALK_ORG_ID || null) });
   } catch (error) {
     return handleError(error, 'appointment_list_failed');
   }
@@ -51,6 +52,9 @@ export async function onRequestPost({ request, env }) {
   try {
     const session = await requireSession(request, env);
     const { anonId, organizationId } = session;
+    if (!await healerReferralEnabled(env, organizationId || env.DINGTALK_ORG_ID || null)) {
+      throw new ApiError('HEALER_REFERRAL_CLOSED', 409, '当前暂未开放疗愈师预约');
+    }
     await ensureProfile(env, anonId);
     const body = await readJson(request);
     const source = body?.messageId ? await readConsentCard(env, anonId, requireText(body.messageId, { min: 1, max: 100, field: 'messageId' })) : null;

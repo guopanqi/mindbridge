@@ -35,12 +35,12 @@ export async function onRequestPost({ request, env }) {
     const id = body?.id;
     const approve = body?.approve === true;
     if (typeof body?.approve !== 'boolean') throw new ApiError('DECISION_REQUIRED', 400, '请选择是否同意');
-    if (typeof id !== 'string' || !id) throw new ApiError('REQUEST_ID_REQUIRED', 400, '缺少请求标识');
+    if (typeof id !== 'string' || !id) throw new ApiError('REQUEST_ID_REQUIRED', 400, '请求参数缺失，请重试');
     const now = Date.now();
     const result = await env.CARE_DB.prepare(
       "UPDATE context_requests SET status = ?, decided_at = ? WHERE id = ? AND anon_id = ? AND status = 'pending' AND expires_at > ? AND EXISTS (SELECT 1 FROM appointments a WHERE a.id=context_requests.appointment_id AND a.status!='cancelled')"
     ).bind(approve ? 'approved' : 'denied', now, id, anonId, now).run();
-    if (!result.meta?.changes) throw new ApiError('REQUEST_NOT_PENDING', 404, '这条请求已经处理过或已过期');
+    if (!result.meta?.changes) throw new ApiError('REQUEST_NOT_PENDING', 404, '该请求已处理或已过期');
     await env.CARE_DB.batch([
       aggregateStatement(env, { eventType: approve ? 'context_approved' : 'context_denied', at: now, organizationId }),
     ]);

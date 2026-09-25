@@ -58,6 +58,61 @@ test('公开组织配置只影响本组织，且不能启用钉钉感知', async
   assert.equal(forbidden.status, 400);
 });
 
+test('行业模板：工作人员可改、企业端可套用，缺失活动整行跳过', async (t) => {
+  const db = new DatabaseSync(':memory:');
+  t.after(() => db.close());
+  const dir = new URL('../migrations/care/', import.meta.url);
+  for (const file of readdirSync(dir).sort().filter((name) => name.endsWith('.sql'))) db.exec(readFileSync(new URL(file, dir), 'utf8'));
+  const now = Date.now();
+  for (const id of ['org_beta_a', 'org_beta_b']) db.prepare(
+    "INSERT INTO organizations(id,display_name,kind,status,created_at,updated_at) VALUES (?,?,'beta','active',?,?)"
+  ).run(id, id, now, now);
+  const source = JSON.parse(readFileSync(new URL('../content/activities/breathing.json', import.meta.url)));
+  for (const activity of [
+    { ...source, id: 'tpl-l1', title: '模板自助活动', level: 'L1' },
+    { ...source, id: 'tpl-l2', title: '模板线下小组', level: 'L2' },
+  ]) {
+    db.exec(activitySql(activity));
+    db.exec(catalogSql({ name: activity.title, activityId: activity.id }));
+  }
+  const env = { CARE_DB: d1(db) };
+  // 非工作人员不能改模板。
+  const forbidden = await updateOrganizationConfig(env, 'org_beta_a',
+    { kind: 'save_template', industry: '互联网/IT', emotion: '焦虑', l1ActivityId: 'tpl-l1', l2ActivityId: 'tpl-l2' }, 'test');
+  assert.equal(forbidden.status, 403);
+  // 工作人员改一行模板。
+  const saved = await updateOrganizationConfig(env, 'org_beta_a',
+    { kind: 'save_template', industry: '互联网/IT', emotion: '焦虑', l1ActivityId: 'tpl-l1', l2ActivityId: 'tpl-l2' }, 'stf_internal_test_org');
+  assert.equal(saved.status, 200);
+  const unknownEmotion = await updateOrganizationConfig(env, 'org_beta_a',
+    { kind: 'save_template', industry: '互联网/IT', emotion: '不存在', l1ActivityId: 'tpl-l1' }, 'stf_internal_test_org');
+  assert.equal(unknownEmotion.status, 404);
+  // 模板随配置下发（含行业疗愈目标）。
+  const config = await readOrganizationConfig(env, 'org_beta_a');
+  assert.equal(config.industryTemplates['互联网/IT'].find((x) => x.emotion === '焦虑').l2ActivityId, 'tpl-l2');
+  assert.match(config.industryGoals['互联网/IT'], /掌控时间/);
+  // 企业端套用：只写本组织，未列出的情绪保持现状。
+  const applied = await updateOrganizationConfig(env, 'org_beta_a', { kind: 'apply_template', industry: '互联网/IT' }, 'stf_org_x');
+  assert.equal(applied.status, 200);
+  assert.ok(applied.body.applied.includes('焦虑'));
+  const a = await readOrganizationConfig(env, 'org_beta_a');
+  const b = await readOrganizationConfig(env, 'org_beta_b');
+  assert.equal(a.matrix.find((x) => x.emotion === '焦虑').l2.activityId, 'tpl-l2');
+  assert.notEqual(b.matrix.find((x) => x.emotion === '焦虑').l2.activityId, 'tpl-l2');
+  // 模板引用到已退役活动时：保存侧直接拒绝，套用侧整行跳过并如实报告。
+  const badSave = await updateOrganizationConfig(env, 'org_beta_a',
+    { kind: 'save_template', industry: '互联网/IT', emotion: '疲惫', l1ActivityId: 'gone', l2ActivityId: 'tpl-l2' }, 'stf_internal_test_org');
+  assert.equal(badSave.status, 400);
+  db.prepare("UPDATE industry_matrix_templates SET l1_activity_id='gone' WHERE industry='互联网/IT' AND emotion='疲惫'").run();
+  const partial = await updateOrganizationConfig(env, 'org_beta_b', { kind: 'apply_template', industry: '互联网/IT' }, 'stf_org_y');
+  assert.equal(partial.status, 200);
+  assert.ok(partial.body.skipped.includes('疲惫'));
+  assert.ok(!partial.body.applied.includes('疲惫'));
+  // 未知模板名如实 404。
+  const unknown = await updateOrganizationConfig(env, 'org_beta_a', { kind: 'apply_template', industry: '不存在' }, 'stf_org_x');
+  assert.equal(unknown.status, 404);
+});
+
 test('内部接口按 organizationId 读写公开组织配置，且不能开钉钉感知', async (t) => {
   const db = new DatabaseSync(':memory:');
   t.after(() => db.close());

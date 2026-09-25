@@ -1,7 +1,7 @@
 import { api, ApiError } from './api.js';
 import { BUILD_ID } from './build-id.js';
 import { $, el, toast } from './dom.js';
-import { loadDashboard, renderDashboard, setOrganizationKind } from './views/dashboard.js';
+import { loadDashboard, renderDashboard, setOrganizationKind, setViewerRoles } from './views/dashboard.js';
 import { loadAudit, renderAudit } from './views/audit.js';
 import { loadTestTimeline, renderTestTimeline } from './views/test-timeline.js';
 
@@ -9,8 +9,8 @@ const GATE_TEXT = {
   NO_CODE: '请从钉钉管理后台（oa.dingtalk.com → 应用管理 → MindBridge）进入，或使用组织管理链接打开。',
   NOT_ADMIN: '只有企业管理员可以进入 MindBridge 管理后台。',
   SSO_CODE_REPLAYED: '这个免登链接已经用过了，请回到钉钉管理后台重新点击进入。',
-  ADMIN_LINK_INVALID: '管理链接无效或已失效，请向创建组织的人索取新链接。',
-  INTERNAL_TEST_LOGIN_INVALID: '内部测试入口无效，请使用新发的测试入口。',
+  ADMIN_LINK_INVALID: '管理链接无效或已失效，请联系组织创建者获取新链接。',
+  INTERNAL_TEST_LOGIN_INVALID: '内部测试入口无效，请使用最新下发的测试入口。',
   APP_CONFIGURATION_MISSING: '管理后台配置不完整，请联系系统管理员。',
   SERVER_TIMEOUT: '网络连接超时，请稍后重试。',
   NETWORK_ERROR: '网络连接失败，请稍后重试。',
@@ -48,13 +48,13 @@ function renderBanner(data) {
   if (tenant.kind === 'beta') {
     nodes.push(
       el('span', { class: 'live-chip', text: '公开组织' }),
-      el('span', { text: '本页只显示此组织的聚合数据，与其他组织和企业报表互不可见' }),
+       el('span', { text: '本页仅显示此组织的聚合数据，与其他组织和企业报表互不可见' }),
     );
   }
   if (typeof data.liveEventCount === 'number' && tenant.kind !== 'beta') {
     nodes.push(
       el('span', { class: 'live-chip', text: '真实事件' }),
-      el('span', { text: `内测期间已并入 ${data.liveEventCount} 条真实钉钉员工事件` }),
+       el('span', { text: `内测期间已接入 ${data.liveEventCount} 条真实钉钉员工事件` }),
     );
   } else if (typeof data.liveEventCount === 'number' && tenant.kind === 'beta' && data.liveEventCount > 0) {
     nodes.push(
@@ -89,16 +89,17 @@ async function showView(view) {
     if (view === 'test-timeline') await loadTestTimeline();
   } catch (error) {
     if (error instanceof ApiError && error.code === 'STAFF_SESSION_REQUIRED') {
-      showGate('会话已过期', '请重新打开管理入口。', 'STAFF_SESSION_REQUIRED');
+      showGate('会话已过期', '请重新通过管理入口进入。', 'STAFF_SESSION_REQUIRED');
       return;
     }
-    toast('这一页暂时打不开。');
+    toast('该页面暂时无法打开。');
   }
 }
 
 async function enterConsole(session) {
   const orgKind = session.organization?.kind || 'enterprise';
   setOrganizationKind(orgKind);
+  setViewerRoles(session.roles);
   const roleLabel = session.roles.includes('internal_tester')
     ? '内部测试员'
     : orgKind === 'beta'
@@ -150,7 +151,7 @@ async function boot() {
       await api.signInAsInternalTester(debugKey);
     } catch (error) {
       const reason = error instanceof ApiError ? error.code : 'UNEXPECTED_CLIENT_ERROR';
-      showGate('无法进入内部测试视图', GATE_TEXT[reason] || error.userMessage || '测试入口校验没有完成。', reason);
+      showGate('无法进入内部测试视图', GATE_TEXT[reason] || error.userMessage || '测试入口校验未完成。', reason);
       return;
     }
   }
@@ -161,7 +162,7 @@ async function boot() {
       await api.signInWithOrgKey(orgKey);
     } catch (error) {
       const reason = error instanceof ApiError ? error.code : 'UNEXPECTED_CLIENT_ERROR';
-      showGate('无法进入管理后台', GATE_TEXT[reason] || error.userMessage || '管理链接校验没有完成。', reason);
+      showGate('无法进入管理后台', GATE_TEXT[reason] || error.userMessage || '管理链接校验未完成。', reason);
       return;
     }
   }
@@ -175,7 +176,7 @@ async function boot() {
       await api.signInWithOmp(code);
     } catch (error) {
       const reason = error instanceof ApiError ? error.code : 'UNEXPECTED_CLIENT_ERROR';
-      showGate('无法进入管理后台', GATE_TEXT[reason] || error.userMessage || '身份校验没有完成。', reason);
+      showGate('无法进入管理后台', GATE_TEXT[reason] || error.userMessage || '身份校验未完成。', reason);
       return;
     }
   }
@@ -185,7 +186,7 @@ async function boot() {
   } catch (error) {
     if (!(error instanceof ApiError) || error.code !== 'HTTP_401') {
       const reason = error instanceof ApiError ? error.code : 'UNEXPECTED_CLIENT_ERROR';
-      showGate('无法进入管理后台', GATE_TEXT[reason] || '身份校验没有完成。', reason);
+      showGate('无法进入管理后台', GATE_TEXT[reason] || '身份校验未完成。', reason);
       return;
     }
   }
@@ -198,7 +199,7 @@ document.addEventListener('click', (event) => {
 });
 $('#sign-out').addEventListener('click', async () => {
   await api.signOut().catch(() => {});
-  showGate('已退出', '需要时可重新打开管理入口。', null);
+  showGate('已退出', '可随时通过管理入口重新进入。', null);
 });
 
 void boot();

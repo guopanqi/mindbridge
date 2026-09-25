@@ -3,13 +3,13 @@ import { buildInstructions, PROMPT_VERSION } from './instructions.js';
 import { applyStatePatch, validateDecision } from './model-contract.js';
 import { executeTool } from './tools.js';
 
-export async function runConversationHarness({ env, gateway, userState, recentMessages, currentMessage, channel = 'h5', profileContext = 'none', organizationId = null, now = Date.now(), clock = () => Date.now() }) {
+export async function runConversationHarness({ env, gateway, userState, recentMessages, currentMessage, channel = 'h5', profileContext = 'none', organizationId = null, healerEnabled = false, now = Date.now(), clock = () => Date.now() }) {
   // 首次调用、契约重试和工具后的措辞调用共享预算，不为每次调用重置计时。
   const deadlineAt = clock() + 8_000;
   const requestId = `mdl_${crypto.randomUUID().replace(/-/g, '')}`;
   const context = buildModelVisibleContext({ userState, recentMessages, currentMessage, channel, profileContext });
   const first = await generateValidated(gateway, {
-    instructions: buildInstructions({ userState: context.userState }),
+    instructions: buildInstructions({ userState: context.userState, healerEnabled }),
     context,
     promptVersion: PROMPT_VERSION,
   }, deadlineAt, clock);
@@ -40,11 +40,13 @@ export async function runConversationHarness({ env, gateway, userState, recentMe
       // 功能请求的回答来自检索事实，不再耗费第二轮模型把“想要活动”重新解释成心理诉求。
       const repeated = activity && userState?.recentRecommendations?.includes(activity.id);
       decision = { ...decision, toolCall: null, reply: { text: activity
-        ? `${repeated ? '这是刚才推荐过的活动，你可以再打开练习：' : '可以参加这个活动：'}${activity.title}。${activity.description || ''}`
+        ? repeated
+          ? `如果你想再做一次，可以打开刚才的「${activity.title}」。`
+          : `要不先看看「${activity.title}」？你可以按自己的节奏来。`
         : activityEmptyReply(toolResult.status) } };
     } else {
     const second = await generateValidated(gateway, {
-      instructions: buildInstructions({ userState: context.userState, toolPhase: true }),
+      instructions: buildInstructions({ userState: context.userState, toolPhase: true, healerEnabled }),
       context,
       toolResult,
       promptVersion: PROMPT_VERSION,

@@ -6,9 +6,12 @@ import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 
 const appDir = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const [name, originText, maxText = '100', daysText = '30', consoleOriginText = 'https://mindbridge-console.pages.dev'] = process.argv.slice(2);
+const [name, originText, maxText = '100', daysText = '30', consoleOriginText = 'https://mindbridge-console.pages.dev', researchOption] = process.argv.slice(2);
+// 内测组织默认开启原文研究导出；保留分离能力，需关闭时在最后添加 --no-research-transcripts。
+// 旧的 --research-transcripts 作为兼容别名保留，传了和没传效果一致。
+if (researchOption && !['--research-transcripts', '--no-research-transcripts'].includes(researchOption)) throw new Error('未知选项；默认已开启原文研究导出，如需关闭请在最后添加 --no-research-transcripts');
 if (!name || name.length > 80 || /[\x00-\x1f]/.test(name) || !originText) { // eslint-disable-line no-control-regex -- 组织名不得含控制字符
-  throw new Error('用法：node scripts/create-beta-organization.mjs "组织名称" https://员工端域名 [人数上限] [有效天数] [https://管理端域名]');
+  throw new Error('用法：node scripts/create-beta-organization.mjs "组织名称" https://员工端域名 [人数上限] [有效天数] [https://管理端域名] [--no-research-transcripts]');
 }
 const origin = new URL(originText);
 if (origin.protocol !== 'https:' || origin.pathname !== '/' || origin.search || origin.hash) {
@@ -38,7 +41,8 @@ VALUES (${quote(id)}, ${quote(name)}, 'beta', 'active', ${now}, ${now});
 INSERT INTO beta_invites (id, organization_id, token_digest, expires_at, max_joins, created_at)
 VALUES (${quote(inviteId)}, ${quote(id)}, ${quote(digest)}, ${now + days * 86400000}, ${maxJoins}, ${now});
 INSERT INTO beta_admin_credentials (organization_id, token_digest, created_at)
-VALUES (${quote(id)}, ${quote(adminDigest)}, ${now});`;
+VALUES (${quote(id)}, ${quote(adminDigest)}, ${now});
+${researchOption === '--no-research-transcripts' ? '' : `INSERT INTO organization_capabilities (organization_id, capability, enabled, updated_at) VALUES (${quote(id)}, 'research_transcript_export', 1, ${now});`}`;
 execFileSync(resolve(appDir, 'node_modules/.bin/wrangler'), [
   'd1', 'execute', 'mindbridge-beta-care', '--remote', '--config', 'wrangler.beta-db.jsonc', '--command', sql,
 ], { cwd: appDir, stdio: ['ignore', 'pipe', 'inherit'] });
@@ -47,3 +51,5 @@ url.searchParams.set('invite', token);
 const adminUrl = new URL('/', consoleOrigin);
 adminUrl.searchParams.set('orgKey', adminToken);
 process.stdout.write(`组织 ID：${id}\n邀请链接（只显示一次）：${url.href}\n管理链接（只显示一次，勿发给普通参与者）：${adminUrl.href}\n`);
+if (researchOption === '--no-research-transcripts') process.stdout.write('已关闭内部研究原文导出。\n');
+else process.stdout.write('已默认开启内部研究原文导出；员工端不再显示原文研究告知，请确保已通过线下方式明确告知参与者。管理链接默认可看本组织小样本真实报表。\n');

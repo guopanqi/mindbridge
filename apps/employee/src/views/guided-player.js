@@ -90,7 +90,7 @@ export function renderMediaPlayer(stage, { complete, cleanup }) {
       await media.play();
       if (!disposed) { message.textContent = ''; retry.hidden = true; }
     } catch {
-      if (!disposed) { message.textContent = '播放尚未开始，请点击播放。'; retry.hidden = false; }
+      if (!disposed) { message.textContent = '请点击播放开始。'; retry.hidden = false; }
     }
   };
   retry.addEventListener('click', () => { if (media.error) media.load(); void play(); });

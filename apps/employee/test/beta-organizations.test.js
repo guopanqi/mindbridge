@@ -52,6 +52,8 @@ test('邀请身份可续会话，广场在两个公开组织之间严格隔离',
     sqlite.prepare('INSERT INTO beta_invites(id,organization_id,token_digest,created_at) VALUES (?,?,?,?)')
       .run(`inv_${i}`, `org_${i}`, await sha256Base64Url(tokens[i]), now);
   }
+  sqlite.prepare('INSERT INTO organization_healer_settings (organization_id, enabled, updated_at) VALUES (?, 1, ?)').run('org_0', now);
+  sqlite.exec("UPDATE service_status SET status='open' WHERE service_id='healer-referral'");
   const env = { CARE_DB: d1(sqlite), CARE_CONTENT_KEY_V1: toBase64Url(crypto.getRandomValues(new Uint8Array(32))), APP_VERSION: 'test' };
 
   const joinedA = await join({ request: req('/api/auth/invite', 'POST', { token: tokens[0] }), env });

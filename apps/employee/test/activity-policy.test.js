@@ -8,6 +8,7 @@ import { runConversationHarness } from '../functions/api/_lib/harness/index.js';
 import { emptyUserState } from '../functions/api/_lib/harness/model-contract.js';
 import { onRequestGet as resourcesGet, onRequestPost as resourcesPost } from '../functions/api/resources.js';
 import { onRequestGet as configGet, onRequestPut as configPut } from '../functions/api/internal/config.js';
+import { onRequestPut as serviceStatusPut } from '../functions/api/internal/service-status.js';
 import { sha256Base64Url } from '../functions/api/_lib/crypto.js';
 
 // Real SQLite adapter: executes production SQL; no matching SQL strings or canned results.
@@ -23,6 +24,7 @@ async function setup(t) {
     { ...sample, id: 'custom-l1', title: '文字灯塔练习', level: 'L1' },
     { ...sample, id: 'custom-l2', title: '深入灯塔练习', level: 'L2' },
     { ...sample, id: 'draft', title: '尚未开放的灯塔', available: false },
+    { ...sample, id: 'offline-preview', title: '线下正念工作坊', kind: 'offline', available: false },
   ];
   for (const a of docs) { db.exec(activitySql(a)); db.exec(catalogSql({ name: `资源-${a.id}`, activityId: a.id })); }
   db.exec("DELETE FROM intervention_matrix WHERE emotion = '焦虑'");
@@ -92,7 +94,7 @@ test('没有配置时文本检索；策略禁用、目录禁用、内容未发�
   const { put, recommend, invoke, db } = await setup(t);
   assert.deepEqual(new Set((await recommend({})).activities.map(a => a.id)), new Set(['custom-l1', 'custom-l2']));
   assert.equal((await invoke(resourcesPost, 'POST', { activityId: 'draft' })).status, 404);
-  assert.equal((await put({ kind: 'matrix', emotion: '焦虑', l1ActivityId: 'draft' })).status, 400);
+  assert.equal((await put({ kind: 'matrix', emotion: '焦虑', l1ActivityId: 'draft' })).status, 200);
   await put({ kind: 'matrix', emotion: '焦虑', l1ActivityId: 'custom-l1', enabled: false });
   assert.deepEqual((await recommend({ emotion: '焦虑', level: 'blue' })).activities, []);
   await put({ kind: 'matrix', emotion: '焦虑', enabled: true });
@@ -103,10 +105,53 @@ test('没有配置时文本检索；策略禁用、目录禁用、内容未发�
   assert.deepEqual((await recommend({ emotion: '焦虑', level: 'blue' })).activities, []);
 });
 
+test('未开放线下活动只在活动库预览，不能推荐或开始', async t => {
+  const { invoke, recommend } = await setup(t);
+  const library = (await invoke(resourcesGet, 'GET')).body.resources;
+  assert.equal(library.find(item => item.id === 'offline-preview')?.status, 'coming_soon');
+  assert.ok(!library.some(item => item.id === 'draft'));
+  assert.ok(!(await recommend({ explicitRequest: true })).activities.some(item => item.id === 'offline-preview'));
+  assert.equal((await invoke(resourcesPost, 'POST', { activityId: 'offline-preview' })).status, 404);
+});
+
 test('配置接口拒绝未授权写入', async t => {
   const { env } = await setup(t);
   const response = await configPut({ env, request: new Request('https://example.test/api/internal/config', { method: 'PUT', body: JSON.stringify({ kind: 'activity', activityId: 'custom-l1', enabled: false }) }) });
   assert.equal(response.status, 401);
+});
+
+test('疗愈师组织配置默认启用，但产品状态未开放时仍不可预约', async t => {
+  const { invoke, put, env } = await setup(t);
+  assert.equal((await invoke(configGet, 'GET', undefined, true)).body.healerReferralEnabled, false);
+  assert.equal((await invoke(configGet, 'GET', undefined, true)).body.healerOrganizationEnabled, true);
+  assert.equal((await put({ kind: 'healer_referral', enabled: true })).status, 200);
+  assert.equal((await invoke(configGet, 'GET', undefined, true)).body.healerOrganizationEnabled, true);
+  assert.equal((await invoke(configGet, 'GET', undefined, true)).body.healerReferralEnabled, false);
+  await env.CARE_DB.prepare("UPDATE service_status SET status='open' WHERE service_id='healer-referral'").run();
+  assert.equal((await invoke(configGet, 'GET', undefined, true)).body.healerReferralEnabled, true);
+  assert.equal((await put({ kind: 'healer_referral', enabled: false })).status, 200);
+  assert.equal((await invoke(configGet, 'GET', undefined, true)).body.healerReferralEnabled, false);
+});
+
+test('产品服务状态独立于组织配置并限制未就绪内容开放', async t => {
+  const { env, invoke, put, recommend } = await setup(t);
+  const setStatus = async (serviceId, status, previewVisible = false) => {
+    const response = await serviceStatusPut({ env, request: new Request('https://example.test/api/internal/service-status', {
+      method: 'PUT', headers: { authorization: `Bearer ${env.INTERNAL_SERVICE_TOKEN}` },
+      body: JSON.stringify({ serviceId, status, previewVisible }),
+    }) });
+    return response.status;
+  };
+  assert.equal(await setStatus('activity:draft', 'open'), 409);
+  assert.equal((await put({ kind: 'activity', activityId: 'custom-l1', enabled: true })).status, 200);
+  assert.equal(await setStatus('activity:custom-l1', 'paused', true), 200);
+  const library = (await invoke(resourcesGet, 'GET')).body.resources;
+  assert.equal(library.find(item => item.id === 'custom-l1')?.status, 'paused');
+  assert.ok(!(await recommend({})).activities.some(item => item.id === 'custom-l1'));
+  assert.equal((await invoke(resourcesPost, 'POST', { activityId: 'custom-l1' })).status, 404);
+  assert.equal((await invoke(configGet, 'GET', undefined, true)).body.activityCatalog.find(item => item.id === 'custom-l1').enabled, 1);
+  assert.equal(await setStatus('activity:custom-l1', 'open'), 200);
+  assert.ok((await recommend({})).activities.some(item => item.id === 'custom-l1'));
 });
 
 test('显式找活动跳出默认映射，先排除重复再取结果，结果耗尽与不可用分别说明', async t => {

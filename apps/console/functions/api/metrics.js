@@ -9,7 +9,11 @@ export async function onRequestGet({ request, env }) {
     const staff = await requireStaff(request, env, 'hr_viewer');
     const days = new URL(request.url).searchParams.get('days') || '90';
     const origin = new URL(request.url).searchParams.get('origin') === 'demo_seed' ? 'demo_seed' : 'live';
-    const internalTest = staff.roles.includes('internal_tester') && staff.organizationId === env.INTERNAL_TEST_ORG_ID;
+    // 小样本视图不再只限全局 INTERNAL_TEST_ORG_ID：beta 组织的管理链接（orgKey 会话）
+    // 默认可看本组织小样本真实报表；全局内部测试入口保持兼容。
+    const betaAdminView = staff.organizationKind === 'beta' && staff.roles.includes('admin') && origin === 'live';
+    const internalTest = (staff.roles.includes('internal_tester') && staff.organizationId === env.INTERNAL_TEST_ORG_ID)
+      || betaAdminView;
     const upstream = await fetch(
       `${env.CARE_API_ORIGIN}/api/internal/metrics?days=${encodeURIComponent(days)}&origin=${origin}&${organizationQuery(staff, env)}${internalTest ? '&internalTest=1' : ''}`,
       { headers: { authorization: `Bearer ${careToken(env)}` }, signal: AbortSignal.timeout(10000) }

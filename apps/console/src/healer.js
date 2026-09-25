@@ -28,7 +28,7 @@ async function enterWorkspace(session) {
   // 管理员会话不能直接进入疗愈师个案台。
   if (!session.roles.includes('healer')) {
     await api.signOut().catch(() => {});
-    showGate('这个账号不是疗愈师', '请输入系统侧创建的疗愈师登录名。', 'NOT_HEALER');
+    showGate('该账号不是疗愈师账号', '请输入系统预置的疗愈师登录名。', 'NOT_HEALER');
     return;
   }
   setHealerIdentity({ displayName: session.displayName, credential: session.credential });
@@ -71,12 +71,12 @@ async function boot() {
     if (session.authenticated) return void enterWorkspace(session);
   } catch (error) {
     if (!(error instanceof ApiError) || error.code !== 'HTTP_401') {
-      showGate('工作台打不开', '网络连接没有完成，请稍后重试。',
+      showGate('工作台暂时无法打开', '网络连接未完成，请稍后再试。',
         error instanceof ApiError ? error.code : 'UNEXPECTED_CLIENT_ERROR');
       return;
     }
   }
-  showGate('疗愈师工作台', '输入系统侧创建的疗愈师登录名即可进入。', null);
+  showGate('疗愈师工作台', '输入系统预置的疗愈师登录名即可进入。', null);
 }
 
 async function signIn() {
@@ -87,7 +87,7 @@ async function signIn() {
     await api.signInAsHealer({ username });
     await enterWorkspace(await api.session());
   } catch (error) {
-    toast(error instanceof ApiError && error.userMessage ? error.userMessage : '登录没有完成。');
+    toast(error instanceof ApiError && error.userMessage ? error.userMessage : '登录失败，请稍后再试。');
   }
 }
 

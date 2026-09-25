@@ -23,11 +23,11 @@ export function parseRoles(value) {
 
 export async function readJson(request, maxBytes = 8192) {
   const raw = await request.text();
-  if (raw.length > maxBytes) throw new ApiError('PAYLOAD_TOO_LARGE', 413, '内容过长');
+  if (raw.length > maxBytes) throw new ApiError('PAYLOAD_TOO_LARGE', 413, '内容过长，请精简后重试');
   try {
     return JSON.parse(raw || '{}');
   } catch {
-    throw new ApiError('INVALID_JSON', 400, '请求格式错误');
+    throw new ApiError('INVALID_JSON', 400, '请求格式有误，请重试');
   }
 }
 
@@ -88,5 +88,5 @@ export function handleError(error, event) {
     return json({ ok: false, reasonCode: error.code, message: error.userMessage }, error.status, headers);
   }
   console.error(JSON.stringify({ event, reasonCode: 'INTERNAL_ERROR' }));
-  return json({ ok: false, reasonCode: 'INTERNAL_ERROR', message: '服务暂时不可用' }, 500);
+  return json({ ok: false, reasonCode: 'INTERNAL_ERROR', message: '服务暂时不可用，请稍后再试' }, 500);
 }

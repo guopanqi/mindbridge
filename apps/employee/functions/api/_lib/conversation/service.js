@@ -10,6 +10,8 @@ import { emptyUserState } from '../harness/model-contract.js';
 import { runConversationHarness } from '../harness/index.js';
 import { CRISIS_RESOURCES, fallbackNeedsCrisis, safeFallback } from '../harness/safety.js';
 import { productEventStatement } from '../product-events.js';
+import { hasActivityAudio } from '../activity-presentation.js';
+import { healerReferralEnabled } from '../healer-availability.js';
 
 const RATE_WINDOW_MS = 60_000;
 const RATE_LIMIT = 20;
@@ -49,7 +51,7 @@ async function loadConversationMessages(env, conversationId, limit = 20) {
   return out;
 }
 
-async function respondWithHarness(env, { text, conversation, profileContext, now, channel, organizationId }) {
+async function respondWithHarness(env, { text, conversation, profileContext, now, channel, organizationId, healerEnabled }) {
   let harness;
   let revision;
   let loadedState = emptyUserState();
@@ -69,6 +71,7 @@ async function respondWithHarness(env, { text, conversation, profileContext, now
       channel,
       profileContext,
       organizationId,
+      healerEnabled,
       now,
     });
   } catch (error) {
@@ -79,6 +82,7 @@ async function respondWithHarness(env, { text, conversation, profileContext, now
       result: safeFallback(loadedState, text),
       enteredRed: fallbackNeedsCrisis(text) && loadedState.supportLevel !== 'red',
       degraded: true,
+      healerEnabled,
     };
   }
   const level = harness.nextState.supportLevel === 'blue'
@@ -87,6 +91,10 @@ async function respondWithHarness(env, { text, conversation, profileContext, now
   const resource = harness.activity ? {
     name: harness.activity.title,
     description: harness.activity.description,
+    kind: harness.activity.kind,
+    form: harness.activity.form,
+    duration: harness.activity.duration,
+    audioAvailable: hasActivityAudio(harness.activity.stages_json),
     icon: '🌿',
     level: harness.activity.level || 'L1',
     emotion: harness.nextState.emotion || '平静',
@@ -106,6 +114,7 @@ async function respondWithHarness(env, { text, conversation, profileContext, now
     },
     harness: { ...harness, revision },
     enteredRed: loadedState.supportLevel !== 'red' && harness.nextState.supportLevel === 'red',
+    healerEnabled,
   };
 }
 
@@ -188,6 +197,7 @@ export async function handleInbound({ env, anonId, text, channel = 'h5', request
     const engineOutput = await respondWithHarness(env, {
       text, conversation, profileContext: profile.context_tag, now, channel,
       organizationId: session?.organizationId || env.DINGTALK_ORG_ID || null,
+      healerEnabled: await healerReferralEnabled(env, session?.organizationId || env.DINGTALK_ORG_ID || null),
     });
     const result = engineOutput.result;
     const userSealed = await sealBody(env, text, aad);
@@ -264,7 +274,7 @@ export async function handleInbound({ env, anonId, text, channel = 'h5', request
       appended.push({ id: cardId, role: 'resource', at: now + 2, card: result.resource });
     }
 
-    if (result.level === 'red' && engineOutput.enteredRed) {
+    if (result.level === 'red' && engineOutput.enteredRed && engineOutput.healerEnabled) {
       // 红色第一步：先给人，不给号码。说明边界并征求知情同意，绝不谎称已代为联系任何人。
       const card = {
         kind: 'consent',
@@ -285,11 +295,11 @@ export async function handleInbound({ env, anonId, text, channel = 'h5', request
     // 热线不是红色的默认推送：只有当同意卡已经给过、员工还没接受，红色又持续了一轮时才补上，
     // 而且整段对话只补这一次——反复弹号码，对已经说"说了也没用"的人只是噪音。
     // 模型不可用的降级路径例外：那一轮拿不到判断，宁可多给一次号码。
-    if (result.level === 'red' && result.crisis && (!engineOutput.enteredRed || engineOutput.degraded)) {
+    if (result.level === 'red' && result.crisis && (!engineOutput.healerEnabled || !engineOutput.enteredRed || engineOutput.degraded)) {
       const already = await env.CARE_DB.prepare(
         "SELECT 1 AS hit FROM messages WHERE anon_id = ? AND role = 'crisis' LIMIT 1"
       ).bind(anonId).first();
-      const offered = engineOutput.degraded || await env.CARE_DB.prepare(
+      const offered = !engineOutput.healerEnabled || engineOutput.degraded || await env.CARE_DB.prepare(
         "SELECT 1 AS hit FROM messages WHERE anon_id = ? AND role = 'consent' LIMIT 1"
       ).bind(anonId).first();
       if (!already && offered) {

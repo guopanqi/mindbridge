@@ -1,0 +1,20 @@
+{
+  "id": "identity-story-group",
+  "contentVersion": 1,
+  "title": "身份重塑叙事疗愈小组",
+  "description": "面向正在经历岗位变化、职业转型或技术替代焦虑的人。通过梳理职业经历、重要选择和曾经创造的价值，在小组中重新理解自己的能力与下一步方向。具体形式与参与安排将在开放时公布。",
+  "kind": "offline",
+  "level": "L2",
+  "available": false,
+  "form": "线下小组",
+  "suitedFor": "职业转型、身份变化或担心被替代时",
+  "coreMethod": "职业身份变迁图与叙事分享",
+  "tags": ["职业转型", "迷茫", "身份重塑", "叙事疗愈"],
+  "scale": {
+    "preLabel": "开始前，对下一步方向的清晰感如何？",
+    "low": "不清晰",
+    "high": "很清晰",
+    "direction": "up"
+  },
+  "stages": []
+}

@@ -33,8 +33,8 @@ export async function loadTestTimeline(anonId = selected) {
     refresh.addEventListener('click', () => { void loadTestTimeline(selected); });
     clear(root).append(el('section', { class: 'panel' }, [
       el('h2', { text: '匿名用户事件时间线' }),
-      el('p', { class: 'panel-sub', text: '仅内部测试员可见。显示此组织的匿名 ID、聊天与活动行为，不显示聊天原文。操作后点击刷新，核对统计事件是否写入。' }),
-      people.length ? el('div', { class: 'timeline-controls' }, [picker, refresh]) : el('p', { class: 'empty', text: '这个组织还没有匿名参与者。' }),
+      el('p', { class: 'panel-sub', text: '仅内部测试可见：展示本组织匿名 ID 的聊天与活动行为，不含聊天原文。操作后点击刷新，核对统计事件是否已写入。' }),
+      people.length ? el('div', { class: 'timeline-controls' }, [picker, refresh]) : el('p', { class: 'empty', text: '该组织暂无匿名参与者。' }),
       selected ? el('p', { class: 'panel-sub', text: `当前匿名 User ID：${selected}` }) : null,
       selected && data.events.length ? el('table', { class: 'grid-table' }, [
         el('thead', {}, [el('tr', {}, [
@@ -46,10 +46,10 @@ export async function loadTestTimeline(anonId = selected) {
           el('td', { class: 'mono', text: event.activityName || event.objectId || '—' }),
           el('td', { text: event.statistic ? `${event.statistic} · ${event.statisticRecorded ? '已写入' : '未查到'}` : '不写入组织统计' }),
         ]))),
-      ]) : selected ? el('p', { class: 'empty', text: '这个匿名用户还没有可显示的事件。' }) : null,
+      ]) : selected ? el('p', { class: 'empty', text: '该匿名用户暂无可显示的事件。' }) : null,
       selected ? el('p', { class: 'panel-sub', text: data.statisticNote || '' }) : null,
     ]));
   } catch (error) {
-    clear(root).append(el('p', { class: 'empty', text: error.userMessage || '测试时间线暂时取不到。' }));
+    clear(root).append(el('p', { class: 'empty', text: error.userMessage || '测试时间线暂时无法加载。' }));
   }
 }

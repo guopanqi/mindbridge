@@ -42,6 +42,7 @@ export async function onRequestGet(context) {
       resources: history.resources,
       retentionDays: history.retentionDays,
       appointments: appointments.appointments,
+      healerReferralEnabled: appointments.healerReferralEnabled,
       consents: consents.consents,
       authorizations: authorizations.requests,
     });

@@ -1,8 +1,8 @@
 {
   "id": "mindfulness-workshop",
-  "contentVersion": 2,
+  "contentVersion": 4,
   "title": "午间正念工作坊",
-  "description": "疗愈师带领的 8 人小组，不用自我介绍，也不用聊工作，来闭着眼睛坐一小时就行。",
+  "description": "由疗愈师带领的线下小组正念练习，预计约一小时。你可以按自己的舒适度参与，不必要求自己马上放松；具体安排和参与方式以开放报名时的信息为准。",
   "kind": "offline",
   "level": "L2",
   "available": false,
@@ -11,8 +11,6 @@
   "scoreLabel": "紧绷感",
   "suitedFor": "连续失眠、早上不想去公司、一个人调作息调不回来的时候",
   "coreMethod": "疗愈师带领的团体正念",
-  "schedule": "本周五 12:30",
-  "location": "B 座 3F 静室",
   "tags": [
     "失眠",
     "疲惫",

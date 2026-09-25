@@ -116,8 +116,12 @@ export async function onRequestGet({ request, env }) {
       'SELECT id, display_name, kind FROM organizations WHERE id = ? AND status = ?'
     ).bind(organizationId, 'active').first();
     if (!organization) return json({ ok: false, reasonCode: 'ORGANIZATION_UNKNOWN' }, 404);
+    // 小样本视图：全局内部测试组织保持兼容；beta 组织的管理链接默认可看本组织小样本。
+    // 调用方必须是持有 INTERNAL_SERVICE_TOKEN 的 console 代理，care 侧再按 kind 兜底，
+    // 避免 enterprise 组织被带上 internalTest=1。
     const internalTest = url.searchParams.get('internalTest') === '1'
-      && origin === 'live' && organizationId === env.INTERNAL_TEST_ORG_ID;
+      && origin === 'live'
+      && (organizationId === env.INTERNAL_TEST_ORG_ID || organization?.kind === 'beta');
     const minSample = internalTest ? 1 : MIN_SAMPLE;
     const suppressFor = (value, size) => suppress(value, size, minSample);
     const suppressSeriesFor = (points) => suppressSeries(points, minSample);

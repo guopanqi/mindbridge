@@ -14,16 +14,16 @@ const MIN_BOOT_MS = 1200;
 const AUTH_TIMEOUT_MS = 12_000;
 
 const FAILURE_TEXT = {
-  DINGTALK_JSAPI_UNAVAILABLE: '请从钉钉工作台里打开 MindBridge，直接访问网址无法建立匿名身份。',
-  DINGTALK_AUTH_FAILED: '钉钉没有完成免登。请确认是从钉钉工作台进入，再重试一次。',
-  DINGTALK_AUTH_TIMEOUT: '钉钉没有返回免登信息，请退出后重新从工作台进入。',
-  DINGTALK_AUTH_CODE_EMPTY: '钉钉没有返回免登信息，请退出后重新从工作台进入。',
-  SERVER_TIMEOUT: '网络连接超时，请检查网络后重试。',
-  NETWORK_ERROR: '网络连接失败，请检查网络后重试。',
+  DINGTALK_JSAPI_UNAVAILABLE: '请从钉钉工作台打开 MindBridge，直接访问链接无法建立匿名身份。',
+  DINGTALK_AUTH_FAILED: '钉钉免登未完成，请确认从钉钉工作台进入后重试。',
+  DINGTALK_AUTH_TIMEOUT: '未获取到钉钉免登信息，请退出后重新从工作台进入。',
+  DINGTALK_AUTH_CODE_EMPTY: '未获取到钉钉免登信息，请退出后重新从工作台进入。',
+  SERVER_TIMEOUT: '网络连接超时，请稍后再试。',
+  NETWORK_ERROR: '网络连接失败，请稍后再试。',
   APP_CONFIGURATION_MISSING: '应用配置不完整，请联系管理员。',
   INVITE_INVALID: '邀请链接无效或已失效，请联系邀请人。',
   INVITE_FULL: '本次邀请名额已满，请联系邀请人。',
-  INVITE_REQUIRED: '请使用邀请链接进入。链接失效或打不开时，请联系邀请人。',
+  INVITE_REQUIRED: '请使用邀请链接进入；链接失效或无法打开时，请联系邀请人。',
 };
 
 let booting = false;
@@ -64,22 +64,23 @@ async function establishSession() {
 }
 
 function showFailure(code) {
-  $('#boot-title').textContent = '暂时没能进入 MindBridge';
-  $('#boot-detail').textContent = '你的身份信息没有被记录，可以放心重试。';
-  $('#boot-fail-text').textContent = FAILURE_TEXT[code] || '连接没有完成，请重试一次。';
+  $('#boot-title').textContent = '暂时无法进入 MindBridge';
+  $('#boot-detail').textContent = '你的身份信息未被记录，可放心重试。';
+  $('#boot-fail-text').textContent = FAILURE_TEXT[code] || '连接未完成，请重试。';
   $('#boot-code').textContent = `${code || 'UNKNOWN'} · ${BUILD_ID}`;
   $('#boot-fail').hidden = false;
   $('#boot').classList.add('failed');
 }
 
 async function enterApp(session) {
-  setPrivacyEntryChannel(session?.entryChannel);
+  setPrivacyEntryChannel(session?.entryChannel, session?.researchTranscriptEnabled);
   const me = await api.me();
   $('#display-name').textContent = me.displayName;
   $('#organization-label').textContent = session?.entryChannel === 'beta_web'
     ? `${session.organizationName || '公开测试组织'} · 匿名参与`
-    : '匿名身份 · HR 与疗愈师都看不到你是谁';
+    : '匿名身份 · 对 HR 与疗愈师匿名';
   $('#app').dataset.entryChannel = session?.entryChannel === 'beta_web' ? 'beta_web' : 'dingtalk';
+  $('#app').dataset.researchTranscript = session?.researchTranscriptEnabled === true ? 'enabled' : 'disabled';
   $('#boot').hidden = true;
   $('#app').hidden = false;
   await showView('chat');
@@ -151,7 +152,7 @@ export async function boot({ reason } = {}) {
       pendingInvite = inviteToken;
       url.searchParams.delete('invite');
       window.history.replaceState(null, '', url.toString());
-      $('#boot-detail').textContent = '正在加入公开测试组织。同一浏览器可在多个组织各记一个匿名身份，用原邀请链接可回到原组织；产品团队会按匿名代号分析使用记录，进入后可查看完整隐私说明。';
+      $('#boot-detail').textContent = '正在加入公开测试组织。同一浏览器在各组织分别使用独立匿名身份，原邀请链接可回到原身份；使用记录仅按匿名代号分析，完整说明见进入后的隐私页。';
       document.querySelector('#boot-steps [data-step="verify"]').lastChild.textContent = '确认测试组织邀请';
       document.querySelector('#boot-steps [data-step="strip"]').lastChild.textContent = '不收集姓名或微信身份';
       await api.authenticateInvite(inviteToken);
@@ -163,7 +164,7 @@ export async function boot({ reason } = {}) {
     if (!alive) {
       const blocked = bareEntryCode(navigator.userAgent);
       if (blocked) {
-        $('#boot-detail').textContent = '这个入口需要邀请链接。';
+        $('#boot-detail').textContent = '该入口需要邀请链接。';
         const verify = document.querySelector('#boot-steps [data-step="verify"]');
         const strip = document.querySelector('#boot-steps [data-step="strip"]');
         const anon = document.querySelector('#boot-steps [data-step="anon"]');

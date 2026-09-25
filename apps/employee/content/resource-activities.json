@@ -38,5 +38,17 @@
   {
     "name": "午间正念工作坊",
     "activityId": "mindfulness-workshop"
+  },
+  {
+    "name": "身份重塑叙事疗愈小组",
+    "activityId": "identity-story-group"
+  },
+  {
+    "name": "心流插花艺术小组",
+    "activityId": "flow-flower-group"
+  },
+  {
+    "name": "巴林特同行支持小组",
+    "activityId": "balint-peer-group"
   }
 ]

@@ -80,10 +80,10 @@ export async function onRequestPost({ request, env }) {
   }
   const code = input?.code;
   if (!isSafeText(code, 1, MAX_CODE_LENGTH)) {
-    return json({ message: '缺少有效的钉钉授权码', reasonCode: 'AUTH_CODE_INVALID' }, 400);
+    return json({ message: '缺少有效的钉钉授权，请重试', reasonCode: 'AUTH_CODE_INVALID' }, 400);
   }
   if (!isSafeText(env.DINGTALK_CLIENT_ID, 2, 256) || !isSafeText(env.DINGTALK_CORP_ID, 2, 256)) {
-    return json({ message: '应用部署配置不完整', reasonCode: 'APP_CONFIGURATION_MISSING' }, 503);
+    return json({ message: '应用配置不完整，请联系管理员', reasonCode: 'APP_CONFIGURATION_MISSING' }, 503);
   }
 
   try {
@@ -113,7 +113,7 @@ export async function onRequestPost({ request, env }) {
       : 'IDENTITY_RELAY_FAILED';
     console.error(JSON.stringify({ event: 'dingtalk_auth_failed', reasonCode }));
     const status = error instanceof ConfigError || reasonCode === 'IDENTITY_RELAY_FAILED' ? 503 : 401;
-    return json({ message: '钉钉身份验证未完成，请稍后重试', reasonCode }, status);
+    return json({ message: '钉钉身份验证未完成，请稍后再试', reasonCode }, status);
   }
 }
 

@@ -1,12 +1,58 @@
 import { api, ApiError } from '../api.js';
-import { $, clear, el, toast } from '../dom.js';
+import { $, clear, el, openSheet, closeSheet, toast } from '../dom.js';
 import { openActivity } from './activity.js';
+import { activityFacts } from './activity-facts.js';
 
 let stream;
 let input;
 let sendBtn;
 let supportPending = false;
 let cardRefreshVersion = 0;
+let feedbackVersion = 0;
+
+function feedbackDetails() {
+  const choices = ['没有理解我的意思', '建议不适合我', '回复太慢或出错', '其他'];
+  const select = el('select', { attrs: { 'aria-label': '反馈原因' } }, [
+    el('option', { text: '选择原因（可选）', attrs: { value: '' } }),
+    ...choices.map((choice) => el('option', { text: choice, attrs: { value: choice } })),
+  ]);
+  const box = el('textarea', { attrs: { rows: 4, maxlength: 450, placeholder: '补充意见（可选，请勿填写姓名或联系方式）', 'aria-label': '补充意见' } });
+  const send = el('button', { class: 'primary', text: '提交意见', attrs: { type: 'button' } });
+  send.addEventListener('click', async () => {
+    const detail = box.value.trim();
+    if (!select.value && !detail) { toast('请选择原因或填写意见。'); return; }
+    send.disabled = true;
+    try {
+      await api.submitSuggestion([select.value && `聊天评价：${select.value}`, detail].filter(Boolean).join('\n'));
+      closeSheet(); toast('谢谢反馈。');
+    } catch { send.disabled = false; toast('提交失败，请稍后再试。'); }
+  });
+  openSheet('补充聊天意见', [el('p', { text: '选一个原因或写几句话即可，提交给产品团队。' }), select, box, send]);
+}
+
+async function refreshFeedback() {
+  const version = ++feedbackVersion;
+  stream?.querySelector('.chat-feedback')?.remove();
+  let result;
+  try { result = await api.chatFeedback(); } catch { return; }
+  if (version !== feedbackVersion || !stream?.isConnected || !result.feedback) return;
+  const latest = [...stream.querySelectorAll('.bubble.bot:not(.typing)')].at(-1);
+  if (!latest) return;
+  const row = el('div', { class: 'chat-feedback' });
+  if (result.feedback.answer) {
+    row.append(el('span', { text: '谢谢反馈 · ' }), el('button', { class: 'chat-feedback-link', text: '补充意见', attrs: { type: 'button' }, on: { click: feedbackDetails } }));
+  } else {
+    row.append(el('span', { text: '这次交流有帮助吗？ ' }));
+    for (const [label, answer] of [['有帮助', 'helpful'], ['一般', 'neutral'], ['没有帮助', 'unhelpful']]) {
+      row.append(el('button', { class: 'chat-feedback-link', text: label, attrs: { type: 'button' }, on: { click: async () => {
+        for (const button of row.querySelectorAll('button')) button.disabled = true;
+        try { await api.answerChatFeedback(result.feedback.id, answer); await refreshFeedback(); }
+        catch { for (const button of row.querySelectorAll('button')) button.disabled = false; toast('评价未保存，请稍后再试。'); }
+      } } }));
+    }
+  }
+  latest.after(row);
+}
 
 async function refreshCards() {
   const version = ++cardRefreshVersion;
@@ -21,7 +67,7 @@ async function refreshCards() {
 }
 
 async function refreshCardsSafely() {
-  try { await refreshCards(); } catch { toast('卡片状态暂时无法确认，请重新进入后查看。'); }
+  try { await refreshCards(); } catch { toast('卡片状态暂时无法确认，请重新进入。'); }
 }
 
 // 发送只有两个业务状态：空闲、发送中。之前这件事分散在 sending 标志、
@@ -69,6 +115,7 @@ function resourceCard(card) {
     el('div', { class: 'card-icon', text: card.icon || '🌿', attrs: { 'aria-hidden': 'true' } }),
     el('div', { class: 'card-main' }, [
       el('p', { class: 'card-title', text: card.name }),
+      card.form || card.duration ? activityFacts(card) : null,
       el('p', { class: 'card-desc', text: card.description }),
       el('p', { class: 'card-tag', text: stateText || (card.level === 'L2' ? '专业支持' : '自助练习') }),
       card.eventId && actionable ? el('button', {
@@ -91,9 +138,9 @@ async function requestAppointment(button, messageId) {
     // 疗愈师要看上下文，得在工作台单独发起申请，由员工本人再确认一次。
     const result = await api.requestAppointment({ riskLevel: 'red', shareContext: false, messageId });
     button.textContent = `已提交 · 个案编号 ${result.caseCode}`;
-    toast('已提交。疗愈师会看到个案编号和风险级别，看不到你是谁。你随时可以在「我的」里取消。');
+    toast('已提交。疗愈师仅能看到个案编号与风险级别，看不到你的身份；可随时在「我的」取消。');
   } catch (error) {
-    toast(error instanceof ApiError && error.userMessage ? error.userMessage : '暂时无法确认提交结果，正在重新核对，请勿重复提交。');
+    toast(error instanceof ApiError && error.userMessage ? error.userMessage : '提交结果暂时无法确认，请勿重复提交。');
   } finally {
     supportPending = false;
     await refreshCardsSafely();
@@ -103,8 +150,12 @@ async function requestAppointment(button, messageId) {
 function consentCard(card, messageId) {
   if (!card) return null;
   const status = card.support?.status;
-  const submitted = ['requested', 'claimed', 'active', 'closed', 'done', 'cancelled', 'unavailable'].includes(status);
+  const submitted = ['requested', 'claimed', 'active', 'closed', 'done', 'cancelled', 'unavailable', 'referral_closed'].includes(status);
   const statusLabel = ({ requested: '已提交 · 等待响应', claimed: '处理中', active: '正在跟进', closed: '本次支持已结束', done: '本次支持已结束', cancelled: '本次预约已取消', unavailable: '预约记录不可用' })[status];
+  if (status === 'referral_closed') return el('div', { class: 'card consent' }, [
+    el('p', { class: 'card-title', text: '疗愈师转介暂未开放' }),
+    el('p', { class: 'card-desc', text: '当前无法提交预约。如有即时危险，请联系身边可信任的人或拨打 12356 心理援助热线。' }),
+  ]);
   if (submitted) return el('div', { class: `card consent${card.tone === 'urgent' ? ' urgent' : ''}` }, [
     el('p', { class: 'card-title', text: '专业支持预约' }),
     el('div', { class: 'support-summary', attrs: { role: 'status' } }, [
@@ -132,7 +183,7 @@ function consentCard(card, messageId) {
           button.disabled = true;
           void api.dismissChatCard(messageId).then(() => {
             toast('好，我们继续说。你随时可以改主意。');
-          }, () => toast('暂时无法确认选择，正在重新核对。')).finally(refreshCardsSafely);
+          }, () => toast('选择暂时无法确认，请稍后再试。')).finally(refreshCardsSafely);
         }
       });
       return button;
@@ -155,11 +206,13 @@ function crisisCard(card) {
 }
 
 // 对话流顶部的隐私说明卡（与 prototype 的 .privacy-note 一致：一枚呼吸的烛光点 + 两行说明）。
+// 内部测试期间不区分是否开启原文研究导出，统一显示默认文案；原文导出仅由持有
+// RESEARCH_EXPORT_TOKEN 的内部人员在后端按组织能力调用，参与者知情由线下方式覆盖。
 function privacyNote() {
   lastStampAt = 0; // 每次重画对话流都从头算时间戳间隔
   return el('div', { class: 'privacy-note', attrs: { 'aria-label': '隐私说明' } }, [
     el('i', { class: 'dot', attrs: { 'aria-hidden': 'true' } }),
-    el('p', { class: 't', html: '你在这里说的每一句话，都属于隐私。<span>真实身份与心理服务数据隔离。你的数据始终是匿名的。</span>' }),
+    el('p', { class: 't', html: '这里的对话会加密保存。<span>真实身份与心理服务数据隔离；HR 只能看到不含原文的聚合统计。</span>' }),
   ]);
 }
 
@@ -181,7 +234,7 @@ function setSendState(next) {
 
 async function send(text) {
   if (sendState !== 'idle') {
-    toast('上一条还在回复中，请稍等一下…');
+    toast('上一条正在回复中，请稍候。');
     return;
   }
   const trimmed = (text || '').trim();
@@ -217,6 +270,7 @@ async function send(text) {
     pending.classList.remove('pending');
     append(body.messages.filter((m) => m.role !== 'user'));
     await refreshCardsSafely();
+    void refreshFeedback();
   } catch (error) {
     typing.remove();
     const code = error instanceof ApiError ? error.code : '';
@@ -229,20 +283,21 @@ async function send(text) {
         clear(stream);
         stream.append(privacyNote());
         append(body.messages);
+        void refreshFeedback();
         if (saved) {
-          toast('连接中断，但这条消息已经发出去了。');
+          toast('这条消息已发送成功。');
         } else {
           input.value = input.value || trimmed;
-          toast('连接中断，这条没有发出去，内容已经放回输入框。');
+          toast('这条消息未能发送，内容已放回输入框。');
         }
       } catch {
         // 连记录都读不到，才是真正的未知。此时不动界面，也不谎称失败。
-        toast('连接中断，暂时无法确认这条是否已保存。请稍后刷新记录确认，避免重复发送。');
+        toast('消息状态暂时无法确认，请稍后在记录中查看，避免重复发送。');
       }
       return;
     }
     rollback();
-    toast(error instanceof ApiError && error.userMessage ? error.userMessage : '消息没有发送成功，请稍后重试。');
+    toast(error instanceof ApiError && error.userMessage ? error.userMessage : '消息发送失败，请稍后再试。');
   } finally {
     setSendState('idle');
   }
@@ -338,7 +393,7 @@ async function renderFollowup() {
             await api.answerFollowup(due.id, answer);
             actions.remove();
             card.append(el('p', { class: 'card-tag', text: '谢谢你告诉我。' }));
-          } catch { toast('没能提交，请稍后再试。'); }
+          } catch { toast('提交失败，请稍后再试。'); }
         },
       },
     })),
@@ -349,7 +404,7 @@ async function renderFollowup() {
           try {
             await api.answerFollowup(due.id, null);
             card.remove();
-          } catch { toast('没能跳过，请稍后再试。'); }
+          } catch { toast('跳过失败，请稍后再试。'); }
         },
       },
     }),
@@ -365,15 +420,17 @@ export async function loadChat() {
     clear(stream);
     stream.append(privacyNote());
     if (!body.messages.length) {
-      append([{ role: 'assistant', text: '你好，我是你的倾诉伙伴 MindBridge。\n这里是一处完全属于你的私密树洞，有什么压力或想法，随时跟我聊聊。' }]);
+      append([{ role: 'assistant', text: '嗨，我是 MindBridge。今天有什么事压在心里吗？工作上的、生活里的，想从哪儿说都行。' }]);
       await renderFollowup();
+      void refreshFeedback();
       return;
     }
     append(body.messages);
     await renderFollowup();
+    void refreshFeedback();
   } catch (error) {
     if (error instanceof ApiError && error.code === 'SESSION_REQUIRED') throw error;
-    toast('历史记录暂时读不出来，你仍然可以继续说。');
+    toast('历史记录暂时无法加载，你仍可以继续倾诉。');
   }
 }
 

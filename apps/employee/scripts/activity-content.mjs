@@ -94,7 +94,7 @@ export function activitySql(a) {
     suited_for: a.suitedFor || a.tags.join('、'), core_method: a.coreMethod || '', schedule: a.schedule, location: a.location,
     content_version: a.contentVersion, content_hash: contentHash(a), content_available: Number(a.available), tags_json: JSON.stringify(a.tags),
   };
-  return `INSERT INTO activities (${Object.keys(fields).join(',')}) VALUES (${Object.values(fields).map(sql).join(',')}) ON CONFLICT(id) DO UPDATE SET ${Object.keys(fields).filter(k => k !== 'id').map(k => `${k}=excluded.${k}`).join(',')} WHERE activities.content_hash IS NULL OR excluded.content_version > activities.content_version;`;
+  return `INSERT INTO activities (${Object.keys(fields).join(',')}) VALUES (${Object.values(fields).map(sql).join(',')}) ON CONFLICT(id) DO UPDATE SET ${Object.keys(fields).filter(k => k !== 'id').map(k => `${k}=excluded.${k}`).join(',')} WHERE activities.content_hash IS NULL OR excluded.content_version > activities.content_version;\nINSERT INTO service_status (service_id, status, preview_visible, updated_at) VALUES (${sql(`activity:${a.id}`)}, ${sql(a.available ? 'open' : 'coming_soon')}, ${Number(a.kind === 'offline' && !a.available)}, 0) ON CONFLICT(service_id) DO NOTHING;`;
 }
 export function catalogSql(config) {
   if (!config || typeof config.name !== 'string' || !/^[a-z0-9-]+$/.test(config.activityId)) throw new Error('Invalid resource mapping');

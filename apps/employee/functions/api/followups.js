@@ -40,13 +40,13 @@ export async function onRequestPost({ request, env }) {
     const body = await readJson(request);
     const id = body?.id;
     const answer = body?.answer;
-    if (typeof id !== 'string' || !id) throw new ApiError('FOLLOWUP_ID_REQUIRED', 400, '缺少回访标识');
-    if (answer !== null && !ANSWERS.includes(answer)) throw new ApiError('ANSWER_INVALID', 400, '未知的选项');
+    if (typeof id !== 'string' || !id) throw new ApiError('FOLLOWUP_ID_REQUIRED', 400, '请求参数缺失，请重试');
+    if (answer !== null && !ANSWERS.includes(answer)) throw new ApiError('ANSWER_INVALID', 400, '选项无效，请重试');
     const now = Date.now();
     const result = await env.CARE_DB.prepare(
       "UPDATE follow_ups SET state = ?, answer = ?, answered_at = ? WHERE id = ? AND anon_id = ? AND state = 'scheduled'"
     ).bind(answer === null ? 'skipped' : 'answered', answer, now, id, anonId).run();
-    if (!result.meta?.changes) throw new ApiError('FOLLOWUP_NOT_FOUND', 404, '这条回访已经处理过了');
+    if (!result.meta?.changes) throw new ApiError('FOLLOWUP_NOT_FOUND', 404, '该回访已处理');
     if (answer !== null) {
       await env.CARE_DB.batch([
         aggregateStatement(env, { eventType: 'followup_answered', emotion: answer, level: 'green', at: now, organizationId }),

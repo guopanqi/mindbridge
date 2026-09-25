@@ -1,0 +1,20 @@
+{
+  "id": "balint-peer-group",
+  "contentVersion": 1,
+  "title": "巴林特同行支持小组",
+  "description": "面向医护及其他长期照护、服务他人的岗位。参与者围绕真实工作处境进行案例呈报和多角度讨论，留意自己在关系中的感受与压力；小组的参与边界、保密约定和带领人员将在开放前明确。",
+  "kind": "offline",
+  "level": "L2",
+  "available": false,
+  "form": "线下同行小组",
+  "suitedFor": "医护、护理及其他长期照护岗位的共情疲劳",
+  "coreMethod": "案例呈报与同行多角度讨论",
+  "tags": ["共情疲劳", "医护", "同行支持", "巴林特小组"],
+  "scale": {
+    "preLabel": "开始前，工作中的情绪负担有多重？",
+    "low": "较轻",
+    "high": "很重",
+    "direction": "down"
+  },
+  "stages": []
+}

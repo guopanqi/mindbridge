@@ -22,7 +22,7 @@ export async function searchActivities(env, args = {}, { excludeIds = [], organi
     if (candidates.length) {
       const placeholders = candidates.map(() => '?').join(',');
       const { results } = await env.CARE_DB.prepare(
-        `SELECT id, title, kind, level, form, duration, description, schedule, location
+        `SELECT id, title, kind, level, form, duration, description, stages_json, schedule, location
          FROM activities WHERE ${activityAvailableSql('activities', organizationId)} AND id IN (${placeholders})`
       ).bind(...candidates).all();
       const byId = new Map((results || []).map((item) => [item.id, item]));
@@ -35,7 +35,7 @@ export async function searchActivities(env, args = {}, { excludeIds = [], organi
   const terms = tokenizeQuery(rawQuery);
   const statement = terms.length
     ? env.CARE_DB.prepare(
-        `SELECT id, title, kind, level, form, duration, description, schedule, location,
+        `SELECT id, title, kind, level, form, duration, description, stages_json, schedule, location,
                 (${terms.map(() => '(title LIKE ?) + (description LIKE ?) + (form LIKE ?)').join(' + ')}) AS score
          FROM activities
          WHERE ${availableSql} AND (${terms.map(() => '(title LIKE ? OR description LIKE ? OR form LIKE ?)').join(' OR ')})
@@ -48,14 +48,14 @@ export async function searchActivities(env, args = {}, { excludeIds = [], organi
         limit
       )
     : env.CARE_DB.prepare(
-        `SELECT id, title, kind, level, form, duration, description, schedule, location
+        `SELECT id, title, kind, level, form, duration, description, stages_json, schedule, location
          FROM activities WHERE ${availableSql} ORDER BY title LIMIT ?`
       ).bind(...excluded, limit);
   const { results } = await statement.all();
   // 词级匹配仍然为空时兜底给通用活动，好过让模型面对空结果再发一次检索。
   if (!results?.length && terms.length) {
     const { results: fallback } = await env.CARE_DB.prepare(
-      `SELECT id, title, kind, level, form, duration, description, schedule, location
+      `SELECT id, title, kind, level, form, duration, description, stages_json, schedule, location
        FROM activities WHERE ${availableSql} ORDER BY title LIMIT ?`
     ).bind(...excluded, limit).all();
     if (fallback?.length) return { activities: fallback, status: 'available', fallback: true };

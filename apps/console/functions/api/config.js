@@ -22,10 +22,14 @@ export async function onRequestGet({ request, env }) {
 
 export async function onRequestPut({ request, env }) {
   try {
-    const staff = await requireStaff(request, env, 'admin');
     const body = await readJson(request);
+    // 行业模板的修改只允许内部工作人员（内部测试员会话）；套用模板则沿用组织 admin 权限。
+    const staff = await requireStaff(request, env, body?.kind === 'save_template' ? 'internal_tester' : 'admin');
     if (body?.kind === 'sensing' && !isEnterpriseSession(staff)) {
       throw new ApiError('FORBIDDEN', 403, '公开组织不能开启钉钉办公数据感知');
+    }
+    if (body?.kind === 'save_template' && !staff.staffId.startsWith('stf_internal_test_')) {
+      throw new ApiError('FORBIDDEN', 403, '只有内部工作人员可以修改行业模板');
     }
     const upstream = await fetch(
       `${env.CARE_API_ORIGIN}/api/internal/config?${organizationQuery(staff, env)}`,
@@ -40,8 +44,14 @@ export async function onRequestPut({ request, env }) {
     const result = await upstream.json();
     const target = body?.kind === 'matrix'
       ? `matrix:${body.emotion}`
-      : body?.kind === 'activity'
+      : body?.kind === 'healer_referral'
+        ? 'healer_referral'
+        : body?.kind === 'activity'
         ? `activity:${body.activityId}`
+        : body?.kind === 'apply_template'
+        ? `apply_template:${body.industry}`
+        : body?.kind === 'save_template'
+        ? `save_template:${body.industry}:${body.emotion}`
         : `sensing:${body.key}`;
     await audit(env, staff.staffId, 'update_config', 'config', target, result.ok ? 'ok' : `denied:${result.reasonCode}`);
     if (!result.ok) {
@@ -50,10 +60,14 @@ export async function onRequestPut({ request, env }) {
         L2_NOT_IN_CATALOG: '所选 L2 资源不在资源目录中',
         ACTIVITY_UNAVAILABLE: '该活动当前不可用',
         ACTIVITY_UNKNOWN: '未知活动',
-        SIGNAL_PERMANENTLY_OFF: '本系统不申请该权限，这项信号无法开启',
+        SIGNAL_PERMANENTLY_OFF: '该能力依赖尚未开通的平台权限，无法开启',
         EMOTION_UNKNOWN: '未知的情绪信号',
         SIGNAL_UNKNOWN: '未知的感知信号',
         KIND_INVALID: '不支持的配置项',
+        TEMPLATE_REQUIRED: '请选择行业模板',
+        TEMPLATE_UNKNOWN: '未知的行业模板',
+        TEMPLATE_UNAVAILABLE: '行业模板暂不可用，请稍后重试',
+        TEMPLATE_FORBIDDEN: '只有内部工作人员可以修改行业模板',
       };
       throw new ApiError(result.reasonCode, 400, messages[result.reasonCode] || '配置没有保存成功');
     }

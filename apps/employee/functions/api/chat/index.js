@@ -2,12 +2,24 @@ import { json } from '../_lib/http.js';
 import { ApiError, ensureProfile, handleError, readJson, requireSession } from '../_lib/care.js';
 import { handleInbound, loadMessages } from '../_lib/conversation/service.js';
 import { hydrateCards } from '../_lib/conversation/card-state.js';
+import { healerReferralEnabled } from '../_lib/healer-availability.js';
+
+async function applyHealerAvailability(env, session, messages) {
+  if (await healerReferralEnabled(env, session.organizationId || env.DINGTALK_ORG_ID || null)) return messages;
+  for (const message of messages) {
+    if (message.role === 'consent' && message.card && !message.card.appointmentId && message.card.support?.status !== 'dismissed') {
+      message.card.support = { status: 'referral_closed' };
+    }
+  }
+  return messages;
+}
 
 export async function onRequestGet({ request, env }) {
   try {
-    const { anonId } = await requireSession(request, env);
+    const session = await requireSession(request, env);
+    const { anonId } = session;
     await ensureProfile(env, anonId);
-    return json({ ok: true, messages: await loadMessages(env, anonId) });
+    return json({ ok: true, messages: await applyHealerAvailability(env, session, await loadMessages(env, anonId)) });
   } catch (error) { return handleError(error, 'chat_history_failed'); }
 }
 
@@ -17,7 +29,7 @@ export async function onRequestPost({ request, env }) {
     const { anonId } = session;
     const { text } = await readJson(request);
     const result = await handleInbound({ env, anonId, text, channel: 'h5', session });
-    result.messages = await hydrateCards(env, anonId, result.messages);
+    result.messages = await applyHealerAvailability(env, session, await hydrateCards(env, anonId, result.messages));
     return json(result);
   } catch (error) { return handleError(error, 'chat_send_failed'); }
 }

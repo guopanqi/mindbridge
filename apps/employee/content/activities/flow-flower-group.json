@@ -1,0 +1,20 @@
+{
+  "id": "flow-flower-group",
+  "contentVersion": 1,
+  "title": "心流插花艺术小组",
+  "description": "通过选择花材、整理色彩与动手创作，给长期需要回应他人情绪的人一段专注于自己的时间。参与者可以按自己的节奏创作，不需要具备插花经验，也不必分享私人经历。具体安排将在开放时公布。",
+  "kind": "offline",
+  "level": "L2",
+  "available": false,
+  "form": "线下艺术小组",
+  "suitedFor": "情绪劳动多、沟通消耗大、想通过创作放松时",
+  "coreMethod": "花材选择、色彩表达与专注创作",
+  "tags": ["情绪劳动", "疲惫", "艺术表达", "插花"],
+  "scale": {
+    "preLabel": "开始前，给自己留出空间的感觉如何？",
+    "low": "很少",
+    "high": "很多",
+    "direction": "up"
+  },
+  "stages": []
+}

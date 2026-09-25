@@ -14,8 +14,8 @@ export function validateMessage(m, config, now = Date.now()) {
   if (![m.msgId,m.senderStaffId].every(x => typeof x === 'string' && x.length > 0 && x.length <= 512)) throw new Error('INVALID_ID');
   const text = typeof m.text?.content === 'string' ? m.text.content.trim() : '';
   const localNotice = m.msgtype !== 'text' || !text
-    ? '目前机器人只支持文字消息，请发送文字，或打开 MindBridge 工作台继续。'
-    : text.length > 800 ? '这条消息超过 800 字，请分成较短的文字发送。原文没有提交到对话服务。' : null;
+    ? '机器人目前仅支持文字消息，请发送文字，或前往 MindBridge 工作台继续。'
+    : text.length > 800 ? '消息超过 800 字，请分段发送。' : null;
   const expires = Number(m.sessionWebhookExpiredTime);
   if (!Number.isFinite(expires) || expires <= now) throw new Error('EXPIRED_WEBHOOK');
   return { msgId: m.msgId, staffId: m.senderStaffId, corpId: config.corpId, robotCode: config.robotCode, text: localNotice ? '' : text, ...(localNotice ? {localNotice} : {}), webhook: webhookUrl(m.sessionWebhook), expires };

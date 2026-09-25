@@ -55,6 +55,11 @@ async function fixture() {
     db.exec(readFileSync(new URL(file, dir), 'utf8'));
   }
   const now = Date.now();
+  db.prepare("INSERT INTO organizations (id, display_name, kind, status, created_at, updated_at) VALUES (?, ?, 'enterprise', 'active', ?, ?)")
+    .run('org_enterprise_primary', '测试企业', now, now);
+  db.prepare('INSERT INTO organization_healer_settings (organization_id, enabled, updated_at) VALUES (?, 1, ?)')
+    .run('org_enterprise_primary', now);
+  db.exec("UPDATE service_status SET status='open' WHERE service_id='healer-referral'");
   db.prepare(
     'INSERT INTO sessions(session_digest, anon_id, expires_at, created_at, last_seen_at) VALUES (?, ?, ?, ?, ?)'
   ).run(await sha256Base64Url(SESSION_TOKEN), 'anon_support_acceptance', now + 86_400_000, now, now);
@@ -73,6 +78,7 @@ async function fixture() {
     CARE_CONTENT_KEY_VERSION: 'v1',
     INTERNAL_SERVICE_TOKEN: SERVICE_TOKEN,
     DEFAULT_HEALER_STAFF_ID: 'staff_acceptance',
+    DINGTALK_ORG_ID: 'org_enterprise_primary',
   };
   const employeeRequest = (path, init = {}) => new Request(`https://employee.test${path}`, {
     ...init,
@@ -94,6 +100,19 @@ async function addConsent(env, db, id = 'msg_consent') {
   db.prepare('INSERT INTO messages(id, conversation_id, anon_id, role, body_cipher, content_key_version, risk_level, created_at, data_origin) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
     .run(id, 'conv_support_acceptance', 'anon_support_acceptance', 'consent', sealed.cipher, sealed.version, 'red', Date.now(), 'live');
 }
+
+test('转介关闭后旧卡片不能创建新预约', async () => {
+  const { db, env, employeeRequest } = await fixture();
+  await addConsent(env, db);
+  db.exec("UPDATE organization_healer_settings SET enabled=0 WHERE organization_id='org_enterprise_primary'");
+  const response = await createAppointment({ env, request: employeeRequest('/api/appointments', {
+    method: 'POST', body: JSON.stringify({ messageId: 'msg_consent' }),
+  }) });
+  assert.equal(response.status, 409);
+  assert.equal((await response.json()).reasonCode, 'HEALER_REFERRAL_CLOSED');
+  assert.equal(db.prepare('SELECT COUNT(*) AS n FROM appointments').get().n, 0);
+  db.close();
+});
 
 test('对话转接：刷新恢复、受理/结束/取消投影，同卡重试不重复预约', async () => {
   const { db, env, employeeRequest } = await fixture();
@@ -558,9 +577,11 @@ test('HR metrics：live 样本 1/4/5/9 人均按 k=10 抑制，10 人才放行',
   }
 });
 
-test('内部测试视图只对指定组织放开单人真实样本', async () => {
+test('内部测试视图：指定组织与 beta 组织管理链接放开单人真实样本，企业其他组织仍抑制', async () => {
   const { db, env } = await metricsFixture(1);
   env.INTERNAL_TEST_ORG_ID = 'org_enterprise_primary';
+  const now = Date.now();
+  db.prepare("INSERT INTO organizations(id,display_name,kind,status,created_at,updated_at) VALUES ('org_enterprise_other','other','enterprise','active',?,?)").run(now, now);
   const get = async (organizationId) => {
     const request = new Request(`https://employee.test/api/internal/metrics?days=7&organizationId=${organizationId}&internalTest=1`, {
       headers: { authorization: `Bearer ${SERVICE_TOKEN}` },
@@ -572,7 +593,11 @@ test('内部测试视图只对指定组织放开单人真实样本', async () =>
   assert.equal(allowed.minSample, 1);
   assert.equal(allowed.coverage.activeUsers.value, 1);
   assert.equal(typeof allowed.temperature.value, 'number');
-  const other = await get('org_review');
+  // beta 组织的管理链接默认可看本组织小样本真实报表。
+  const beta = await get('org_review');
+  assert.equal(beta.internalTest, true);
+  assert.equal(beta.minSample, 1);
+  const other = await get('org_enterprise_other');
   assert.equal(other.internalTest, false);
   assert.equal(other.minSample, 10);
   db.close();

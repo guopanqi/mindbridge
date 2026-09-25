@@ -54,6 +54,7 @@ function shapeActivity(activity, event) {
     kind: activity.kind,
     form: activity.form,
     duration: activity.duration,
+    coreMethod: activity.core_method,
     description: activity.description,
     schedule: activity.schedule,
     location: activity.location,

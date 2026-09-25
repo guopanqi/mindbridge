@@ -5,8 +5,8 @@ let root;
 let allCases = [];
 let activeFilter = 'pending';
 let slaInterval = null;
-// 登录者本人的身份，由工作台在进入时注入；拿不到时退回内测用的预置疗愈师。
-let identity = { displayName: '李佳', credential: 'UNIHEAL 国际疗愈师 · UH-2024-0871' };
+// 登录者本人的身份，由工作台在进入时注入；缺失时退回内测用的预置疗愈师。
+let identity = { displayName: '值班疗愈师', credential: '专业疗愈师 · 在岗值班' };
 
 export function setHealerIdentity(next) {
   identity = {
@@ -31,7 +31,7 @@ async function handleAction(payload, onSuccess) {
     const result = await api.caseAction(payload);
     onSuccess?.(result);
   } catch (error) {
-    toast(error instanceof ApiError && error.userMessage ? error.userMessage : '操作没有成功。');
+    toast(error instanceof ApiError && error.userMessage ? error.userMessage : '操作失败，请稍后再试。');
   }
 }
 
@@ -106,12 +106,12 @@ function renderCaseCard(item, onReload) {
     if (item.contextStatus === 'approved') {
       // 员工原文一律用 textContent 渲染，绝不拼进 innerHTML。
       const grantedBox = el('div', { class: 'locked granted' }, [
-        el('span', { text: '🛡️ 员工已单独批准本次上下文申请；每次读取仍校验有效期与撤销状态' }),
+        el('span', { text: '🛡️ 员工已批准本次查阅申请；每次读取均校验有效期与撤销状态' }),
         ...(item.textSnippets || []).map((snippet) => el('p', { class: 'snippet', text: `「${snippet}」` })),
       ]);
 
       const viewBtn = el('button', {
-        class: 'bt small', text: '查看完整解密对话', style: 'margin-top:8px;', attrs: { type: 'button' },
+        class: 'bt small', text: '查看完整对话', style: 'margin-top:8px;', attrs: { type: 'button' },
         on: {
           click: () => {
             const previous = card.querySelector(`[data-ctx-host="${item.caseCode}"]`);
@@ -137,20 +137,20 @@ function renderCaseCard(item, onReload) {
       grantedBox.append(viewBtn, el('div', { attrs: { 'data-ctx-host': item.caseCode } }));
       card.append(grantedBox);
     } else if (item.contextStatus === 'pending') {
-      card.append(el('div', { class: 'locked granted', style: 'background:#fefbf4; border-color:#f1e3c3; color:#8a6018;', text: '已向员工发起对话查看申请，等待员工在手机端确认...' }));
+      card.append(el('div', { class: 'locked granted', style: 'background:#fefbf4; border-color:#f1e3c3; color:#8a6018;', text: '查阅申请已发送，等待员工确认。' }));
     } else {
       // 理由会原样出现在员工手机上，所以 placeholder 写短、完整说明放 title：窄屏下一行放不下整句。
-      const reasonInput = el('input', { attrs: { type: 'text', placeholder: '填写查看理由，员工端会看到', title: '例如：评估危机并制定支持计划' } });
+      const reasonInput = el('input', { attrs: { type: 'text', placeholder: '填写查阅理由（员工可见）', title: '例如：评估危机并制定支持计划' } });
       const reqBox = el('div', { class: 'ctx-req' }, [
         reasonInput,
         el('button', {
-          class: 'bt small', text: '申请查看上下文', attrs: { type: 'button' },
+          class: 'bt small', text: '申请查阅对话', attrs: { type: 'button' },
           on: {
             click: () => {
               const reason = reasonInput.value.trim();
               if (!reason) return toast('请先填写申请理由。');
               handleAction({ action: 'request_context', caseCode: item.caseCode, reason }, () => {
-                toast('已向员工发出授权申请');
+                toast('查阅申请已发送。');
                 onReload();
               });
             },
@@ -174,7 +174,7 @@ function renderCaseCard(item, onReload) {
         class: 'bt pri', text: '开始跟进', attrs: { type: 'button' },
         on: {
           click: () => handleAction({ action: 'start', caseCode: item.caseCode }, () => {
-            toast('已开始跟进 · 支持记录将写入审计日志');
+            toast('已开始跟进，支持记录将记入审计日志');
             activeFilter = 'active';
             onReload();
           }),
@@ -197,13 +197,13 @@ function renderCaseCard(item, onReload) {
       class: 'bt', text: '记录专业转介评估', attrs: { type: 'button' },
       on: {
         click: () => handleAction({ action: 'refer', caseCode: item.caseCode }, () => {
-          toast('已记录专业转介评估 · 具体机构由专业团队线下流程决定');
+          toast('已记录专业转介评估，具体转介安排由专业团队跟进');
           onReload();
         }),
       },
     }));
 
-    const noteInp = el('input', { attrs: { type: 'text', placeholder: '追加跟进笔记...' }, style: 'width:180px; font-size:12px; padding:6px 8px;' });
+    const noteInp = el('input', { attrs: { type: 'text', placeholder: '追加跟进笔记' }, style: 'width:180px; font-size:12px; padding:6px 8px;' });
     actRow.append(noteInp, el('button', {
       class: 'bt small', text: `记录 (${item.noteCount})`, attrs: { type: 'button' },
       on: {
@@ -212,14 +212,14 @@ function renderCaseCard(item, onReload) {
           if (!val) return toast('请先输入备忘内容。');
           handleAction({ action: 'note', caseCode: item.caseCode, text: val }, () => {
             noteInp.value = '';
-            toast('已记录跟进备忘');
+            toast('跟进备忘已记录。');
             onReload();
           });
         },
       },
     }));
 
-    actRow.append(el('span', { class: 'logtxt', text: '支持记录将写入审计日志' }));
+    actRow.append(el('span', { class: 'logtxt', text: '支持记录将记入审计日志' }));
     card.append(actRow);
   }
 
@@ -275,7 +275,7 @@ function renderWorkspace() {
 
   const caseBox = el('div', { class: 'cases' });
   if (!currentList.length) {
-      caseBox.append(el('div', { class: 'empty', html: '此分类下暂无个案。<br><span style="font-size:12px; color:var(--mut2)">个案由员工<b>主动预约</b>后生成 —— 系统不会未经同意创建个案。</span>' }));
+      caseBox.append(el('div', { class: 'empty', html: '暂无此类个案。<br><span style="font-size:12px; color:var(--mut2)">个案由员工主动预约后生成，未经同意不会创建。</span>' }));
   } else {
     currentList.forEach((item) => {
       caseBox.append(renderCaseCard(item, () => loadCases()));
@@ -298,7 +298,7 @@ export async function loadCases() {
     const res = await api.cases();
     allCases = res.cases || [];
   } catch (error) {
-    clear(root).append(el('p', { class: 'empty', text: error.userMessage || '个案列表暂时取不到。' }));
+    clear(root).append(el('p', { class: 'empty', text: error.userMessage || '个案列表暂时无法加载。' }));
     return;
   }
   renderWorkspace();

@@ -4,6 +4,7 @@
 // 只有员工真的开始参与时，才创建一条 resource_event 进入「推荐→参与→完成」同一条链。
 import { json } from './_lib/http.js';
 import { activityAvailableSql } from './_lib/activity-availability.js';
+import { hasActivityAudio } from './_lib/activity-presentation.js';
 import {
   ApiError, aggregateStatement, ensureProfile, handleError, newId, readJson, requireSession,
 } from './_lib/care.js';
@@ -13,12 +14,14 @@ export async function onRequestGet({ request, env }) {
     const { anonId, organizationId } = await requireSession(request, env);
     await ensureProfile(env, anonId);
     const { results } = await env.CARE_DB.prepare(
-      `SELECT a.id, a.title, a.kind, a.form, a.duration, a.description, a.suited_for, a.core_method,
-              a.level, a.schedule, a.location,
+      `SELECT a.id, a.title, a.kind, a.form, a.duration, a.description, a.suited_for, a.core_method, a.stages_json,
+              a.level, a.schedule, a.location, a.content_available, s.status AS service_status,
               (SELECT COUNT(*) FROM resource_events e
                 WHERE e.anon_id = ? AND e.state = 'completed'
                   AND e.activity_id = a.id) AS done_count
-       FROM activities a WHERE ${activityAvailableSql('a', organizationId)}
+       FROM activities a JOIN service_status s ON s.service_id = 'activity:' || a.id
+       WHERE ${activityAvailableSql('a', organizationId)}
+          OR (s.preview_visible = 1 AND s.status IN ('coming_soon', 'paused'))
        ORDER BY a.level, a.kind, a.title`
     ).bind(anonId).all();
     return json({
@@ -30,12 +33,14 @@ export async function onRequestGet({ request, env }) {
         level: r.level,
         form: r.form,
         duration: r.duration,
+        audioAvailable: hasActivityAudio(r.stages_json),
         description: r.description,
         suitedFor: r.suited_for,
         coreMethod: r.core_method,
         schedule: r.schedule,
         location: r.location,
         doneCount: r.done_count,
+        status: r.service_status === 'open' && r.content_available === 1 ? 'available' : r.service_status,
       })),
     });
   } catch (error) {

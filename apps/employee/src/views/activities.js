@@ -31,7 +31,7 @@ async function open(item, reload) {
   try {
     if (item.state === 'completed' || item.state === 'declined') {
       if (!item.activityId) {
-        toast('这个活动暂时打不开。');
+        toast('该活动暂时无法打开。');
         return;
       }
       const { eventId } = await api.startResource(item.activityId);
@@ -40,7 +40,7 @@ async function open(item, reload) {
     }
     await openActivity(item.id, reload);
   } catch (error) {
-    toast(error instanceof ApiError && error.userMessage ? error.userMessage : '打不开这个活动，请稍后再试。');
+    toast(error instanceof ApiError && error.userMessage ? error.userMessage : '该活动暂时无法打开，请稍后再试。');
   }
 }
 
@@ -92,7 +92,7 @@ function card(item, reload, options = {}) {
               toast('已跳过。');
               reload(true);
             } catch {
-              toast('操作没有成功，请稍后再试。');
+              toast('操作失败，请稍后再试。');
             }
           },
         },
@@ -122,7 +122,7 @@ function render() {
     section(
       '为你推荐', '来自树洞对话的推荐，可自由选择。',
       offered.map((item) => card(item, reload, { reason: item.reason })),
-      '还没有推荐。你也可以自己到活动库里找。',
+      '暂无推荐，也可前往活动库浏览。',
     ),
     ongoing.length
       ? section('进行中 / 待参加', null, ongoing.map((item) => card(item, reload)), '')
@@ -130,7 +130,7 @@ function render() {
     section(
       '活动记录', null,
       past.map((item) => card(item, reload)),
-      '还没有参加过活动。',
+      '暂未参加过活动。',
     ),
     el('button', {
       class: 'act-library-entry', attrs: { type: 'button' },
@@ -160,7 +160,7 @@ export async function loadActivities(force = false) {
     render();
   } catch (error) {
     if (error instanceof ApiError && error.code === 'SESSION_REQUIRED') throw error;
-    if (!hydrated) clear(root).append(el('p', { class: 'empty', text: '活动暂时打不开，请稍后再试。' }));
-    else toast('活动列表暂时刷新不出来。');
+    if (!hydrated) clear(root).append(el('p', { class: 'empty', text: '该活动暂时无法打开，请稍后再试。' }));
+    else toast('活动列表刷新失败，请稍后再试。');
   }
 }
