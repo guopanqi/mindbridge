@@ -4,20 +4,83 @@
 
 钉钉和网页邀请是进入组织的不同方式；聊天、广场、活动和组织报表都按组织隔离。参与者使用组织内匿名身份，工作人员按职责实名访问管理端。
 
+**看仓库时记住两条主线就够了：产品在 `apps/`，比赛与路演在 `路演/`。**
+
+| 想找什么 | 去哪里 |
+|---|---|
+| 产品源码（员工端 / 管理端 / 钉钉机器人） | `apps/`，见下文第一节 |
+| 比赛信息、路演 PPT、视频、原型 | `路演/`，见下文第二节 |
+| 架构、内测操作、数据字典 | `docs/`，见下文第三节 |
+
 ---
 
-## 这个仓库里有什么
+## 一、产品在 `apps/`（仓库主体，可部署）
+
+三个应用分处三个 Cloudflare 项目 / 进程，源码与部署一一对应：
 
 | 目录 | 是什么 | 部署到 |
 |---|---|---|
-| `apps/employee/` | 员工端 H5 + Care Domain API | Cloudflare Pages `mindbridge-beta` |
-| `apps/console/` | HR 看板 + 疗愈师个案台 | Cloudflare Pages `mindbridge-console` |
+| `apps/employee/` | 员工端 H5 + Care Domain API | Pages `mindbridge-beta` → `https://mindbridge-beta.pages.dev/` |
+| `apps/console/` | HR 看板 + 疗愈师个案台 | Pages `mindbridge-console` |
 | `apps/bot-stream/` | 钉钉 Stream 私聊接收器，共用员工端对话服务 | 常驻 Node 进程 |
-| `docs/` | 当前架构、内测操作与研究数据字典 | — |
-| `路演/` | 比赛与路演材料：PPT、视频、原型、赛题。不参与产品发布 | — |
-| `assets/` | 截图与图标 | — |
 
-员工端直接部署到 `https://mindbridge-beta.pages.dev/`。旧项目 `mindbridge-app` 暂时保留供已发出的旧邀请链接使用，不再接收新部署。活动内容由 `apps/employee/content/activities/*.json` 维护，经校验后导入 D1。路演原型在 `路演/原型/`，里面的数据是写死的，不作为产品数据来源。
+### `apps/employee/`：员工用的那一端
+
+- **前端**：`src/` 为功能模块（`main.js` 为入口），经 esbuild 打包为 `public/app.js`；`public/vendor/` 固定钉钉 JSAPI，`public/media/` 为茉莉语音。
+- **后端**：`functions/api/` 为 Pages Functions——`chat/` 聊天、`wall/` 匿名广场、`activities/` 活动、`appointments/` 预约、`authorizations.js` 授权、`internal/` 供管理端调用的内部聚合接口；`_lib/harness/` 为对话上下文、指令、模型网关与安全降级，`_lib/` 下其余模块为各业务服务层。
+- **活动内容**：`content/activities/*.json`（呼吸、正念、渐进式放松等十余项）+ 配套讲解稿 `*-script.md`，经校验后导入 D1。
+- **数据库**：`migrations/care/` 业务库（会话 / 情绪 / 帖子 / 活动 / 预约 / 风险 / 聚合事件），`migrations/identity/` 身份中继库（加密映射、alias）。
+- 旧项目 `mindbridge-app` 仅保留已发出的旧邀请链接，不再接收新部署。
+
+### `apps/console/`：工作人员用的那一端
+
+- **前端**：`src/main.js` 为入口，`src/views/` 为四个视图——`dashboard.js` 组织看板（聚合指标）、`cases.js` 个案列表、`audit.js` 操作审计、`healer.js` + `/healer/` 疗愈师个案台；打包产物为 `public/app.js` 与 `public/healer/app.js`。
+- **后端**：`functions/api/`——`metrics.js` 聚合报表、`cases/` 个案、`audit.js` 审计、`industry.js` 行业对照、`rhythm.js` 考勤节律、`test-timeline.js` 匿名事件时间线；**不绑定 CARE_DB**，只能调员工端固定输出的内部聚合接口。
+- **角色**：`admin`（审计与配置）、`hr_viewer`（只看聚合）、`internal_tester`（指定组织单人样本）、`healer`（跨组织匿名个案，需员工授权才可看原文）。
+- 数据库：`migrations/staff/`（HR 与疗愈师实名身份、角色、审计日志）。
+
+### `apps/bot-stream/`：企业钉钉机器人私聊通道
+
+常驻 Node 进程，只收本企业机器人私聊文本（不处理群聊），经 `POST /api/internal/bot` 复用员工端同一套身份派生与会话逻辑。公开组织邀请链接入口不走这里。运行与契约见该目录 README。
+
+---
+
+## 二、路演资料在 `路演/`（比赛用，不参与产品构建发布）
+
+### 比赛信息：`路演/文档/`
+
+- `2026企业疗愈力与EAP创新挑战赛-决赛信息.md` / `-参赛要求.md` / `-复赛要求.md`：赛制与晋级说明。
+- `决赛路演材料及现场展示管理要求.pdf`、路演需求、视频剧本、项目方案书文字稿。
+
+### PPT：`路演/PPT/`
+
+- `大纲/`：文字稿 / 演讲脚本，先改这里再改脚本。
+- `deck脚本/`：每个版本一个脚本（`NN_名称_页数.js`，复制最近一版递增编号）；历史版本脚本保留，可随时重建。
+- `工具库/`：`lib.js` + `helpers.js`，全套配色与组件只此一份。
+- `成品/`：当前在用的 pptx 与产品三端截图；在该目录 `./build.sh deck脚本/某脚本.js` 生成。
+
+### 视频：`路演/视频/` + `路演/视频成品/`
+
+- `视频/`：录制与合成脚本（`record-*.mjs`、`assemble.mjs` 等），在仓库根目录 `node 路演/视频/xxx.mjs` 运行。
+- `视频成品/`：已导出的 MP4。
+
+### 原型：`路演/原型/`
+
+可点击的交互原型（`mindbridge-prototype.html` 等）。**里面的数据全是写死的**，产品里任何数字都必须有真实来源；发布用 `bash scripts/deploy-prototype.sh` 到 `mindbridge-demo.pages.dev`，不包含在产品 `deploy:all` 中。
+
+---
+
+## 三、文档在 `docs/`（工程约定，唯一口径）
+
+- `组织-入口-地址.md`：组织模型、入口与评审聚合链接的唯一说明。
+- `公开组织内测执行与测试手册.md`：建组织、邀参与者、按组织隔离测试。
+- `内测组织与研究数据字典.md`：匿名主体、事件字段、导出与分析口径。
+- `小规模内部试点数据分析方案.md`、`服务状态与组织配置.md`。
+- 研究数据导出（CSV）在 `data-exports/`，仅 `README.md` 进仓库，原文数据不进。
+
+`assets/` 为截图与图标。`scripts/app.sh` 为两端统一运维入口。
+
+---
 
 ## 架构边界（不可破坏）
 
