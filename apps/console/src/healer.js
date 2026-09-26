@@ -48,11 +48,10 @@ async function enterWorkspace(session) {
 
 async function boot() {
   const url = new URL(window.location.href);
-  // 聚合页可传登录名作为快捷入口；它只是公开账号名，不是密钥。
+  // login 只是公开账号名、不是密钥，保留在地址栏以便转发；k 仍须抹掉。
   const quickLogin = url.searchParams.get('login')?.trim();
-  if (url.searchParams.has('k') || quickLogin) {
+  if (url.searchParams.has('k')) {
     url.searchParams.delete('k');
-    url.searchParams.delete('login');
     window.history.replaceState({}, '', url.toString());
   }
   if (quickLogin) {

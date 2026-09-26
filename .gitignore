@@ -40,6 +40,10 @@ scratch/
 *.docx
 *.key
 
+# 研究数据导出：假名事件与原文 CSV 不进仓库，只留目录结构与说明
+data-exports/*
+!data-exports/README.md
+
 # 对话实验台的本地会话存档
 apps/employee/.lab-sessions/
 

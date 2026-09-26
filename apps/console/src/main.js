@@ -125,18 +125,12 @@ async function enterConsole(session) {
 }
 
 function takeOrgKey(url) {
+  // orgKey 保留在地址栏：去掉后从地址栏复制转发就会丢失，达到即无法进入。
+  // 每次带参进入都会重新签发会话并记一条审计；debugKey 与一次性 code 仍必须抹掉。
   const fromQuery = url.searchParams.get('orgKey');
-  if (fromQuery) {
-    url.searchParams.delete('orgKey');
-    window.history.replaceState({}, '', url.toString());
-    return fromQuery;
-  }
+  if (fromQuery) return fromQuery;
   const fromHash = new URLSearchParams(url.hash.slice(1)).get('key');
-  if (fromHash) {
-    url.hash = '';
-    window.history.replaceState({}, '', url.toString());
-    return fromHash;
-  }
+  if (fromHash) return fromHash;
   return null;
 }
 

@@ -150,8 +150,9 @@ export async function boot({ reason } = {}) {
     const inviteToken = url.searchParams.get('invite') || pendingInvite;
     if (inviteToken) {
       pendingInvite = inviteToken;
-      url.searchParams.delete('invite');
-      window.history.replaceState(null, '', url.toString());
+      // 邀请参数必须留在地址栏：去掉后用户从地址栏复制转发就会丢失 token。
+      // 服务端对已加入成员的重认证是幂等的（不占新名额、不重复记 beta_joined），
+      // 每次完整进入记一条 session_started，与事件口径一致。
       $('#boot-detail').textContent = '正在加入公开测试组织。同一浏览器在各组织分别使用独立匿名身份，原邀请链接可回到原身份；使用记录仅按匿名代号分析，完整说明见进入后的隐私页。';
       document.querySelector('#boot-steps [data-step="verify"]').lastChild.textContent = '确认测试组织邀请';
       document.querySelector('#boot-steps [data-step="strip"]').lastChild.textContent = '不收集姓名或微信身份';
